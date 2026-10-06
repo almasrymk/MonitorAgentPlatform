@@ -10,12 +10,17 @@ public enum ErrorKind
     Locked,
     TooManyRequests,
     Gone,
+    Unavailable,
 }
 
 /// <summary>A stable, client-facing error. <see cref="Code"/> values (<c>AREA_REASON</c>) are part of the public API contract.</summary>
 public sealed record Error(string Code, string Message, ErrorKind Kind)
 {
+    /// <summary>Field errors of a validation failure (camelCase field names).</summary>
     public IReadOnlyDictionary<string, string[]>? FieldErrors { get; init; }
+
+    /// <summary>Extra members written into the problem body (e.g. <c>retryAfterSeconds</c>, <c>feature</c>).</summary>
+    public IReadOnlyDictionary<string, object?>? Details { get; init; }
 
     public static Error Validation(string code, string message) => new(code, message, ErrorKind.Validation);
     public static Error NotFound(string code, string message) => new(code, message, ErrorKind.NotFound);
@@ -25,6 +30,14 @@ public sealed record Error(string Code, string Message, ErrorKind Kind)
     public static Error Locked(string code, string message) => new(code, message, ErrorKind.Locked);
     public static Error TooManyRequests(string code, string message) => new(code, message, ErrorKind.TooManyRequests);
     public static Error Gone(string code, string message) => new(code, message, ErrorKind.Gone);
+    public static Error Unavailable(string code, string message) => new(code, message, ErrorKind.Unavailable);
+
+    public Error With(string key, object? value)
+    {
+        var details = Details is null ? new Dictionary<string, object?>(StringComparer.Ordinal) : new Dictionary<string, object?>(Details, StringComparer.Ordinal);
+        details[key] = value;
+        return this with { Details = details };
+    }
 }
 
 public class Result

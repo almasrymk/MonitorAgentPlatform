@@ -3,33 +3,40 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using MonitorCloud.Api.Controllers;
 
 namespace MonitorCloud.IntegrationTests.Endpoints;
 
 /// <summary>One HTTP endpoint of the running API, read from <see cref="EndpointDataSource"/>.</summary>
-public sealed record ApiEndpoint(string Method, string Route, EndpointMetadataCollection Metadata)
+public sealed partial record ApiEndpoint(string Method, string Route, EndpointMetadataCollection Metadata)
 {
     public bool AllowsAnonymous => Metadata.GetMetadata<IAllowAnonymous>() is not null;
 
     public bool IsPlatform => Route.StartsWith("/api/v1/platform/", StringComparison.OrdinalIgnoreCase);
 
+    public bool IsAuth => Route.StartsWith("/api/v1/auth/", StringComparison.OrdinalIgnoreCase);
+
     public bool IsAgent => Route.StartsWith("/api/agent/", StringComparison.OrdinalIgnoreCase);
 
     public bool IsBusiness => Route.StartsWith("/api/", StringComparison.OrdinalIgnoreCase);
 
+    /// <summary>A tenant-scope business endpoint (not platform, not auth, not agent).</summary>
+    public bool IsTenant => IsBusiness && !IsPlatform && !IsAuth && !IsAgent;
+
     public bool IsList => Metadata.GetMetadata<ListEndpointAttribute>() is not null;
+
+    public bool HasParameters => Route.Contains('{', StringComparison.Ordinal);
+
+    public string Key => $"{Method} {Route}";
 
     /// <summary>The route with every parameter replaced by <paramref name="id"/>.</summary>
     public string Url(Guid id) => RouteParameter().Replace(Route, id.ToString());
 
-    public override string ToString() => $"{Method} {Route}";
+    public override string ToString() => Key;
 
-    private static Regex RouteParameter() => new(@"\{[^}]+\}", RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
+    [GeneratedRegex(@"\{[^}]+\}")]
+    private static partial Regex RouteParameter();
 }
-
-/// <summary>Marks list endpoints so the paging suite covers them (added with <c>.WithMetadata</c> or an attribute).</summary>
-[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class)]
-public sealed class ListEndpointAttribute : Attribute;
 
 public static class EndpointCatalog
 {
@@ -55,7 +62,7 @@ public static class EndpointCatalog
             .SelectMany(e => (e.Metadata.GetMetadata<IHttpMethodMetadata>()?.HttpMethods ?? ["GET"])
                 .Select(m => new ApiEndpoint(m, "/" + (e.RoutePattern.RawText ?? string.Empty).TrimStart('/'), e.Metadata)))
             .Where(e => e.Method != HttpMethods.Options && e.Method != HttpMethods.Head)
-            .DistinctBy(e => e.ToString())
+            .DistinctBy(e => e.Key)
             .OrderBy(e => e.Route, StringComparer.Ordinal)
             .ThenBy(e => e.Method, StringComparer.Ordinal)
             .ToList();

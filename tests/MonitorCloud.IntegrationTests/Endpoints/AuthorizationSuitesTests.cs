@@ -3,11 +3,7 @@ using MonitorCloud.TestShared;
 
 namespace MonitorCloud.IntegrationTests.Endpoints;
 
-/// <summary>
-/// Consistency checks shared by <c>PermissionMatrixTests</c>, <c>CrossTenantTests</c>, <c>LocationScopeTests</c>,
-/// <c>PlatformScopeTests</c>, <c>DeviceTokenTests</c> and <c>PagingAndSortingTests</c>. The per-role and per-tenant
-/// HTTP calls are added in the suites themselves once sign-in exists (M1).
-/// </summary>
+/// <summary>Consistency checks between requests, endpoints and the permission matrix.</summary>
 [Collection(SqlCollection.Name)]
 public sealed class AuthorizationSuitesTests(SqlServerFixture sql) : EndpointSuiteBase(sql)
 {
@@ -47,6 +43,20 @@ public sealed class AuthorizationSuitesTests(SqlServerFixture sql) : EndpointSui
     {
         var offenders = BusinessEndpoints
             .Where(e => !e.Route.StartsWith("/api/v1/", StringComparison.Ordinal) && !e.IsAgent)
+            .ToList();
+
+        offenders.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void No_tenant_endpoint_accepts_a_tenant_id_parameter()
+    {
+        var offenders = BusinessEndpoints
+            .Where(e => !e.IsPlatform)
+            .Where(e => e.Metadata.OfType<Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor>()
+                .Any(d => d.Parameters.Any(p => p.Name.Equals("tenantId", StringComparison.OrdinalIgnoreCase)
+                    || (p.ParameterType.GetProperty("TenantId") is not null))))
+            .Select(e => e.Key)
             .ToList();
 
         offenders.ShouldBeEmpty();

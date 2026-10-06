@@ -9,7 +9,7 @@ public sealed class AnonymousAccessTests(SqlServerFixture sql) : EndpointSuiteBa
     [Fact]
     public void Only_allow_listed_endpoints_accept_anonymous_callers()
     {
-        var offenders = Endpoints.Where(e => e.AllowsAnonymous && !EndpointCatalog.AnonymousAllowList.Contains(e.ToString())).ToList();
+        var offenders = Endpoints.Where(e => e.AllowsAnonymous && !EndpointCatalog.AnonymousAllowList.Contains(e.Key)).ToList();
 
         offenders.ShouldBeEmpty();
     }
@@ -20,7 +20,7 @@ public sealed class AnonymousAccessTests(SqlServerFixture sql) : EndpointSuiteBa
         using var client = App.CreateClient();
         var failures = new List<string>();
 
-        foreach (var endpoint in Endpoints.Where(e => !EndpointCatalog.AnonymousAllowList.Contains(e.ToString())))
+        foreach (var endpoint in Endpoints.Where(e => !EndpointCatalog.AnonymousAllowList.Contains(e.Key)))
         {
             using var request = Request(endpoint, Guid.CreateVersion7());
             using var response = await client.SendAsync(request);
@@ -29,6 +29,16 @@ public sealed class AnonymousAccessTests(SqlServerFixture sql) : EndpointSuiteBa
         }
 
         failures.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Unauthorized_answers_are_problem_details_with_AUTH_UNAUTHORIZED()
+    {
+        using var client = App.CreateClient();
+
+        using var response = await client.GetAsync(new Uri("/api/v1/locations", UriKind.Relative));
+
+        await response.ShouldBeProblemAsync(HttpStatusCode.Unauthorized, "AUTH_UNAUTHORIZED");
     }
 
     [Fact]

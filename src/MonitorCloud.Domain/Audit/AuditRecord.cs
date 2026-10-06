@@ -10,7 +10,7 @@ public enum AuditActorType
 }
 
 /// <summary>Append-only audit trail (02 section 11). There is no update or delete path.</summary>
-public sealed class AuditRecord : Entity
+public sealed class AuditRecord : Entity, IOptionallyTenantOwned
 {
     public const int ActionMaxLength = 100;
     public const int EntityTypeMaxLength = 64;

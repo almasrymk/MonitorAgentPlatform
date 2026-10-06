@@ -24,6 +24,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ITenant
     private static readonly MethodInfo LocationFilterMethod =
         typeof(AppDbContext).GetMethod(nameof(ApplyLocationFilter), BindingFlags.NonPublic | BindingFlags.Instance)!;
 
+    private static readonly MethodInfo LocationAggregateFilterMethod =
+        typeof(AppDbContext).GetMethod(nameof(ApplyLocationAggregateFilter), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
+    private static readonly MethodInfo OptionalTenantFilterMethod =
+        typeof(AppDbContext).GetMethod(nameof(ApplyOptionalTenantFilter), BindingFlags.NonPublic | BindingFlags.Instance)!;
+
     // Read by the query filters; EF Core evaluates them per context instance (per request).
     private bool ScopeUnrestricted => tenantContext.IsUnrestricted;
     private Guid ScopeTenantId => tenantContext.TenantId ?? Guid.Empty;
@@ -38,11 +44,26 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ITenant
 
     Task<int> IUnitOfWork.SaveChangesAsync(CancellationToken cancellationToken) => SaveChangesAsync(cancellationToken);
 
-    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    public void ExpectVersion<TEntity>(TEntity entity, byte[]? rowVersion)
+        where TEntity : class
+    {
+        if (rowVersion is null)
+            return;
+        Entry(entity).Property("RowVersion").OriginalValue = rowVersion;
+    }
+
+    public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
     {
         GuardTenantWrites();
         WriteDomainEventsToOutbox();
-        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        try
+        {
+            return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            throw new ConcurrencyConflictException(ex);
+        }
     }
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess) =>
@@ -59,8 +80,12 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ITenant
             var clr = entityType.ClrType;
             if (typeof(ILocationScoped).IsAssignableFrom(clr))
                 LocationFilterMethod.MakeGenericMethod(clr).Invoke(this, [modelBuilder]);
+            else if (typeof(ILocationAggregate).IsAssignableFrom(clr))
+                LocationAggregateFilterMethod.MakeGenericMethod(clr).Invoke(this, [modelBuilder]);
             else if (typeof(ITenantOwned).IsAssignableFrom(clr))
                 TenantFilterMethod.MakeGenericMethod(clr).Invoke(this, [modelBuilder]);
+            else if (typeof(IOptionallyTenantOwned).IsAssignableFrom(clr))
+                OptionalTenantFilterMethod.MakeGenericMethod(clr).Invoke(this, [modelBuilder]);
         }
     }
 
@@ -82,6 +107,17 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ITenant
             ScopeUnrestricted ||
             (e.TenantId == ScopeTenantId && (ScopeLocations.Count == 0 || ScopeLocations.Contains(e.LocationId))));
 
+    private void ApplyLocationAggregateFilter<TEntity>(ModelBuilder modelBuilder)
+        where TEntity : Entity, ILocationAggregate =>
+        modelBuilder.Entity<TEntity>().HasQueryFilter(e =>
+            ScopeUnrestricted ||
+            (e.TenantId == ScopeTenantId && (ScopeLocations.Count == 0 || ScopeLocations.Contains(e.Id))));
+
+    // Platform rows (TenantId null) are visible to the unrestricted scope only.
+    private void ApplyOptionalTenantFilter<TEntity>(ModelBuilder modelBuilder)
+        where TEntity : class, IOptionallyTenantOwned =>
+        modelBuilder.Entity<TEntity>().HasQueryFilter(e => ScopeUnrestricted || e.TenantId == ScopeTenantId);
+
     /// <summary>Rejects any added, modified or deleted tenant-owned row outside the current scope.</summary>
     private void GuardTenantWrites()
     {
@@ -96,9 +132,18 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ITenant
             if (tenantContext.TenantId is not { } scope || entry.Entity.TenantId != scope || TenantChanged(entry))
                 throw new DomainException(CrossTenantWrite);
         }
+
+        foreach (var entry in ChangeTracker.Entries<IOptionallyTenantOwned>())
+        {
+            if (entry.State is not (EntityState.Added or EntityState.Modified or EntityState.Deleted))
+                continue;
+
+            if (tenantContext.TenantId is not { } scope || entry.Entity.TenantId != scope || TenantChanged(entry))
+                throw new DomainException(CrossTenantWrite);
+        }
     }
 
-    private static bool TenantChanged(EntityEntry<ITenantOwned> entry)
+    private static bool TenantChanged(EntityEntry entry)
     {
         if (entry.State != EntityState.Modified)
             return false;
@@ -115,7 +160,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ITenant
 
         foreach (var aggregate in aggregates)
         {
-            var tenantId = (aggregate as ITenantOwned)?.TenantId ?? tenantContext.TenantId;
+            var tenantId = (aggregate as ITenantOwned)?.TenantId ?? (aggregate as IOptionallyTenantOwned)?.TenantId ?? tenantContext.TenantId;
             foreach (var domainEvent in aggregate.DomainEvents)
                 OutboxMessages.Add(OutboxSerializer.ToMessage(domainEvent, tenantId, timeProvider));
             aggregate.ClearDomainEvents();

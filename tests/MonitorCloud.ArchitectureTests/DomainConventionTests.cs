@@ -37,6 +37,7 @@ public sealed class DomainConventionTests
     {
         var offenders = Assemblies.Domain.GetTypes().Concat(Assemblies.Infrastructure.GetTypes())
             .Where(t => t.IsClass && !t.IsAbstract && !t.Name.EndsWith("Dto", StringComparison.Ordinal))
+            .Where(t => !typeof(IDomainEvent).IsAssignableFrom(t))
             .Where(t => t.GetProperty("TenantId", BindingFlags.Public | BindingFlags.Instance)?.PropertyType == typeof(Guid))
             .Where(t => !typeof(ITenantOwned).IsAssignableFrom(t))
             .Select(t => t.FullName)
@@ -46,6 +47,25 @@ public sealed class DomainConventionTests
     }
 
     [Fact]
-    public void Entities_scoped_to_a_location_are_tenant_owned() =>
+    public void Every_entity_with_an_optional_tenant_id_implements_IOptionallyTenantOwned()
+    {
+        // Outbox messages are infrastructure plumbing, read only by the dispatcher (system scope).
+        var offenders = DomainEntities.Concat(Assemblies.Infrastructure.GetTypes().Where(t => t.Namespace?.EndsWith(".Messaging", StringComparison.Ordinal) != true))
+            .Where(t => t.IsClass && !t.IsAbstract)
+            .Where(t => !typeof(MonitorCloud.Application.Abstractions.Context.ITenantContext).IsAssignableFrom(t) && !typeof(IDomainEvent).IsAssignableFrom(t))
+            .Where(t => t.GetProperty("TenantId", BindingFlags.Public | BindingFlags.Instance)?.PropertyType == typeof(Guid?))
+            .Where(t => !t.Name.EndsWith("Dto", StringComparison.Ordinal) && !t.Name.EndsWith("Info", StringComparison.Ordinal))
+            .Where(t => !typeof(IOptionallyTenantOwned).IsAssignableFrom(t))
+            .Select(t => t.FullName)
+            .ToList();
+
+        offenders.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Entities_scoped_to_a_location_are_tenant_owned()
+    {
         typeof(ITenantOwned).IsAssignableFrom(typeof(ILocationScoped)).ShouldBeTrue();
+        typeof(ITenantOwned).IsAssignableFrom(typeof(ILocationAggregate)).ShouldBeTrue();
+    }
 }

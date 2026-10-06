@@ -1,9 +1,13 @@
+using System.Net.Http.Headers;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MonitorCloud.Application.Abstractions.Context;
+using MonitorCloud.Application.Abstractions.Email;
+using MonitorCloud.Application.Identity;
+using MonitorCloud.Domain.Identity;
 using MonitorCloud.Infrastructure.Persistence;
 
 namespace MonitorCloud.TestShared;
@@ -18,6 +22,7 @@ public class TestApp(SqlServerFixture sql) : WebApplicationFactory<Program>, IAs
     public const string DeviceSigningKey = "TEST-ONLY-device-signing-key-0123456789abcdef";
 
     public TestClock Clock { get; } = new();
+    public CapturingEmailSender Mail { get; } = new();
     public string ConnectionString { get; } = sql.NewDatabase();
 
     public virtual Task InitializeAsync()
@@ -40,6 +45,7 @@ public class TestApp(SqlServerFixture sql) : WebApplicationFactory<Program>, IAs
         builder.UseSetting("Jwt:SigningKey", UserSigningKey);
         builder.UseSetting("Jwt:DeviceSigningKey", DeviceSigningKey);
         builder.UseSetting("Cors:Origins:0", "http://localhost:4300");
+        builder.UseSetting("RateLimiting:Auth:PermitLimit", "100000");
         builder.ConfigureAppConfiguration(config => config.AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["Serilog:MinimumLevel:Default"] = "Warning",
@@ -48,6 +54,8 @@ public class TestApp(SqlServerFixture sql) : WebApplicationFactory<Program>, IAs
         {
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(Clock);
+            services.RemoveAll<IEmailSender>();
+            services.AddSingleton<IEmailSender>(Mail);
             ConfigureTestServices(services);
         });
     }
@@ -76,6 +84,34 @@ public class TestApp(SqlServerFixture sql) : WebApplicationFactory<Program>, IAs
         });
     }
 
+    public Task<T> InDbAsync<T>(Func<AppDbContext, Task<T>> action) =>
+        InSystemScopeAsync(sp => action(sp.GetRequiredService<AppDbContext>()));
+
     /// <summary>Clears every table (dependency order), so tests in a class do not share data.</summary>
     public Task ResetDatabaseAsync() => InSystemScopeAsync(sp => TestDatabase.ResetAsync(sp.GetRequiredService<AppDbContext>()));
+
+    /// <summary>A user access token issued at the test clock's time.</summary>
+    public string TokenFor(User user)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+        return Services.GetRequiredService<ITokenService>().CreateAccessToken(user, Clock.GetUtcNow()).Token;
+    }
+
+    /// <summary>An HTTP client signed in as <paramref name="user"/>, optionally inside a customer workspace.</summary>
+    public HttpClient ClientFor(User? user, Guid? workspace = null)
+    {
+        var client = CreateClient();
+        if (user is not null)
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", TokenFor(user));
+        if (workspace is { } tenantId)
+            client.DefaultRequestHeaders.Add("X-Tenant-Id", tenantId.ToString());
+        return client;
+    }
+
+    public HttpClient ClientWithToken(string token)
+    {
+        var client = CreateClient();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        return client;
+    }
 }

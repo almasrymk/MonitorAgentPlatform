@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using MonitorCloud.Application;
 using MonitorCloud.Application.Abstractions.Audit;
@@ -44,6 +45,15 @@ public static class DependencyInjection
         services.AddScoped<IAuditLogger, AuditLogger>();
         services.AddSingleton<IEntitlementReader, NoEntitlementReader>();
 
+        services.AddSingleton<Application.Identity.IPasswordHasher, Identity.PasswordHasherAdapter>();
+        services.AddSingleton<Application.Identity.ITokenService, Identity.TokenService>();
+        services.TryAddSingleton<Application.Abstractions.Email.IEmailSender, Email.DevelopmentEmailSender>();
+        services.AddOptions<Email.PortalOptions>().Bind(configuration.GetSection(Email.PortalOptions.Section));
+        services.AddSingleton<Application.Abstractions.Email.IPortalLinks, Email.PortalLinks>();
+        services.AddScoped<Application.Tenancy.Contracts.ILocationCodeLookup, Tenancy.LocationCodeLookup>();
+        services.AddScoped<Seeding.BootstrapSeeder>();
+        services.AddScoped<Seeding.DemoSeeder>();
+
         services.AddSingleton(new EventTypeRegistry([typeof(Domain.AssemblyMarker).Assembly, typeof(DependencyInjection).Assembly, typeof(Application.DependencyInjection).Assembly]));
         services.AddOptions<OutboxOptions>().Bind(configuration.GetSection(OutboxOptions.Section));
         services.AddSingleton<OutboxDispatcher>();
@@ -69,10 +79,10 @@ public static class DependencyInjection
     }
 
     /// <summary>Applies pending migrations when <c>Seed:ApplyMigrations</c> is true (Development and tests).</summary>
-    public static async Task ApplyMigrationsAsync(this IServiceProvider services, CancellationToken cancellationToken = default)
+    public static async Task ApplyMigrationsAsync(this IServiceProvider services, bool force = false, CancellationToken cancellationToken = default)
     {
         var seed = services.GetRequiredService<IOptions<SeedOptions>>().Value;
-        if (!seed.ApplyMigrations)
+        if (!seed.ApplyMigrations && !force)
             return;
 
         await using var scope = services.CreateAsyncScope();

@@ -7,6 +7,9 @@ namespace MonitorCloud.Application.Abstractions.Persistence;
 public interface IAppDbContext
 {
     DbSet<TEntity> Set<TEntity>() where TEntity : class;
+
+    /// <summary>Optimistic concurrency: the save fails with <c>CONCURRENCY_CONFLICT</c> unless the row still has this version.</summary>
+    void ExpectVersion<TEntity>(TEntity entity, byte[]? rowVersion) where TEntity : class;
 }
 
 /// <summary>Read side: no-tracking queryables with the same tenant filters.</summary>
@@ -31,3 +34,6 @@ public interface ISqlConnectionFactory
     /// <summary>Parameters <c>@TenantId</c> and <c>@Unrestricted</c> taken from the current tenant context.</summary>
     IReadOnlyDictionary<string, object?> TenantParameters();
 }
+
+/// <summary>Thrown by the unit of work when a row version check fails; mapped to 409 <c>CONCURRENCY_CONFLICT</c>.</summary>
+public sealed class ConcurrencyConflictException(Exception inner) : Exception("Concurrency conflict.", inner);

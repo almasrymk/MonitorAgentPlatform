@@ -20,7 +20,7 @@ public sealed class ProblemDetailsTests(SqlServerFixture sql) : EndpointSuiteBas
     [Fact]
     public async Task Unknown_route_is_a_problem_with_code_and_trace_id()
     {
-        using var client = App.CreateClient();
+        using var client = App.ClientFor(World.A.Administrator);
 
         using var response = await client.GetAsync(new Uri("/api/v1/does-not-exist", UriKind.Relative));
 
@@ -30,12 +30,22 @@ public sealed class ProblemDetailsTests(SqlServerFixture sql) : EndpointSuiteBas
     [Fact]
     public async Task Wrong_method_is_a_problem()
     {
-        using var client = App.CreateClient();
+        using var client = App.ClientFor(World.A.Administrator);
 
         using var response = await client.DeleteAsync(new Uri("/openapi/v1.json", UriKind.Relative));
 
         response.StatusCode.ShouldBe(HttpStatusCode.MethodNotAllowed);
         response.Content.Headers.ContentType!.MediaType.ShouldBe("application/problem+json");
+    }
+
+    [Fact]
+    public async Task Unknown_route_without_a_token_is_401_so_routes_do_not_leak()
+    {
+        using var client = App.CreateClient();
+
+        using var response = await client.GetAsync(new Uri("/api/v1/does-not-exist", UriKind.Relative));
+
+        await ShouldBeProblem(response, HttpStatusCode.Unauthorized, "AUTH_UNAUTHORIZED");
     }
 
     [Fact]

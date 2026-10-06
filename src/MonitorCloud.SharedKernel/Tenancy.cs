@@ -11,3 +11,15 @@ public interface ILocationScoped : ITenantOwned
 {
     Guid LocationId { get; }
 }
+
+/// <summary>The location itself: its <see cref="Entity.Id"/> is the location id used by the location scope.</summary>
+public interface ILocationAggregate : ITenantOwned;
+
+/// <summary>
+/// Rows that belong to one tenant or to the platform (<c>TenantId</c> null): users, audit records, notifications.
+/// Tenant scopes see their own rows only; platform rows are visible to the unrestricted scope only.
+/// </summary>
+public interface IOptionallyTenantOwned
+{
+    Guid? TenantId { get; }
+}

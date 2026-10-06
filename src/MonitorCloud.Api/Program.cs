@@ -1,5 +1,6 @@
 using MonitorCloud.Api;
 using MonitorCloud.Infrastructure;
+using MonitorCloud.Infrastructure.Seeding;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger();
@@ -15,9 +16,19 @@ try
     builder.Services.AddApi(builder.Configuration, builder.Environment);
 
     var app = builder.Build();
+
+    // `dotnet run --project src/MonitorCloud.Api -- seed --reset` drops the demo data and seeds again (08).
+    if (args.Length > 0 && args[0] == "seed")
+    {
+        await app.Services.ApplyMigrationsAsync(force: true);
+        await app.Services.SeedAsync(reset: args.Contains("--reset"));
+        return;
+    }
+
     app.UseApi();
 
     await app.Services.ApplyMigrationsAsync();
+    await app.Services.SeedAsync();
     await app.RunAsync();
 }
 catch (Exception ex) when (ex is not HostAbortedException)

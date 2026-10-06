@@ -1,6 +1,8 @@
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
+using MonitorCloud.Api.Authentication;
 using MonitorCloud.Api.Infrastructure;
 using MonitorCloud.Application;
 using MonitorCloud.Application.Abstractions.Context;
@@ -12,33 +14,64 @@ namespace MonitorCloud.Api;
 public static class ApiServiceCollectionExtensions
 {
     public const string CorsPolicy = "portal";
+    public const string AuthRateLimit = "auth";
 
     public static IServiceCollection AddApi(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
+        ArgumentNullException.ThrowIfNull(configuration);
         services.AddSingleton(TimeProvider.System);
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUser, HttpCurrentUser>();
 
         services.AddApplication();
         services.AddInfrastructure(configuration);
+        services.AddMonitorAuthentication();
 
         services.AddProblemDetails(options => options.CustomizeProblemDetails = ProblemDetailsEnricher.Enrich);
         services.AddExceptionHandler<GlobalExceptionHandler>();
 
-        services.AddControllers()
-            .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()))
+        services.AddControllers(o => o.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true)
+            .AddJsonOptions(o =>
+            {
+                o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                o.JsonSerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+            })
             .ConfigureApiBehaviorOptions(o => o.InvalidModelStateResponseFactory = ModelStateProblem.Create);
-        services.ConfigureHttpJsonOptions(o => o.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+        services.ConfigureHttpJsonOptions(o =>
+        {
+            o.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            o.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+        });
 
         services.AddOpenApi("v1");
         services.AddResponseCompression(o => o.EnableForHttps = true);
+
+        // Per-IP limit on auth/* (01 section 7); tuned in M10.
+        var permitLimit = configuration.GetValue("RateLimiting:Auth:PermitLimit", 20);
+        services.AddRateLimiter(o =>
+        {
+            o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            o.AddPolicy(AuthRateLimit, context => RateLimitPartition.GetFixedWindowLimiter(
+                context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = permitLimit, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+            o.OnRejected = async (context, token) =>
+            {
+                context.HttpContext.Response.Headers.RetryAfter = "60";
+                var problems = context.HttpContext.RequestServices.GetRequiredService<IProblemDetailsService>();
+                await problems.WriteAsync(new ProblemDetailsContext
+                {
+                    HttpContext = context.HttpContext,
+                    ProblemDetails = { Status = 429, Title = "Too Many Requests", Detail = "Too many requests. Try again later." },
+                });
+            };
+        });
 
         var origins = configuration.GetSection("Cors:Origins").Get<string[]>() ?? [];
         services.AddCors(o => o.AddPolicy(CorsPolicy, p => p
             .WithOrigins(origins)
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .WithExposedHeaders(CorrelationIdMiddleware.HeaderName, "ETag")));
+            .WithExposedHeaders(CorrelationIdMiddleware.HeaderName, "ETag", "Retry-After")));
 
         if (!environment.IsDevelopment())
             services.AddHsts(o => o.MaxAge = TimeSpan.FromDays(365));
@@ -65,6 +98,10 @@ public static class ApiServiceCollectionExtensions
 
         app.UseResponseCompression();
         app.UseCors(CorsPolicy);
+        app.UseRateLimiter();
+        app.UseAuthentication();
+        app.UseMiddleware<TenantContextMiddleware>();
+        app.UseAuthorization();
 
         app.MapOpenApi("/openapi/{documentName}.json").AllowAnonymous();
         app.MapHealthChecks("/health/live", new HealthCheckOptions

@@ -1,4 +1,6 @@
+using System.Net.Http.Headers;
 using MonitorCloud.TestShared;
+using MonitorCloud.TestShared.Builders;
 
 namespace MonitorCloud.IntegrationTests.Endpoints;
 
@@ -7,7 +9,13 @@ public abstract class EndpointSuiteBase(SqlServerFixture sql) : IAsyncLifetime
 {
     protected TestApp App { get; } = new(sql);
 
-    public virtual Task InitializeAsync() => App.InitializeAsync();
+    protected TestWorld World { get; private set; } = null!;
+
+    public virtual async Task InitializeAsync()
+    {
+        await App.InitializeAsync();
+        World = await TestWorld.CreateAsync(App);
+    }
 
     public virtual Task DisposeAsync() => App.DisposeAsync();
 
@@ -15,12 +23,12 @@ public abstract class EndpointSuiteBase(SqlServerFixture sql) : IAsyncLifetime
 
     protected IReadOnlyList<ApiEndpoint> BusinessEndpoints => EndpointCatalog.Business(App.Services);
 
-    protected static HttpRequestMessage Request(ApiEndpoint endpoint, Guid id)
+    protected static HttpRequestMessage Request(ApiEndpoint endpoint, Guid id, string? query = null)
     {
         ArgumentNullException.ThrowIfNull(endpoint);
-        var request = new HttpRequestMessage(new HttpMethod(endpoint.Method), endpoint.Url(id));
+        var request = new HttpRequestMessage(new HttpMethod(endpoint.Method), endpoint.Url(id) + query);
         if (endpoint.Method is "POST" or "PUT" or "PATCH")
-            request.Content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json");
+            request.Content = new StringContent("{}", System.Text.Encoding.UTF8, new MediaTypeHeaderValue("application/json"));
         return request;
     }
 }

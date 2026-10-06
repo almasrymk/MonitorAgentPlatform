@@ -53,6 +53,7 @@ public static class ProblemDetailsEnricher
         ErrorKind.Locked => StatusCodes.Status423Locked,
         ErrorKind.TooManyRequests => StatusCodes.Status429TooManyRequests,
         ErrorKind.Gone => StatusCodes.Status410Gone,
+        ErrorKind.Unavailable => StatusCodes.Status503ServiceUnavailable,
         _ => StatusCodes.Status400BadRequest,
     };
 
@@ -69,6 +70,12 @@ public static class ProblemDetailsEnricher
         problem.Title = ReasonPhrases.GetReasonPhrase(status);
         problem.Detail = error.Message;
         problem.Extensions[CodeKey] = error.Code;
+        if (error.Details is not null)
+        {
+            foreach (var (key, value) in error.Details)
+                problem.Extensions[key] = value;
+        }
+
         return problem;
     }
 }

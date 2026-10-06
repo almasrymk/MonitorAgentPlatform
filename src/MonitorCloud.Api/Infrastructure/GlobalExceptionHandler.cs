@@ -16,6 +16,9 @@ public sealed partial class GlobalExceptionHandler(IProblemDetailsService proble
             case DomainException domain:
                 problem = ProblemDetailsEnricher.FromError(domain.Error, httpContext);
                 break;
+            case MonitorCloud.Application.Abstractions.Persistence.ConcurrencyConflictException:
+                problem = ProblemDetailsEnricher.FromError(MonitorCloud.Application.Common.CommonErrors.ConcurrencyConflict, httpContext);
+                break;
             case BadHttpRequestException bad:
                 problem = new ProblemDetails { Status = bad.StatusCode, Title = "Bad Request", Detail = "The request is malformed." };
                 problem.Extensions[ProblemDetailsEnricher.CodeKey] = "BAD_REQUEST";
