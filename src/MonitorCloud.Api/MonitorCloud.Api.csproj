@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <UserSecretsId>monitor-cloud-api</UserSecretsId>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MonitorCloud.Infrastructure\MonitorCloud.Infrastructure.csproj" />
+    <ProjectReference Include="..\MonitorCloud.AgentGateway\MonitorCloud.AgentGateway.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="MonitorCloud.IntegrationTests" />
+    <InternalsVisibleTo Include="MonitorCloud.UnitTests" />
+  </ItemGroup>
+</Project>

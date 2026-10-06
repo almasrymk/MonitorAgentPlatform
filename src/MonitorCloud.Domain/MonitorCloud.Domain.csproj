@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\MonitorCloud.SharedKernel\MonitorCloud.SharedKernel.csproj" />
+  </ItemGroup>
+</Project>

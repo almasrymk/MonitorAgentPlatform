@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Generated gRPC/Protobuf types. Multi-targeted so the .NET 8 agent can reference the same contract. -->
+  <PropertyGroup>
+    <TargetFramework></TargetFramework>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" />
+    <PackageReference Include="Grpc.Net.Client" />
+    <PackageReference Include="Grpc.Tools" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <Protobuf Include="..\..\proto\monitor\agent\v1\agent.proto" ProtoRoot="..\..\proto" GrpcServices="Both" Link="Protos\agent.proto" />
+  </ItemGroup>
+</Project>

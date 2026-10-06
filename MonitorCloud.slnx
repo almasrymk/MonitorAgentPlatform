@@ -1,0 +1,25 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MonitorCloud.AgentGateway/MonitorCloud.AgentGateway.csproj" />
+    <Project Path="src/MonitorCloud.AgentProtocol/MonitorCloud.AgentProtocol.csproj" />
+    <Project Path="src/MonitorCloud.Api/MonitorCloud.Api.csproj" />
+    <Project Path="src/MonitorCloud.Application/MonitorCloud.Application.csproj" />
+    <Project Path="src/MonitorCloud.Domain/MonitorCloud.Domain.csproj" />
+    <Project Path="src/MonitorCloud.Infrastructure/MonitorCloud.Infrastructure.csproj" />
+    <Project Path="src/MonitorCloud.SharedKernel/MonitorCloud.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MonitorCloud.ArchitectureTests/MonitorCloud.ArchitectureTests.csproj" />
+    <Project Path="tests/MonitorCloud.ContractTests/MonitorCloud.ContractTests.csproj" />
+    <Project Path="tests/MonitorCloud.GatewayTests/MonitorCloud.GatewayTests.csproj" />
+    <Project Path="tests/MonitorCloud.IntegrationTests/MonitorCloud.IntegrationTests.csproj" />
+    <Project Path="tests/MonitorCloud.UnitTests/MonitorCloud.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/tests/Shared/">
+    <Project Path="tests/Shared/MonitorCloud.TestShared.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/MonitorCloud.DeviceSimulator/MonitorCloud.DeviceSimulator.csproj" />
+    <Project Path="tools/MonitorCloud.LicensingSeeder/MonitorCloud.LicensingSeeder.csproj" />
+  </Folder>
+</Solution>
