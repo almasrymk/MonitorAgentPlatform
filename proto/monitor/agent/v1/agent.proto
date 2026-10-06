@@ -1,0 +1,249 @@
+// Monitor Agent <-> Monitor Cloud device protocol, version 1.
+// Rules:
+//  * Never reuse or renumber a field. Add new fields with new numbers; old agents ignore them.
+//  * The device and tenant are taken from the authenticated device token, never from a message.
+//  * All times are UTC. Percentages are 0-100.
+syntax = "proto3";
+
+package monitor.agent.v1;
+
+option csharp_namespace = "MonitorCloud.AgentProtocol.V1";
+
+import "google/protobuf/timestamp.proto";
+
+service AgentGateway {
+  // One long-lived stream per device. The first agent message must be Hello.
+  rpc Connect(stream AgentMessage) returns (stream CloudMessage);
+}
+
+// ---------------------------------------------------------------- envelopes
+
+message AgentMessage {
+  string message_id = 1;                       // UUID, unique per message, reused on retry
+  uint64 sequence = 2;                         // per-device, strictly increasing for guaranteed messages; 0 for best-effort
+  google.protobuf.Timestamp sent_at = 3;
+  oneof body {
+    Hello hello = 10;
+    Heartbeat heartbeat = 11;
+    MetricBatch metric_batch = 12;             // guaranteed
+    LiveSample live_sample = 13;               // best-effort, only in live mode
+    Snapshot snapshot = 14;                    // best-effort, at most once per minute
+    InventoryUpdate inventory = 15;            // guaranteed
+    IssueEvent issue = 16;                     // guaranteed
+    MonitorPointReport monitor_points = 17;    // guaranteed
+    ConfigApplied config_applied = 18;         // guaranteed
+    CommandResult command_result = 19;         // guaranteed
+    Goodbye goodbye = 20;
+  }
+}
+
+message CloudMessage {
+  string message_id = 1;
+  google.protobuf.Timestamp sent_at = 2;
+  oneof body {
+    Welcome welcome = 10;
+    Ack ack = 11;
+    SetTelemetryMode set_mode = 12;
+    ConfigUpdate config_update = 13;
+    LicenseUpdate license_update = 14;
+    Command command = 15;
+    Disconnect disconnect = 16;
+    RequestInventory request_inventory = 17;
+  }
+}
+
+// ---------------------------------------------------------------- session
+
+message Hello {
+  uint32 protocol_version = 1;                 // 1
+  string agent_version = 2;
+  string hostname = 3;
+  OsFamily os_family = 4;
+  string os_name = 5;
+  string os_version = 6;
+  string architecture = 7;
+  int32 applied_config_version = 8;
+  uint64 last_acked_sequence = 9;              // highest sequence the agent knows was acknowledged
+  string local_ip = 10;
+  string mac_address = 11;
+  google.protobuf.Timestamp boot_time = 12;
+}
+
+message Welcome {
+  string session_id = 1;
+  uint32 heartbeat_seconds = 2;                // default 30
+  uint64 last_received_sequence = 3;           // agent resends everything above this
+  int32 config_version = 4;                    // current cloud version; ConfigUpdate follows when it differs
+  LicenseState license_state = 5;
+  google.protobuf.Timestamp server_time = 6;
+  uint32 max_batch_minutes = 7;                // largest backlog batch the cloud accepts, default 60
+}
+
+message Heartbeat {
+  int64 uptime_seconds = 1;
+  uint32 outbox_depth = 2;
+}
+
+message Ack {
+  uint64 sequence = 1;                         // everything up to and including this is durable
+}
+
+message Goodbye {
+  GoodbyeReason reason = 1;
+}
+
+message Disconnect {
+  string code = 1;                             // TENANT_ARCHIVED, DEVICE_RETIRED, CREDENTIAL_REVOKED, PROTOCOL_UNSUPPORTED, SERVER_SHUTDOWN, SESSION_ROTATE, DUPLICATE_SESSION
+  string message = 2;
+  uint32 retry_after_seconds = 3;              // 0 = do not retry
+}
+
+// ---------------------------------------------------------------- telemetry
+
+message MetricBatch {
+  repeated MinuteAggregate minutes = 1;        // one per completed minute, oldest first
+  repeated DiskUsage disks = 2;                // sent with the first minute of every hour and on change
+}
+
+message MinuteAggregate {
+  google.protobuf.Timestamp bucket_start = 1;  // start of the minute
+  uint32 samples = 2;
+  double cpu_avg = 3;
+  double cpu_max = 4;
+  double cpu_p95 = 5;
+  double ram_avg = 6;
+  double ram_max = 7;
+  optional double disk_active_avg = 8;
+  optional uint64 disk_read_bps = 9;
+  optional uint64 disk_write_bps = 10;
+  optional double disk_response_ms = 11;
+  optional uint64 net_rx_bps = 12;
+  optional uint64 net_tx_bps = 13;
+  optional uint64 net_rx_bytes = 14;
+  optional uint64 net_tx_bytes = 15;
+  optional double ping_ms = 16;
+  optional double packet_loss_percent = 17;
+  optional double temp_max_c = 18;
+  double disk_percent_max = 19;                // highest used % among fixed partitions
+  int64 uptime_seconds = 20;
+}
+
+message DiskUsage {
+  string drive = 1;
+  string label = 2;
+  string file_system = 3;
+  double total_gb = 4;
+  double used_gb = 5;
+  double free_gb = 6;
+}
+
+message LiveSample {
+  double cpu_percent = 1;
+  double ram_percent = 2;
+  double disk_active_percent = 3;
+  uint64 net_rx_bps = 4;
+  uint64 net_tx_bps = 5;
+  optional double cpu_temp_c = 6;
+}
+
+// The detailed picture behind the device screen. JSON keeps it flexible; the schema is in docs/plan/05.
+message Snapshot {
+  bytes json_brotli = 1;
+}
+
+message SetTelemetryMode {
+  TelemetryMode mode = 1;
+  uint32 live_interval_seconds = 2;            // 2-5
+  uint32 ttl_seconds = 3;                      // agent returns to NORMAL when it expires without renewal
+}
+
+// ---------------------------------------------------------------- inventory, issues, monitor points
+
+message InventoryUpdate {
+  InventoryKind kind = 1;
+  string hash = 2;                             // sha256 of the uncompressed JSON
+  bytes json_brotli = 3;
+}
+
+message RequestInventory {
+  repeated InventoryKind kinds = 1;            // empty = all
+}
+
+message IssueEvent {
+  string issue_key = 1;                        // cpu, ram, disk-C, point:{key}, sensor:{name}, hw:{name}
+  IssueAction action = 2;
+  Severity severity = 3;
+  string category = 4;                         // Performance, Storage, Service, Application, Database, Connectivity, System
+  string title = 5;
+  string message = 6;
+  google.protobuf.Timestamp occurred_at = 7;
+  string monitor_point_key = 8;                // empty when not about a monitor point
+}
+
+message MonitorPointReport {
+  repeated MonitorPointStatus points = 1;      // only points whose status or definition changed, plus a full report after Hello
+  bool full = 2;
+}
+
+message MonitorPointStatus {
+  string key = 1;
+  string display_name = 2;
+  string type = 3;                             // Website, Database, Ping, Application, Service, Disk, Network, Custom
+  string target = 4;
+  bool enabled = 5;
+  PointStatus status = 6;
+  string message = 7;
+  optional double response_ms = 8;
+  google.protobuf.Timestamp last_checked = 9;
+  google.protobuf.Timestamp status_since = 10;
+  uint32 interval_seconds = 11;
+}
+
+// ---------------------------------------------------------------- configuration, licence, commands
+
+message ConfigUpdate {
+  int32 version = 1;
+  bytes json_brotli = 2;                       // device configuration document, schema in docs/plan/05
+}
+
+message ConfigApplied {
+  int32 version = 1;
+  bool success = 2;
+  string error = 3;
+}
+
+message LicenseUpdate {
+  LicenseState state = 1;
+  string reason_code = 2;                      // LIC_* code when UNLICENSED
+  string token = 3;                            // signed licence token for offline verification
+  google.protobuf.Timestamp check_after = 4;
+}
+
+message Command {
+  string command_id = 1;
+  string type = 2;                             // refresh-inventory, run-speed-test, restart-agent, service-start, service-stop, service-restart
+  string parameters_json = 3;
+  google.protobuf.Timestamp expires_at = 4;
+  string nonce = 5;
+  bytes signature = 6;                         // ES256 over command_id|type|parameters_json|expires_at|nonce|device_id
+  string key_id = 7;
+}
+
+message CommandResult {
+  string command_id = 1;
+  CommandStatus status = 2;
+  string output = 3;                           // truncated to 64 KB by the agent
+  google.protobuf.Timestamp completed_at = 4;
+}
+
+// ---------------------------------------------------------------- enums
+
+enum OsFamily { OS_FAMILY_UNSPECIFIED = 0; WINDOWS = 1; LINUX = 2; MACOS = 3; OTHER = 4; }
+enum TelemetryMode { TELEMETRY_MODE_UNSPECIFIED = 0; NORMAL = 1; LIVE = 2; }
+enum LicenseState { LICENSE_STATE_UNSPECIFIED = 0; LICENSED = 1; UNLICENSED = 2; }
+enum Severity { SEVERITY_UNSPECIFIED = 0; INFO = 1; WARNING = 2; CRITICAL = 3; }
+enum IssueAction { ISSUE_ACTION_UNSPECIFIED = 0; RAISED = 1; SEVERITY_CHANGED = 2; CLEARED = 3; }
+enum PointStatus { POINT_STATUS_UNSPECIFIED = 0; POINT_UNKNOWN = 1; POINT_HEALTHY = 2; POINT_WARNING = 3; POINT_CRITICAL = 4; }
+enum InventoryKind { INVENTORY_KIND_UNSPECIFIED = 0; HARDWARE = 1; OS = 2; NETWORK = 3; DISKS = 4; PROGRAMS = 5; SERVICES = 6; USERS = 7; SENSORS = 8; }
+enum GoodbyeReason { GOODBYE_REASON_UNSPECIFIED = 0; SERVICE_STOPPING = 1; HOST_SHUTTING_DOWN = 2; UPDATING = 3; }
+enum CommandStatus { COMMAND_STATUS_UNSPECIFIED = 0; SUCCEEDED = 1; FAILED = 2; REJECTED = 3; EXPIRED = 4; }
