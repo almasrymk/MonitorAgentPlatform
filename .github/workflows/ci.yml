@@ -103,23 +103,52 @@ jobs:
 
   e2e:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-    defaults:
-      run:
-        working-directory: portal
+    timeout-minutes: 40
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          # Throw-away password of the CI-only SQL Server service container.
+          MSSQL_SA_PASSWORD: CI-ONLY-Sql-Pa55word!
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$MSSQL_SA_PASSWORD\" -Q 'SELECT 1' || exit 1"
+          --health-interval 10s --health-timeout 5s --health-retries 12
+    env:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Monitor: Server=localhost,1433;Database=MonitorCloud;User Id=sa;Password=CI-ONLY-Sql-Pa55word!;TrustServerCertificate=True
+      E2E_API_RUNNING: "1"
+      CI: "true"
     steps:
       - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
       - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: portal/package-lock.json
+      - name: Start the API with the demo seed
+        run: |
+          dotnet build src/MonitorCloud.Api -c Release
+          nohup dotnet run --project src/MonitorCloud.Api --launch-profile http --no-build -c Release > api.log 2>&1 &
+          for i in $(seq 1 90); do curl -fs http://localhost:5300/health/ready && break; sleep 2; done
+          curl -fs http://localhost:5300/health/ready
       - run: npm ci
+        working-directory: portal
+      - name: API types are up to date (api:types freshness)
+        working-directory: portal
+        run: |
+          npm run api:types
+          git diff --exit-code -- src/app/core/api/schema.d.ts
       - run: npx playwright install --with-deps chromium
+        working-directory: portal
       - name: Playwright
+        working-directory: portal
         run: npx playwright test
-        env:
-          CI: "true"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -127,8 +156,8 @@ jobs:
           path: |
             portal/playwright-report/
             portal/test-results/
+            api.log
           retention-days: 7
-
   secrets-scan:
     runs-on: ubuntu-latest
     timeout-minutes: 10

@@ -77,6 +77,67 @@ Acceptance:
 
 ### Open questions
 
-- CI status on GitHub can't be read from this machine because the `gh` CLI isn't signed in. Check the
-  Actions tab after the push.
+- ~~CI status on GitHub~~: the first run (commit 4079f02) finished with **success** on all jobs.
 - Design images `docs/design/00..07-*.png` are needed before M3's screenshot baselines.
+
+## M1 - Identity, tenancy and the two portals' shell (done 2026-10-06)
+
+### Tasks
+
+| Id | Status | Notes |
+|---|---|---|
+| MC-101 | Done | `User` (platform/tenant, invitations, lock-out 5 failures / 15 min, last-administrator rule, location scope), `RefreshToken` (HMAC-SHA256, 14 days, rotation, family revocation on re-use, audited), roles and permissions as code (03 section 2), PBKDF2 hashing, HS256 access tokens with the claims of 03, login / refresh / logout / me / password / language / invitation accept, development e-mail sender (log + `App_Data/mail`) |
+| MC-102 | Done | `HttpCurrentUser`, `TenantContextMiddleware` (tenant users, platform workspace via `X-Tenant-Id`, devices, closed anonymous scope; foreign `X-Tenant-Id` rejected and audited), query filters for tenant-owned, location-scoped, location and optionally-tenant-owned rows, write guard for all of them; two JWT schemes (`Bearer`, `Device`); fallback policy requires a user token |
+| MC-103 | Done | `Tenant` (create / update / suspend / resume / archive, events), `Location` (default "Unassigned" created by the `TenantCreatedV1` handler, delete rules, unique code per tenant), platform tenant endpoints, workspace sessions (reason >= 10, audited open/close); suspended or archived customers lose their refresh tokens (event handler) |
+| MC-104 | Done | Audit list endpoints `/platform/audit` and `/audit` (filters, paging) |
+| MC-105 | Done | `BootstrapSeeder`; `DemoSeeder` part 1: 2 platform users, the 8 detailed and 40 generated customers (2 suspended), their locations and users (Acme has 8); `dotnet run --project src/MonitorCloud.Api -- seed --reset` |
+| MC-106 | Done | Tenant users (list with role/status/search, invite, update, activate, deactivate, resend invitation), `/roles`, platform users (list, create, update, activate, deactivate, reset password) |
+| MC-107 | Done | Login (language switch, translated errors incl. minutes of lock-out), accept-invitation, `AuthService` (access token in memory, refresh token in `sessionStorage`, silent restore, single shared refresh), guards (auth, area, permission, workspace), interceptors (bearer, `X-Tenant-Id` only inside a workspace and never on platform/auth calls, refresh once on 401 with queued retries, correlation id, problem details -> translated toast), `ScopeStore`, contextual sidebar, top bar (search placeholder, date range, bell placeholder, user menu with language and sign-out), breadcrumb, workspace banner, `/dev/components` |
+| MC-108 | Done | `Card`, `KpiTile` (`goodWhen`), `StatusPill`, `Button`, `SearchInput`, `Select`, `Tabs`, `DataTable` (sortable headers, sticky header, loading/empty), `Pagination`, `Dialog`, `ConfirmWithReasonDialog`, `Drawer`, `Toast`, `Skeleton`, `EmptyState`, `ErrorState`, `Avatar`, `EntityHeader` (+ `PageHeader`, `Icon`) |
+| MC-109 | Done | Users & Permissions (tabs with counts, invite/edit drawer, row actions), Users & Roles (platform), Locations (cards, add/edit drawer), Customers (tiles, toolbar, cards and list view, Open Workspace / Suspend / Archive with reason, Reactivate); device, health, licence and renewal fields show skeletons until M2-M5 |
+
+### Test results (local, 2026-10-06)
+
+| Suite | Count | Result |
+|---|---|---|
+| Backend unit | 203 | passed |
+| Architecture (module isolation now scans IL with Mono.Cecil; error codes translated in both dictionaries) | 253 | passed |
+| Integration (generic suites: anonymous access, permission matrix for 6 roles x every endpoint, cross-tenant, location scope, platform scope, device tokens, problem details, paging/sorting; features: auth, users, tenants, locations, data isolation, seed) | 110 | passed |
+| Gateway | 3 | passed |
+| Portal unit (Vitest) | 82 | passed |
+| Portal e2e (Playwright against the API with the demo seed: flows 5 and 6, workspace with reason and banner, `/admin` blocked for a tenant user, reload/sign-out, RTL) | 10 | passed |
+
+Coverage: Domain 99.1% line / 92.9% branch, Application 97.4% line / 89.7% branch, backend 97.3% line; portal 85.7% statements.
+
+Accept criteria: `admin@monitor.local`, `admin@acme.test` and `viewer@acme.test` sign in; `admin@oasis.test` is rejected
+(`AUTH_TENANT_SUSPENDED`); the platform admin opens the Acme workspace with a reason and sees the banner; a tenant
+user cannot reach `/admin`; the five generic suites and the refresh-token re-use test pass; e2e flows 5 and 6 pass.
+
+### Stubbed or deferred, with reason
+
+- `ILocationDeviceCounter` returns 0 (`NoDevicesCounter`) until the Devices module (M3): `LOCATION_NOT_EMPTY`
+  is therefore never returned yet. Location cards show 0 devices.
+- Customer cards: plan, devices, health, licence usage and next renewal are `null` (skeletons) until M2/M3;
+  "Expiring Soon" is 0 until M2.
+- Top-bar search box and bell are placeholders (search in M9, notifications in M6). Dashboards, devices,
+  subscription, reports, archive and settings menu items open a "delivered in milestone Mx" page.
+- `DataTable` virtual scrolling (above 100 rows) arrives with the device lists in M3.
+- Gateway half of `DeviceTokenTests` (user token rejected by the gateway) arrives with the gateway in M4.
+- Invitation e-mails use the development sender; real delivery with retry is MC-603 (M6).
+
+### Deviations and decisions
+
+- Handlers that return a versioned DTO save before mapping so the returned `version`/`ETag` is the new row
+  version (the unit-of-work behaviour then has nothing left to save).
+- Sign-in, refresh, logout and invitation acceptance run under the system scope inside their handlers (allowed
+  `IgnoreQueryFilters` call sites in `Application/Identity/`); a failed sign-in saves the failure counter and the
+  audit record explicitly because the command result is a failure.
+- `TENANT_SCOPE_REQUIRED` is returned with HTTP 400 as listed in 06 section 6.
+- Unknown routes without a token answer 401 (fallback authorization policy), so routes do not leak.
+- Requests of one feature are grouped in one file per area (command, validator and handler side by side,
+  e.g. `Application/Tenancy/LocationRequests.cs`) instead of one folder per request. ADR 0003 (proposed).
+- `api:types` freshness is checked in the CI `e2e` job, which runs the API with the demo seed.
+
+### Open questions
+
+- ADR 0002 and ADR 0003 are proposed and await product-owner review.
