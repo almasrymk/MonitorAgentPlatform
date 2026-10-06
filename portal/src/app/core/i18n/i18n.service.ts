@@ -51,6 +51,16 @@ export class I18nService {
     return template.replace(/\{(\w+)\}/g, (match, name: string) => (name in params ? String(params[name]) : match));
   }
 
+  has(key: string): boolean {
+    return key in this.active() || key in (en as Dictionary);
+  }
+
+  /** Message for an API error code (`error.{CODE}`), or the generic one. */
+  errorMessage(code: string): string {
+    const key = `error.${code}`;
+    return this.has(key) ? this.t(key) : this.t('error.ERROR');
+  }
+
   private initialLanguage(): Language {
     let saved: string | null = null;
     try {

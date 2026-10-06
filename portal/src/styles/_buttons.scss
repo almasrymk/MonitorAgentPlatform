@@ -1,0 +1,123 @@
+// Button variants of 07 section 4, used through the mcButton directive.
+.mc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mc-space-2);
+  block-size: 36px;
+  padding-inline: var(--mc-space-4);
+  border-radius: var(--mc-radius-md);
+  border: 1px solid transparent;
+  font: inherit;
+  font-weight: var(--mc-fw-medium);
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background-color 120ms ease;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  &--sm {
+    block-size: 30px;
+    padding-inline: var(--mc-space-3);
+    font-size: var(--mc-fs-sm);
+  }
+
+  &--primary-solid {
+    background: var(--mc-primary-solid);
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      background: var(--mc-primary-solid-hover);
+    }
+  }
+
+  &--primary-outline {
+    background: transparent;
+    border-color: var(--mc-info);
+    color: var(--mc-info);
+  }
+
+  &--secondary {
+    background: var(--mc-bg-card-raised);
+    border-color: var(--mc-border-strong);
+    color: var(--mc-text);
+
+    &:hover:not(:disabled) {
+      background: var(--mc-bg-hover);
+    }
+  }
+
+  &--danger-outline {
+    background: transparent;
+    border-color: var(--mc-danger);
+    color: var(--mc-danger);
+  }
+
+  &--success-outline {
+    background: transparent;
+    border-color: var(--mc-success);
+    color: var(--mc-success);
+  }
+
+  &--ghost {
+    background: transparent;
+    color: var(--mc-text-secondary);
+
+    &:hover:not(:disabled) {
+      background: var(--mc-bg-hover);
+    }
+  }
+
+  &--icon {
+    inline-size: 32px;
+    block-size: 32px;
+    padding: 0;
+    background: transparent;
+    color: var(--mc-text-muted);
+
+    &:hover:not(:disabled) {
+      background: var(--mc-bg-hover);
+    }
+  }
+}
+
+.mc-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mc-space-4);
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: var(--mc-space-1);
+    color: var(--mc-text-secondary);
+    font-size: var(--mc-fs-sm);
+  }
+
+  input,
+  select,
+  textarea {
+    block-size: 36px;
+    padding-inline: var(--mc-space-3);
+    background: var(--mc-bg-input);
+    border: 1px solid var(--mc-border);
+    border-radius: var(--mc-radius-md);
+    color: var(--mc-text);
+    font: inherit;
+  }
+
+  select[multiple] {
+    block-size: auto;
+    min-block-size: 96px;
+    padding-block: var(--mc-space-2);
+  }
+
+  .field-error {
+    color: var(--mc-danger);
+    font-size: var(--mc-fs-xs);
+  }
+}

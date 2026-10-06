@@ -1,0 +1,93 @@
+<mc-page-header [title]="i18n.t('customers.title')" [subtitle]="i18n.t('customers.subtitle')" />
+
+<section class="tiles">
+  <mc-kpi-tile icon="customers" tone="info" [label]="i18n.t('customers.total')" [value]="summary()?.total ?? null" />
+  <mc-kpi-tile icon="check" tone="success" [label]="i18n.t('customers.active')" [value]="summary()?.active ?? null" />
+  <mc-kpi-tile icon="calendar" tone="warning" [label]="i18n.t('customers.expiringSoon')" [value]="summary()?.expiringSoon ?? null" goodWhen="down" />
+  <mc-kpi-tile icon="alert" tone="danger" [label]="i18n.t('customers.suspendedTile')" [value]="summary()?.suspended ?? null" goodWhen="down" />
+</section>
+
+<section class="toolbar">
+  <mc-search-input data-testid="customer-search" [placeholder]="i18n.t('customers.search')" [value]="search()" (searched)="setFilter(() => search.set($event))" />
+  <mc-select [label]="i18n.t('customers.allPlans')" [options]="planOptions()" value="" />
+  <mc-select [label]="i18n.t('customers.allHealth')" [options]="healthOptions()" value="" />
+  <mc-select [label]="i18n.t('customers.allStatuses')" [options]="statusOptions()" [value]="status()" (valueChange)="setFilter(() => status.set($event))" data-testid="status-filter" />
+  <mc-select [label]="i18n.t('common.sortBy')" [options]="sortOptions()" [value]="sort()" (valueChange)="setFilter(() => sort.set($event))" />
+  <div class="view-toggle" role="group" [attr.aria-label]="i18n.t('common.view')">
+    <button type="button" mcButton="icon" [attr.aria-pressed]="view() === 'grid'" [attr.aria-label]="i18n.t('common.grid')" (click)="view.set('grid')"><mc-icon name="grid" /></button>
+    <button type="button" mcButton="icon" [attr.aria-pressed]="view() === 'list'" [attr.aria-label]="i18n.t('common.list')" (click)="view.set('list')"><mc-icon name="list" /></button>
+  </div>
+</section>
+
+@if (failed()) {
+  <mc-error-state (retry)="load()" />
+} @else if (loading() && !result()) {
+  <section class="grid">
+    @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
+      <div class="card"><mc-skeleton [height]="180" /></div>
+    }
+  </section>
+} @else if (result()?.items?.length === 0) {
+  <mc-empty-state icon="customers" [title]="i18n.t('customers.empty')" />
+} @else if (view() === 'grid') {
+  <section class="grid">
+    @for (card of result()!.items; track card.id) {
+      <article class="card" data-testid="customer-card">
+        <header>
+          <mc-avatar [name]="card.name" [letters]="1" [size]="40" />
+          <div class="name">
+            <h2>{{ card.name }}</h2>
+            <span class="plan">{{ card.planName ?? i18n.t('customers.planPending') }}</span>
+          </div>
+          <mc-status-pill [status]="card.status" />
+        </header>
+        <dl class="facts">
+          <div><dt>{{ i18n.t('customers.locations') }}</dt><dd>{{ card.locations }}</dd></div>
+          <div><dt>{{ i18n.t('customers.devices') }}</dt><dd>@if (card.devices === null || card.devices === undefined) { <mc-skeleton [height]="14" width="32px" /> } @else { {{ card.devices }} }</dd></div>
+          <div><dt>{{ i18n.t('customers.healthScore') }}</dt><dd><mc-skeleton [height]="14" width="40px" /></dd></div>
+          <div><dt>{{ i18n.t('customers.licenseUsage') }}</dt><dd><mc-skeleton [height]="14" width="56px" /></dd></div>
+          <div><dt>{{ i18n.t('customers.nextRenewal') }}</dt><dd><mc-skeleton [height]="14" width="64px" /></dd></div>
+          <div><dt>{{ i18n.t('customers.since') }}</dt><dd>{{ since(card) }}</dd></div>
+        </dl>
+        <footer>
+          @if (card.status !== 'Archived') {
+            <button type="button" mcButton="primary-solid" size="sm" data-testid="open-workspace" (click)="ask('workspace', card)">{{ i18n.t('customers.openWorkspace') }}</button>
+          }
+          @if (canManage() && card.status !== 'Archived') {
+            <button type="button" mcButton="secondary" size="sm" (click)="ask('archive', card)">{{ i18n.t('customers.archive') }}</button>
+            @if (card.status === 'Suspended') {
+              <button type="button" mcButton="success-outline" size="sm" (click)="resume(card)">{{ i18n.t('customers.reactivate') }}</button>
+            } @else {
+              <button type="button" mcButton="danger-outline" size="sm" (click)="ask('suspend', card)">{{ i18n.t('customers.suspend') }}</button>
+            }
+          }
+        </footer>
+      </article>
+    }
+  </section>
+} @else {
+  <mc-data-table [columns]="columns()" [rows]="result()!.items" [loading]="loading()" [sort]="sort()" (sortChange)="setFilter(() => sort.set($event ?? 'name'))">
+    <ng-template mcCell="name" let-row><strong>{{ $any(row).name }}</strong></ng-template>
+    <ng-template mcCell="status" let-row><mc-status-pill [status]="$any(row).status" /></ng-template>
+    <ng-template mcCell="plan" let-row>{{ $any(row).planName ?? '—' }}</ng-template>
+    <ng-template mcCell="actions" let-row>
+      @if ($any(row).status !== 'Archived') {
+        <button type="button" mcButton="primary-outline" size="sm" (click)="ask('workspace', $any(row))">{{ i18n.t('customers.openWorkspace') }}</button>
+      }
+    </ng-template>
+  </mc-data-table>
+}
+
+@if (result(); as r) {
+  <mc-pagination [page]="r.page" [pageSize]="r.pageSize" [total]="r.total" (pageChange)="goTo($event)" />
+}
+
+<mc-confirm-reason-dialog
+  [open]="dialogOpen()"
+  (openChange)="closeDialog($event)"
+  [title]="dialogTitle()"
+  [message]="action()?.kind === 'workspace' ? i18n.t('customers.workspaceReason') : undefined"
+  [confirmLabel]="action()?.kind === 'workspace' ? i18n.t('customers.openWorkspace') : action()?.kind === 'suspend' ? i18n.t('customers.suspend') : i18n.t('customers.archive')"
+  [danger]="action()?.kind !== 'workspace'"
+  [busy]="busy()"
+  (confirmed)="confirm($event)" />

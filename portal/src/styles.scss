@@ -1,5 +1,6 @@
 // Global styles. Components use only the tokens of styles/_tokens.scss (copied from docs/design/tokens.scss).
 @use 'styles/tokens';
+@use 'styles/buttons';
 
 *,
 *::before,

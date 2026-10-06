@@ -1,0 +1,73 @@
+<mc-page-header [title]="i18n.t('locations.title')" [subtitle]="i18n.t('locations.subtitle')">
+  @if (canManage()) {
+    <button type="button" mcButton="primary-solid" data-testid="add-location" (click)="openNew()"><mc-icon name="plus" [size]="16" /> {{ i18n.t('locations.add') }}</button>
+  }
+</mc-page-header>
+
+@if (failed()) {
+  <mc-error-state (retry)="load()" />
+} @else if (loading() && !result()) {
+  <section class="grid">
+    @for (i of [1, 2, 3, 4]; track i) {
+      <div class="card"><mc-skeleton [height]="160" /></div>
+    }
+  </section>
+} @else if (result()?.items?.length === 0) {
+  <mc-empty-state icon="location" [title]="i18n.t('locations.empty')" />
+} @else {
+  <section class="grid">
+    @for (location of result()!.items; track location.id) {
+      <article class="card" data-testid="location-card">
+        <div class="image" aria-hidden="true"><span>{{ location.name.charAt(0) }}</span></div>
+        <div class="body">
+          <header>
+            <h2>{{ location.isDefault ? i18n.t('locations.unassigned') : location.name }}</h2>
+            <mc-status-pill [status]="location.status" />
+          </header>
+          <p class="place">{{ place(location) }}</p>
+          <dl class="counts">
+            <div><dt>{{ i18n.t('locations.devices') }}</dt><dd>{{ location.devices }}</dd></div>
+            <div><dt>{{ i18n.t('locations.online') }}</dt><dd>{{ location.online }}</dd></div>
+            <div><dt>{{ i18n.t('locations.warning') }}</dt><dd>{{ location.warning }}</dd></div>
+            <div><dt>{{ i18n.t('locations.critical') }}</dt><dd>{{ location.critical }}</dd></div>
+          </dl>
+          @if (canManage() && !location.isDefault) {
+            <button type="button" mcButton="ghost" size="sm" (click)="edit(location)"><mc-icon name="edit" [size]="14" /> {{ i18n.t('common.edit') }}</button>
+          }
+        </div>
+      </article>
+    }
+  </section>
+  @if (result(); as r) {
+    <mc-pagination [page]="r.page" [pageSize]="r.pageSize" [total]="r.total" (pageChange)="page.set($event); load()" />
+  }
+}
+
+<mc-drawer [open]="form() !== null" (openChange)="!$event && form.set(null)" [title]="form()?.id ? i18n.t('locations.edit') : i18n.t('locations.add')">
+  @if (form(); as f) {
+    <form class="mc-form" id="location-form" (ngSubmit)="save()">
+      <label><span>{{ i18n.t('locations.name') }}</span><input name="name" [(ngModel)]="f.name" required data-testid="location-name" /></label>
+      <label><span>{{ i18n.t('locations.code') }}</span><input name="code" [(ngModel)]="f.code" required data-testid="location-code" /></label>
+      <label><span>{{ i18n.t('locations.country') }}</span><input name="country" [(ngModel)]="f.country" /></label>
+      <label><span>{{ i18n.t('locations.city') }}</span><input name="city" [(ngModel)]="f.city" /></label>
+      <label><span>{{ i18n.t('locations.address') }}</span><input name="addressLine" [(ngModel)]="f.addressLine" /></label>
+      <label><span>{{ i18n.t('locations.timeZone') }}</span>
+        <select name="timeZone" [(ngModel)]="f.timeZone">
+          @for (zone of timeZones; track zone) {
+            <option [value]="zone">{{ zone }}</option>
+          }
+        </select>
+      </label>
+      <label><span>{{ i18n.t('locations.contactName') }}</span><input name="contactName" [(ngModel)]="f.contactName" /></label>
+      <label><span>{{ i18n.t('locations.contactEmail') }}</span><input name="contactEmail" type="email" [(ngModel)]="f.contactEmail" /></label>
+      <label><span>{{ i18n.t('locations.contactPhone') }}</span><input name="contactPhone" [(ngModel)]="f.contactPhone" /></label>
+      @if (formError()) {
+        <p class="field-error" role="alert">{{ formError() }}</p>
+      }
+    </form>
+  }
+  <div drawerActions>
+    <button type="button" mcButton="secondary" (click)="form.set(null)">{{ i18n.t('common.cancel') }}</button>
+    <button type="submit" form="location-form" mcButton="primary-solid" [disabled]="busy()" data-testid="save-location">{{ i18n.t('common.save') }}</button>
+  </div>
+</mc-drawer>
