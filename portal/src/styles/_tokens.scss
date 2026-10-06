@@ -1,0 +1,128 @@
+// Monitor Cloud design tokens.
+// Brand, semantic, series, page/card background and muted-text colours were sampled from the approved
+// mockups in docs/design. Borders, hover, raised surfaces, secondary text, sizes and the light theme are
+// estimates: confirm them against the design source when it is available.
+// Copy this file to portal/src/styles/_tokens.scss and use only these variables in components: no literal colours.
+
+:root {
+  // ---- surfaces (dark theme, default) ----
+  --mc-bg-page: #0B0F15;          // page background behind cards
+  --mc-bg-topbar: #11151D;
+  --mc-bg-sidebar: #11151D;
+  --mc-bg-card: #11161D;          // cards, tiles, tables
+  --mc-bg-card-raised: #151B24;   // inner tiles, table header rows, inputs
+  --mc-bg-input: #0F1621;
+  --mc-bg-hover: #182029;
+  --mc-bg-nav-active: #182826;    // active sidebar item (green tint)
+  --mc-border: #1E2632;
+  --mc-border-strong: #2A3442;
+
+  // ---- text ----
+  --mc-text: #FFFFFF;
+  --mc-text-secondary: #B6C0CC;
+  --mc-text-muted: #7C8A9F;
+  --mc-text-faint: #475263;
+  --mc-link: #1BB8FF;
+
+  // ---- brand and semantic ----
+  --mc-brand: #32D45F;            // logo, active nav, healthy, online
+  --mc-success: #32D45F;
+  --mc-success-soft: rgba(50, 212, 95, 0.14);
+  --mc-info: #1391FE;             // primary actions, RAM, info severity
+  --mc-info-soft: rgba(19, 145, 254, 0.14);
+  --mc-primary-solid: #0B5ED7;    // filled primary button (Open Workspace)
+  --mc-primary-solid-hover: #0050BA;
+  --mc-warning: #FDB926;
+  --mc-warning-soft: rgba(253, 185, 38, 0.14);
+  --mc-danger: #FD3F48;
+  --mc-danger-soft: rgba(253, 63, 72, 0.14);
+  --mc-neutral: #7C8A9F;          // offline, other, resolved
+  --mc-neutral-soft: rgba(124, 138, 159, 0.16);
+
+  // ---- data series ----
+  --mc-series-cpu: #32D45F;
+  --mc-series-ram: #1391FE;
+  --mc-series-disk: #A651FA;
+  --mc-series-network: #FDD31C;
+  --mc-series-windows: #1391FE;
+  --mc-series-linux: #1BB8FF;
+  --mc-series-macos: #884DFD;
+  --mc-series-other: #7C8A9F;
+  --mc-series-enterprise: #32D45F;
+  --mc-series-business: #1391FE;
+  --mc-series-professional: #884DFD;
+  --mc-series-starter: #7C8A9F;
+  --mc-avatar: #4659FC;
+
+  // ---- typography ----
+  --mc-font: "Inter", "IBM Plex Sans Arabic", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mc-font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+  --mc-fs-xs: 11px;
+  --mc-fs-sm: 12px;
+  --mc-fs-md: 13px;               // body, table cells
+  --mc-fs-lg: 15px;               // card titles
+  --mc-fs-xl: 18px;               // entity names
+  --mc-fs-2xl: 24px;              // page titles, KPI values
+  --mc-fw-regular: 400;
+  --mc-fw-medium: 500;
+  --mc-fw-semibold: 600;
+  --mc-fw-bold: 700;
+  --mc-lh: 1.45;
+
+  // ---- shape and spacing ----
+  --mc-radius-sm: 6px;
+  --mc-radius-md: 8px;
+  --mc-radius-lg: 10px;           // cards
+  --mc-radius-pill: 999px;
+  --mc-space-1: 4px;
+  --mc-space-2: 8px;
+  --mc-space-3: 12px;             // gap between cards
+  --mc-space-4: 16px;             // card padding
+  --mc-space-5: 20px;
+  --mc-space-6: 24px;
+  --mc-shadow-card: 0 0 0 1px var(--mc-border);
+  --mc-focus-ring: 0 0 0 2px rgba(19, 145, 254, 0.55);
+
+  // ---- layout ----
+  --mc-topbar-height: 60px;
+  --mc-sidebar-width: 184px;
+  --mc-content-max: 1680px;
+  --mc-z-topbar: 20;
+  --mc-z-drawer: 40;
+  --mc-z-toast: 60;
+}
+
+// Light theme: same token names, to be tuned with the designer. The dark theme is the default and the only
+// one covered by the mockups.
+:root[data-theme="light"] {
+  --mc-bg-page: #F3F5F8;
+  --mc-bg-topbar: #FFFFFF;
+  --mc-bg-sidebar: #FFFFFF;
+  --mc-bg-card: #FFFFFF;
+  --mc-bg-card-raised: #F6F8FA;
+  --mc-bg-input: #FFFFFF;
+  --mc-bg-hover: #EEF2F6;
+  --mc-bg-nav-active: #E7F8EC;
+  --mc-border: #E1E6EC;
+  --mc-border-strong: #CBD3DC;
+  --mc-text: #10151C;
+  --mc-text-secondary: #3A4654;
+  --mc-text-muted: #66758A;
+  --mc-text-faint: #9AA6B5;
+  --mc-link: #0B6FCC;
+  --mc-brand: #17A34A;
+  --mc-success: #17A34A;
+  --mc-info: #0B6FCC;
+  --mc-warning: #B87900;
+  --mc-danger: #D92D36;
+}
+
+// Severity and state helpers used by pills, dots and badges.
+$mc-states: (
+  "healthy": var(--mc-success), "online": var(--mc-success), "active": var(--mc-success), "licensed": var(--mc-success),
+  "warning": var(--mc-warning), "expiring": var(--mc-warning),
+  "critical": var(--mc-danger), "suspended": var(--mc-danger),
+  "info": var(--mc-info),
+  "offline": var(--mc-neutral), "unknown": var(--mc-neutral), "unlicensed": var(--mc-neutral), "resolved": var(--mc-neutral)
+);
+

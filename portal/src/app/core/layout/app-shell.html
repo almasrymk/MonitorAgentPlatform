@@ -1,0 +1,16 @@
+<a class="skip-link" href="#mc-content">{{ 'shell.skipToContent' | t }}</a>
+<header class="topbar" data-testid="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"></span>
+    <span class="brand-name">{{ 'app.name' | t }}</span>
+  </div>
+</header>
+<div class="frame">
+  <nav class="sidebar" data-testid="sidebar" [attr.aria-label]="'shell.navigation' | t">
+    <div class="sidebar-items"></div>
+    <p class="sidebar-footer" data-testid="version">{{ versionText() }}</p>
+  </nav>
+  <main class="content" id="mc-content" tabindex="-1" data-testid="content">
+    <router-outlet />
+  </main>
+</div>

@@ -1,0 +1,9 @@
+{
+  "app.name": "Monitor Agent Platform",
+  "app.version": "Monitor Agent Platform v{version}",
+  "shell.skipToContent": "Skip to content",
+  "shell.navigation": "Main navigation",
+  "shell.empty": "Nothing here yet.",
+  "language.en": "English",
+  "language.ar": "العربية"
+}

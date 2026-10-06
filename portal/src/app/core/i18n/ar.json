@@ -1,0 +1,9 @@
+{
+  "app.name": "منصة Monitor Agent",
+  "app.version": "منصة Monitor Agent الإصدار {version}",
+  "shell.skipToContent": "انتقل إلى المحتوى",
+  "shell.navigation": "القائمة الرئيسية",
+  "shell.empty": "لا يوجد شيء هنا بعد.",
+  "language.en": "English",
+  "language.ar": "العربية"
+}

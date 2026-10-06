@@ -1,0 +1,52 @@
+// Global styles. Components use only the tokens of styles/_tokens.scss (copied from docs/design/tokens.scss).
+@use 'styles/tokens';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  block-size: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--mc-bg-page);
+  color: var(--mc-text);
+  font-family: var(--mc-font);
+  font-size: var(--mc-fs-md);
+  line-height: var(--mc-lh);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--mc-link);
+  text-decoration: none;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--mc-focus-ring);
+  border-radius: var(--mc-radius-sm);
+}
+
+.mc-visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
