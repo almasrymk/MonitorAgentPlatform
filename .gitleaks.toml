@@ -7,6 +7,8 @@ useDefault = true
 description = "Development-only placeholder values and generated files"
 regexes = [
   '''DEV-ONLY-[A-Za-z0-9\-_]+''',
+  '''CI-ONLY-[A-Za-z0-9\-_!]+''',
+  '''TEST-ONLY-[A-Za-z0-9\-_]+''',
 ]
 paths = [
   '''portal/package-lock\.json''',

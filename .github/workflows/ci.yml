@@ -1,0 +1,142 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: "Y"
+          # Throw-away password of the CI-only SQL Server service container.
+          MSSQL_SA_PASSWORD: CI-ONLY-Sql-Pa55word!
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$MSSQL_SA_PASSWORD\" -Q 'SELECT 1' || exit 1"
+          --health-interval 10s --health-timeout 5s --health-retries 12
+    env:
+      MONITOR_TEST_SQLSERVER: Server=localhost,1433;User Id=sa;Password=CI-ONLY-Sql-Pa55word!;TrustServerCertificate=True
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore
+        run: |
+          dotnet tool restore
+          dotnet restore MonitorCloud.slnx
+      - name: Vulnerable packages (High/Critical fail)
+        shell: pwsh
+        run: ./build/vulnerable-packages.ps1
+      - name: Build (warnings as errors)
+        run: dotnet build MonitorCloud.slnx -c Release -warnaserror --no-restore
+      - name: Unit and architecture tests
+        run: >-
+          dotnet test MonitorCloud.slnx -c Release --no-build
+          --filter "FullyQualifiedName~MonitorCloud.UnitTests|FullyQualifiedName~MonitorCloud.ArchitectureTests"
+          --settings coverlet.runsettings --collect "XPlat Code Coverage" --results-directory TestResults/unit
+      - name: Integration, gateway and contract (fake) tests
+        run: >-
+          dotnet test MonitorCloud.slnx -c Release --no-build
+          --filter "FullyQualifiedName~MonitorCloud.IntegrationTests|FullyQualifiedName~MonitorCloud.GatewayTests|FullyQualifiedName~MonitorCloud.ContractTests"
+          --settings coverlet.runsettings --collect "XPlat Code Coverage" --results-directory TestResults/integration
+      - name: Coverage gates
+        shell: pwsh
+        run: |
+          dotnet reportgenerator -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:TestResults/coverage -reporttypes:"Cobertura;MarkdownSummaryGithub"
+          Get-Content TestResults/coverage/SummaryGithub.md >> $env:GITHUB_STEP_SUMMARY
+          ./build/coverage-gate.ps1 -Report TestResults/coverage/Cobertura.xml
+      - name: Pending migration check
+        run: dotnet ef migrations has-pending-model-changes -p src/MonitorCloud.Infrastructure -s src/MonitorCloud.Api --no-build --configuration Release
+        env:
+          ConnectionStrings__Monitor: ${{ env.MONITOR_TEST_SQLSERVER }}
+          Jwt__SigningKey: CI-ONLY-user-signing-key-0123456789abcdef
+          Jwt__DeviceSigningKey: CI-ONLY-device-signing-key-0123456789abcdef
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backend-test-results
+          path: TestResults/
+          retention-days: 7
+
+  portal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: portal
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: portal/package-lock.json
+      - run: npm ci
+      - name: Lint (ESLint + logical CSS properties)
+        run: npm run lint
+      - name: Unit tests with coverage gate
+        run: npm run test:coverage
+      - name: Production build with budgets
+        run: npx ng build --configuration production
+      - name: Gzip bundle budgets
+        run: npm run build:check
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: portal
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: portal/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Playwright
+        run: npx playwright test
+        env:
+          CI: "true"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: |
+            portal/playwright-report/
+            portal/test-results/
+          retention-days: 7
+
+  secrets-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: gitleaks (full history)
+        run: |
+          curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz | tar -xz gitleaks
+          ./gitleaks git --config .gitleaks.toml --redact --verbose --exit-code 1 .

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat code coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <Include>[MonitorCloud.*]*</Include>
+          <Exclude>[MonitorCloud.*Tests]*,[MonitorCloud.TestShared]*,[MonitorCloud.AgentProtocol]*,[MonitorCloud.DeviceSimulator]*,[MonitorCloud.LicensingSeeder]*</Exclude>
+          <ExcludeByFile>**/Migrations/*.cs,**/obj/**/*.cs</ExcludeByFile>
+          <ExcludeByAttribute>GeneratedCodeAttribute,CompilerGeneratedAttribute,ExcludeFromCodeCoverageAttribute</ExcludeByAttribute>
+          <SkipAutoProps>true</SkipAutoProps>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>
