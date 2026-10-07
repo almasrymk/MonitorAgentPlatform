@@ -19,6 +19,12 @@ public sealed class CrossTenantTests(SqlServerFixture sql) : EndpointSuiteBase(s
         ["/api/v1/users/{id:guid}/activate"] = t => t.ItManager.Id,
         ["/api/v1/users/{id:guid}/deactivate"] = t => t.ItManager.Id,
         ["/api/v1/users/{id:guid}/resend-invitation"] = t => t.ItManager.Id,
+        ["/api/v1/devices/{id:guid}"] = t => t.Device1.Id,
+        ["/api/v1/devices/{id:guid}/retire"] = t => t.Device1.Id,
+        ["/api/v1/devices/{id:guid}/unlicense"] = t => t.Device1.Id,
+        ["/api/v1/locations/{id:guid}/dashboard"] = t => t.Location1.Id,
+        ["/api/v1/locations/{id:guid}/enrollment-codes"] = t => t.Location1.Id,
+        ["/api/v1/locations/{id:guid}/enrollment-codes/{codeId:guid}"] = t => t.Location1.Id,
     };
 
     private IEnumerable<ApiEndpoint> TenantEndpointsWithIds => BusinessEndpoints.Where(e => e.IsTenant && e.HasParameters);
@@ -75,7 +81,7 @@ public sealed class CrossTenantTests(SqlServerFixture sql) : EndpointSuiteBase(s
     public async Task List_endpoints_never_contain_rows_of_another_tenant()
     {
         using var client = App.ClientFor(World.B.Administrator);
-        var aIds = new[] { World.A.Id, World.A.Location1.Id, World.A.Location2.Id, World.A.DefaultLocation.Id, World.A.Administrator.Id }
+        var aIds = new[] { World.A.Id, World.A.Location1.Id, World.A.Location2.Id, World.A.DefaultLocation.Id, World.A.Administrator.Id, World.A.Device1.Id, World.A.Device2.Id }
             .Select(id => id.ToString()).ToList();
         var failures = new List<string>();
 

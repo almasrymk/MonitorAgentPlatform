@@ -35,7 +35,9 @@ public static class DependencyInjection
         services.AddScoped<TenantDirectory>();
         services.AddScoped<ITenantDirectory>(sp => sp.GetRequiredService<TenantDirectory>());
         services.AddScoped<ILocationDirectory>(sp => sp.GetRequiredService<TenantDirectory>());
-        services.TryAddScoped<ILocationDeviceCounter, NoDevicesCounter>();
+        services.AddScoped<ILocationLookup, LocationLookup>();
+        services.AddScoped<IEnrollmentCodeRedeemer, EnrollmentCodeRedeemer>();
+        services.AddScoped<ITenantNames, TenantNames>();
         services.AddScoped<ILinkedTenantDirectory, LinkedTenantDirectory>();
         services.AddScoped<ITenantProvisioning, TenantProvisioning>();
 
@@ -43,7 +45,17 @@ public static class DependencyInjection
         services.AddScoped<Licensing.Contracts.IEntitlementRefresher>(sp => sp.GetRequiredService<Licensing.LicensingSyncService>());
         services.AddScoped<Abstractions.Entitlements.IEntitlementReader, Licensing.EntitlementReader>();
         services.AddScoped<Licensing.Contracts.IEntitlementDirectory, Licensing.EntitlementDirectory>();
-        services.TryAddScoped<Licensing.IDeviceLicenseStats, Licensing.NoDeviceLicenseStats>();
+        services.AddSingleton<Licensing.Contracts.ILicensingPolicy, Licensing.LicensingPolicy>();
+        services.AddScoped<Licensing.Contracts.IDeviceSeats, Licensing.DeviceSeats>();
+        services.AddScoped<Licensing.Contracts.IEntitlementStatistics, Licensing.EntitlementStatistics>();
+        services.AddScoped<Licensing.DeviceLicenseRefreshService>();
+
+        services.AddScoped<Devices.DeviceStatsDirectory>();
+        services.AddScoped<Devices.Contracts.IDeviceStatsDirectory>(sp => sp.GetRequiredService<Devices.DeviceStatsDirectory>());
+        services.AddScoped<ILocationDeviceCounter>(sp => sp.GetRequiredService<Devices.DeviceStatsDirectory>());
+        services.AddScoped<Licensing.Contracts.IDeviceLicenseStats, Devices.DeviceLicenseStats>();
+        services.AddScoped<Devices.DeviceGraceService>();
+        services.AddScoped<Devices.Contracts.IDeviceDashboardReader, Devices.DeviceDashboardReader>();
 
         // Integration event handlers: every IIntegrationEventHandler<T> implementation in this assembly.
         foreach (var type in assembly.GetTypes().Where(t => t is { IsAbstract: false, IsInterface: false }))

@@ -31,20 +31,6 @@ public sealed record SubscriptionDto(
     DateTimeOffset? SyncedAt,
     bool Stale);
 
-public sealed record OsUsageDto(string OsFamily, int Devices, decimal Percent);
-
-/// <summary>Devices by licence state and operating system (filled by the Devices module from M3).</summary>
-public interface IDeviceLicenseStats
-{
-    Task<(int Licensed, int Unlicensed, IReadOnlyList<OsUsageDto> ByOs)> GetAsync(CancellationToken ct);
-}
-
-internal sealed class NoDeviceLicenseStats : IDeviceLicenseStats
-{
-    public Task<(int Licensed, int Unlicensed, IReadOnlyList<OsUsageDto> ByOs)> GetAsync(CancellationToken ct) =>
-        Task.FromResult<(int, int, IReadOnlyList<OsUsageDto>)>((0, 0, []));
-}
-
 [RequirePermission(Permissions.SubscriptionRead)]
 public sealed record GetSubscriptionQuery : IQuery<SubscriptionDto>;
 

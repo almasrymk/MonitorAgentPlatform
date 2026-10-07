@@ -184,8 +184,12 @@ public sealed class DeviceLicenseAndSyncStateTests
     [Fact]
     public void Licence_is_renewed_unlicensed_and_tracks_the_grace_period()
     {
-        var license = DeviceLicense.Licensed(Guid.CreateVersion7(), Guid.CreateVersion7(), Guid.CreateVersion7(), "LIC-1", "token", "kid", Now.AddHours(24), Now.AddDays(8), Now);
+        var licenseId = Guid.CreateVersion7();
+        var license = DeviceLicense.Licensed(Guid.CreateVersion7(), Guid.CreateVersion7(), "fp-00000001", licenseId, "LIC-1", "token", "kid", Now.AddHours(24), Now.AddDays(8), Now);
         license.State.ShouldBe(DeviceLicenseState.Licensed);
+        license.DeviceFingerprint.ShouldBe("fp-00000001");
+        license.DomainEvents.OfType<DeviceLicenseChangedV1>().Single().Licensed.ShouldBeTrue();
+        license.ClearDomainEvents();
 
         license.Unlicense("LIC_REVOKED", Now.AddDays(1));
         license.State.ShouldBe(DeviceLicenseState.Unlicensed);
@@ -196,8 +200,11 @@ public sealed class DeviceLicenseAndSyncStateTests
 
         license.Unlicense("LIC_EXPIRED", Now.AddDays(2));
         license.UnlicensedSince.ShouldBe(Now.AddDays(1));
+        license.DomainEvents.OfType<DeviceLicenseChangedV1>().Single().ReasonCode.ShouldBe("LIC_REVOKED");
+        license.ClearDomainEvents();
 
-        license.Renew("token2", "kid2", Now.AddDays(3), Now.AddDays(10), Now.AddDays(2));
+        license.Renew(licenseId, "LIC-1", "token2", "kid2", Now.AddDays(3), Now.AddDays(10), Now.AddDays(2));
+        license.DomainEvents.OfType<DeviceLicenseChangedV1>().Single().Licensed.ShouldBeTrue();
         license.State.ShouldBe(DeviceLicenseState.Licensed);
         license.ReasonCode.ShouldBeNull();
         license.UnlicensedSince.ShouldBeNull();

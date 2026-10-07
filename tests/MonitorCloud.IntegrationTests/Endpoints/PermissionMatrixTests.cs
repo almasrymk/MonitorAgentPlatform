@@ -37,7 +37,7 @@ public sealed class PermissionMatrixTests(SqlServerFixture sql) : EndpointSuiteB
         {
             var user = World.UserOf(role, World.A);
             var platform = Roles.IsPlatformRole(role);
-            foreach (var endpoint in BusinessEndpoints.Where(e => EndpointPermissions.Rows[e.Key] != EndpointPermissions.Anonymous))
+            foreach (var endpoint in BusinessEndpoints.Where(e => EndpointPermissions.Rows[e.Key] is not (EndpointPermissions.Anonymous or EndpointPermissions.DeviceOnly)))
             {
                 var permission = EndpointPermissions.Rows[endpoint.Key];
                 // Platform roles call tenant endpoints inside the workspace of customer A.

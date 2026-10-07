@@ -50,6 +50,11 @@ public static class DependencyInjection
         services.AddOptions<Email.PortalOptions>().Bind(configuration.GetSection(Email.PortalOptions.Section));
         services.AddSingleton<Application.Abstractions.Email.IPortalLinks, Email.PortalLinks>();
         services.AddScoped<Application.Tenancy.Contracts.ILocationCodeLookup, Tenancy.LocationCodeLookup>();
+        services.AddOptions<Application.Devices.Contracts.AgentSettings>().Bind(configuration.GetSection(Application.Devices.Contracts.AgentSettings.Section));
+        services.AddSingleton<Application.Devices.IDeviceSecretService, Devices.DeviceSecretService>();
+        services.AddSingleton<Application.Devices.IDeviceTokenService, Devices.DeviceTokenService>();
+        services.AddScoped<Application.Licensing.Contracts.IEnrollmentAttemptLog, Licensing.EnrollmentAttemptLog>();
+        services.AddHostedService<Devices.DeviceMaintenanceJob>();
         services.AddScoped<Seeding.BootstrapSeeder>();
         services.AddScoped<Seeding.DemoSeeder>();
 

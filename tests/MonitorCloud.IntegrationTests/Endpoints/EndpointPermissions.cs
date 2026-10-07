@@ -9,6 +9,9 @@ public static class EndpointPermissions
     public const string Anonymous = "anonymous";
     public const string AnyUser = "*";
 
+    /// <summary>Device token only (agent endpoints); user tokens get 401 from the Device scheme.</summary>
+    public const string DeviceOnly = "device";
+
     public static readonly IReadOnlyDictionary<string, string> Rows = new Dictionary<string, string>(StringComparer.Ordinal)
     {
         ["POST /api/v1/auth/login"] = Anonymous,
@@ -55,5 +58,22 @@ public static class EndpointPermissions
         ["POST /api/v1/users/{id:guid}/resend-invitation"] = "users.manage",
         ["GET /api/v1/roles"] = "users.manage",
         ["GET /api/v1/audit"] = "audit.read",
+
+        ["POST /api/agent/v1/enroll"] = Anonymous,
+        ["POST /api/agent/v1/token"] = Anonymous,
+        ["POST /api/agent/v1/credential/rotate"] = DeviceOnly,
+
+        ["GET /api/v1/devices"] = "devices.read",
+        ["GET /api/v1/devices/summary"] = "devices.read",
+        ["GET /api/v1/devices/{id:guid}"] = "devices.read",
+        ["PUT /api/v1/devices/{id:guid}"] = "devices.manage",
+        ["POST /api/v1/devices/{id:guid}/retire"] = "devices.manage",
+        ["POST /api/v1/devices/{id:guid}/unlicense"] = "devices.manage",
+        ["GET /api/v1/dashboard"] = "dashboard.read",
+        ["GET /api/v1/locations/{id:guid}/dashboard"] = "dashboard.read",
+        ["GET /api/v1/platform/dashboard"] = "platform.dashboard.read",
+        ["POST /api/v1/locations/{id:guid}/enrollment-codes"] = "devices.enroll",
+        ["GET /api/v1/locations/{id:guid}/enrollment-codes"] = "devices.enroll",
+        ["DELETE /api/v1/locations/{id:guid}/enrollment-codes/{codeId:guid}"] = "devices.enroll",
     };
 }

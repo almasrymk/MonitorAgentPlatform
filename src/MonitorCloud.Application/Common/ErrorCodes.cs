@@ -46,6 +46,14 @@ public static class ErrorCodes
     public const string LicActivationLimitReached = "LIC_ACTIVATION_LIMIT_REACHED";
     public const string LicDeviceNotActivated = "LIC_DEVICE_NOT_ACTIVATED";
     public const string LicInvalidDevice = "LIC_INVALID_DEVICE";
+    public const string DeviceNotFound = "DEVICE_NOT_FOUND";
+    public const string DeviceInvalidCredential = "DEVICE_INVALID_CREDENTIAL";
+    public const string DeviceRetired = "DEVICE_RETIRED";
+    public const string DeviceUnlicensed = "DEVICE_UNLICENSED";
+    public const string EnrollInvalidLocationCode = "ENROLL_INVALID_LOCATION_CODE";
+    public const string EnrollTenantNotActive = "ENROLL_TENANT_NOT_ACTIVE";
+    public const string EnrollProtocolUnsupported = "ENROLL_PROTOCOL_UNSUPPORTED";
+    public const string EnrollmentCodeNotFound = "ENROLLMENT_CODE_NOT_FOUND";
 
     public static IReadOnlyList<string> All { get; } = typeof(ErrorCodes)
         .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)

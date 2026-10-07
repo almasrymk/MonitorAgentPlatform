@@ -48,6 +48,7 @@ internal sealed class DeviceLicenseConfiguration : IEntityTypeConfiguration<Devi
         builder.HasKey(x => x.DeviceId);
         builder.Property(x => x.DeviceId).ValueGeneratedNever();
         builder.Ignore(x => x.Id);
+        builder.Property(x => x.DeviceFingerprint).HasMaxLength(128).IsRequired();
         builder.Property(x => x.LicenseNumber).HasMaxLength(64).IsRequired();
         builder.Property(x => x.State).HasConversion<string>().HasMaxLength(16);
         builder.Property(x => x.ReasonCode).HasMaxLength(64);
@@ -67,5 +68,22 @@ internal sealed class LicensingSyncStateConfiguration : IEntityTypeConfiguration
         builder.Property(x => x.Id).ValueGeneratedNever();
         builder.Property(x => x.Cursor).HasMaxLength(200);
         builder.Property(x => x.LastError).HasMaxLength(1000);
+    }
+}
+
+internal sealed class EnrollmentAttemptConfiguration : IEntityTypeConfiguration<EnrollmentAttempt>
+{
+    public void Configure(EntityTypeBuilder<EnrollmentAttempt> builder)
+    {
+        builder.ToTable("EnrollmentAttempts", Schemas.Licensing);
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).ValueGeneratedNever();
+        builder.Property(x => x.KeyPrefix).HasMaxLength(6).IsRequired();
+        builder.Property(x => x.DeviceFingerprint).HasMaxLength(128).IsRequired();
+        builder.Property(x => x.Hostname).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.Ip).HasMaxLength(64);
+        builder.Property(x => x.ErrorCode).HasMaxLength(64);
+        builder.HasIndex(x => x.At);
+        builder.HasIndex(x => new { x.TenantId, x.At });
     }
 }

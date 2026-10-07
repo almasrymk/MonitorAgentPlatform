@@ -48,6 +48,9 @@ internal sealed class TenantProvisioning(IAppDbContext db, IUnitOfWork unitOfWor
         var now = clock.GetUtcNow();
         var tenant = Tenant.Create(name, code, string.IsNullOrWhiteSpace(country) ? "Unknown" : country, "Unknown", null, DateOnly.FromDateTime(now.UtcDateTime), licensingCustomerId, now);
         db.Set<Tenant>().Add(tenant);
+        // The default location is created here as well (not only by CreateDefaultLocation from the outbox): a device
+        // enrolling for a brand-new customer must land in "Unassigned" within the same request (04 section 4.1).
+        db.Set<Location>().Add(Location.CreateDefault(tenant.Id, tenant.TimeZone, now));
         audit.Add("tenant.provisioned", "Tenant", tenant.Id.ToString(), $"Licensing customer {licensingCustomerId}");
         await unitOfWork.SaveChangesAsync(ct);
         return new ProvisionedTenant(tenant.Id, true, tenant.Status.ToString());

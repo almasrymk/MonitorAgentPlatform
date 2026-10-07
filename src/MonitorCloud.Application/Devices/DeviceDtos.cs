@@ -1,0 +1,52 @@
+namespace MonitorCloud.Application.Devices;
+
+public sealed record DeviceListItemDto(
+    Guid Id,
+    string Name,
+    string OsFamily,
+    string? OsName,
+    string? LocalIp,
+    string Connection,
+    string Health,
+    string LicenseState,
+    decimal? Cpu,
+    decimal? Ram,
+    decimal? Disk,
+    DateTimeOffset? LastSeenAt,
+    long? UptimeSeconds,
+    int OpenAlerts,
+    string OpenAlertSeverity,
+    Guid LocationId,
+    string? LocationName);
+
+public sealed record DevicesSummaryDto(int Total, int Online, int Offline, int Licensed, int Unlicensed, int Healthy, int Warning, int Critical, int? NewDevices);
+
+public sealed record DeviceDto(
+    Guid Id,
+    string Name,
+    string Hostname,
+    string Fingerprint,
+    Guid TenantId,
+    string CustomerName,
+    Guid LocationId,
+    string LocationName,
+    string OsFamily,
+    string? OsName,
+    string? OsVersion,
+    string? Architecture,
+    string? LocalIp,
+    string? PublicIp,
+    string? MacAddress,
+    string? AgentVersion,
+    int ProtocolVersion,
+    string Status,
+    DateTimeOffset EnrolledAt,
+    string Connection,
+    string Health,
+    string LicenseState,
+    string? LicenseReason,
+    DateTimeOffset? LastSeenAt,
+    long? UptimeSeconds,
+    int? AppliedConfigVersion,
+    int? TargetConfigVersion,
+    string Version);

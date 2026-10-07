@@ -5,6 +5,7 @@ using MonitorCloud.Application.Abstractions.Authorization;
 using MonitorCloud.Application.Abstractions.Messaging;
 using MonitorCloud.Application.Abstractions.Persistence;
 using MonitorCloud.Application.Common;
+using MonitorCloud.Application.Devices.Contracts;
 using MonitorCloud.Application.Licensing.Contracts;
 using MonitorCloud.Domain.Identity;
 using MonitorCloud.Domain.Tenancy;
@@ -19,7 +20,7 @@ namespace MonitorCloud.Application.Tenancy;
 public sealed record GetTenantsQuery(string? Search, string? Plan, string? Health, string? SubscriptionStatus, string? Status, string? Sort, int? Page, int? PageSize)
     : IQuery<PagedResult<TenantCardDto>>;
 
-internal sealed class GetTenantsQueryHandler(IReadDbContext db, IEntitlementDirectory entitlements) : IQueryHandler<GetTenantsQuery, PagedResult<TenantCardDto>>
+internal sealed class GetTenantsQueryHandler(IReadDbContext db, IEntitlementDirectory entitlements, IDeviceStatsDirectory devices) : IQueryHandler<GetTenantsQuery, PagedResult<TenantCardDto>>
 {
     private static readonly string[] Sorts = ["name", "code", "customerSince", "status"];
 
@@ -49,6 +50,22 @@ internal sealed class GetTenantsQueryHandler(IReadDbContext db, IEntitlementDire
             tenants = tenants.Where(t => ids.Contains(t.Id));
         }
 
+        // Health filter (07 section 5.2): critical = any critical device, warning = any warning and no critical, healthy = neither.
+        var health = request.Health?.Trim().ToLowerInvariant();
+        if (health is "healthy" or "warning" or "critical")
+        {
+            var all = await devices.ByTenantAsync(null, cancellationToken);
+            var ids = all.Where(p => health switch
+            {
+                "critical" => p.Value.Critical > 0,
+                "warning" => p.Value.Critical == 0 && p.Value.Warning > 0,
+                _ => p.Value.Critical == 0 && p.Value.Warning == 0,
+            }).Select(p => p.Key).ToList();
+            tenants = health == "healthy"
+                ? tenants.Where(t => !all.Keys.Contains(t.Id) || ids.Contains(t.Id))
+                : tenants.Where(t => ids.Contains(t.Id));
+        }
+
         tenants = (sort.Value.Key, sort.Value.Descending) switch
         {
             ("code", false) => tenants.OrderBy(t => t.Code),
@@ -76,6 +93,12 @@ internal sealed class GetTenantsQueryHandler(IReadDbContext db, IEntitlementDire
         items = [.. items.Select(i => licensing.TryGetValue(i.Id, out var e)
             ? i with { PlanCode = e.PlanCode, PlanName = e.PlanName, SubscriptionStatus = e.SubscriptionStatus, ExpiringSoon = e.ExpiringSoon, LicensesUsed = e.ActiveSeats, LicenseLimit = e.MaxDevices, NextRenewal = e.RenewsAt }
             : i)];
+        var counts = await devices.ByTenantAsync([.. items.Select(i => i.Id)], cancellationToken);
+        items = [.. items.Select(i =>
+        {
+            var c = counts.GetValueOrDefault(i.Id) ?? DeviceCounts.Empty;
+            return i with { Devices = c.Devices, Healthy = c.Healthy, Warning = c.Warning, Critical = c.Critical, HealthScore = c.HealthScore };
+        })];
         return new PagedResult<TenantCardDto>(items, total, page, pageSize);
     }
 }

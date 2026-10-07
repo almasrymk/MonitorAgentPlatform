@@ -1,15 +1,21 @@
 using Microsoft.Extensions.DependencyInjection;
 using MonitorCloud.Application.Identity;
+using MonitorCloud.Application.Devices;
+using MonitorCloud.Domain.Devices;
 using MonitorCloud.Domain.Identity;
 using MonitorCloud.Domain.Tenancy;
 using MonitorCloud.Application.Licensing;
+using MonitorCloud.Application.Tenancy;
 using MonitorCloud.Infrastructure.Licensing.Fake;
 using MonitorCloud.Infrastructure.Persistence;
 
 namespace MonitorCloud.TestShared.Builders;
 
 /// <summary>One customer of the test world: its locations and one user per role.</summary>
-public sealed record TestTenant(Tenant Tenant, Location DefaultLocation, Location Location1, Location Location2, IReadOnlyDictionary<string, User> Users, User RestrictedManager)
+/// <summary>Device1 is in Location1, Device2 in Location2 (both online, healthy, licensed); EnrollmentCodeId belongs to Location1.</summary>
+public sealed record TestTenant(
+    Tenant Tenant, Location DefaultLocation, Location Location1, Location Location2, IReadOnlyDictionary<string, User> Users, User RestrictedManager,
+    Device Device1, Device Device2, Guid EnrollmentCodeId)
 {
     public Guid Id => Tenant.Id;
     public User Administrator => Users[Roles.Administrator];
@@ -49,8 +55,9 @@ public sealed record TestWorld(User PlatformAdmin, User PlatformSupport, TestTen
             var support = User.CreatePlatformUser("platform.support@monitor.local", "Platform Support", Roles.PlatformSupport, hash, now);
             db.AddRange(admin, support);
 
-            var a = AddTenant(db, "Alpha Test Company", "ALPHA", "alpha.test", hash, now);
-            var b = AddTenant(db, "Beta Test Company", "BETA", "beta.test", hash, now);
+            var secrets = sp.GetRequiredService<IDeviceSecretService>();
+            var a = AddTenant(db, secrets, "Alpha Test Company", "ALPHA", "alpha.test", hash, now);
+            var b = AddTenant(db, secrets, "Beta Test Company", "BETA", "beta.test", hash, now);
             await db.SaveChangesAsync();
 
             // The fake Licensing Platform knows both customers; the sync fills their entitlements.
@@ -63,7 +70,10 @@ public sealed record TestWorld(User PlatformAdmin, User PlatformSupport, TestTen
         });
     }
 
-    private static TestTenant AddTenant(AppDbContext db, string name, string code, string domain, string hash, DateTimeOffset now)
+    /// <summary>The device secret of every test-world device.</summary>
+    public const string DeviceSecret = "TEST-ONLY-device-secret";
+
+    private static TestTenant AddTenant(AppDbContext db, IDeviceSecretService secrets, string name, string code, string domain, string hash, DateTimeOffset now)
     {
         var tenant = Tenant.Create(name, code, "Egypt", "Cairo", "Africa/Cairo", new DateOnly(2025, 1, 1), Guid.CreateVersion7(), now);
         tenant.ClearDomainEvents();
@@ -78,6 +88,22 @@ public sealed record TestWorld(User PlatformAdmin, User PlatformSupport, TestTen
         var restricted = User.CreateTenantUser(tenant.Id, $"restricted@{domain}", $"{name} Restricted Manager", Roles.ITManager, [location1.Id], hash, now);
         db.AddRange(users.Values);
         db.Add(restricted);
-        return new TestTenant(tenant, defaultLocation, location1, location2, users, restricted);
+
+        var device1 = AddDevice(db, secrets, tenant.Id, location1.Id, $"{code}-PC-01", now);
+        var device2 = AddDevice(db, secrets, tenant.Id, location2.Id, $"{code}-PC-02", now);
+        var enrollmentCode = LocationEnrollmentCode.Create(tenant.Id, location1.Id, EnrollmentCodes.Hash($"LOC-{code}-TEST"), EnrollmentCodes.Prefix($"LOC-{code}-TEST"), TimeSpan.FromDays(7), null, null, now);
+        db.Add(enrollmentCode);
+        return new TestTenant(tenant, defaultLocation, location1, location2, users, restricted, device1, device2, enrollmentCode.Id);
+    }
+
+    private static Device AddDevice(AppDbContext db, IDeviceSecretService secrets, Guid tenantId, Guid locationId, string name, DateTimeOffset now)
+    {
+        var info = new AgentInfo(name, OsFamily.Windows, "Windows 11 Pro", "10.0.26100", "x64", "1.1.0", 1, "10.0.0.10", "203.0.113.10", null);
+        var device = Device.Enroll(tenantId, locationId, $"fp-{name.ToLowerInvariant()}", info, now);
+        device.ClearDomainEvents();
+        var state = DeviceState.Create(device.Id, tenantId, locationId, OsFamily.Windows, LicenseStateValue.Licensed, now);
+        state.SeedAs(ConnectionState.Online, now, now.AddHours(-1), now, TimeSpan.FromDays(14));
+        db.AddRange(device, DeviceCredential.Issue(device.Id, tenantId, secrets.Hash(DeviceSecret), now), state);
+        return device;
     }
 }

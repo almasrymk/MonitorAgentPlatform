@@ -15,6 +15,8 @@ public static class ApiServiceCollectionExtensions
 {
     public const string CorsPolicy = "portal";
     public const string AuthRateLimit = "auth";
+    public const string EnrollRateLimit = "agent-enroll";
+    public const string AgentTokenRateLimit = "agent-token";
 
     public static IServiceCollection AddApi(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
@@ -48,12 +50,22 @@ public static class ApiServiceCollectionExtensions
 
         // Per-IP limit on auth/* (01 section 7); tuned in M10.
         var permitLimit = configuration.GetValue("RateLimiting:Auth:PermitLimit", 20);
+        // 05 section 1.1: 10 enrollments per minute per IP (5 per hour per fingerprint is checked by the handler).
+        var enrollLimit = configuration.GetValue("RateLimiting:Enroll:PermitLimit", 10);
+        // Token exchange: per IP here; 5 failures per device id block that id (DeviceCredential).
+        var tokenLimit = configuration.GetValue("RateLimiting:AgentToken:PermitLimit", 120);
         services.AddRateLimiter(o =>
         {
             o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             o.AddPolicy(AuthRateLimit, context => RateLimitPartition.GetFixedWindowLimiter(
                 context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                 _ => new FixedWindowRateLimiterOptions { PermitLimit = permitLimit, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+            o.AddPolicy(EnrollRateLimit, context => RateLimitPartition.GetFixedWindowLimiter(
+                context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = enrollLimit, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+            o.AddPolicy(AgentTokenRateLimit, context => RateLimitPartition.GetFixedWindowLimiter(
+                context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = tokenLimit, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
             o.OnRejected = async (context, token) =>
             {
                 context.HttpContext.Response.Headers.RetryAfter = "60";

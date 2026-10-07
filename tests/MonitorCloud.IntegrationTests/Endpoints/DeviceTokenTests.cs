@@ -38,7 +38,8 @@ public sealed class DeviceTokenTests(SqlServerFixture sql) : EndpointSuiteBase(s
         using var client = App.ClientWithToken(token);
         var failures = new List<string>();
 
-        foreach (var endpoint in Endpoints.Where(e => !EndpointCatalog.AnonymousAllowList.Contains(e.Key)))
+        // Agent endpoints are the ones that take device tokens (credential rotation).
+        foreach (var endpoint in Endpoints.Where(e => !EndpointCatalog.AnonymousAllowList.Contains(e.Key) && !e.IsAgent))
         {
             using var request = Request(endpoint, Guid.CreateVersion7());
             using var response = await client.SendAsync(request);

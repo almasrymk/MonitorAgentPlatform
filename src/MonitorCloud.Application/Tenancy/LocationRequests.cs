@@ -6,6 +6,7 @@ using MonitorCloud.Application.Abstractions.Context;
 using MonitorCloud.Application.Abstractions.Messaging;
 using MonitorCloud.Application.Abstractions.Persistence;
 using MonitorCloud.Application.Common;
+using MonitorCloud.Application.Devices.Contracts;
 using MonitorCloud.Application.Tenancy.Contracts;
 using MonitorCloud.Domain.Identity;
 using MonitorCloud.Domain.Tenancy;
@@ -16,7 +17,7 @@ namespace MonitorCloud.Application.Tenancy;
 [RequirePermission(Permissions.LocationsRead)]
 public sealed record GetLocationsQuery(string? Search, string? Sort, int? Page, int? PageSize) : IQuery<PagedResult<LocationCardDto>>;
 
-internal sealed class GetLocationsQueryHandler(IReadDbContext db) : IQueryHandler<GetLocationsQuery, PagedResult<LocationCardDto>>
+internal sealed class GetLocationsQueryHandler(IReadDbContext db, IDeviceStatsDirectory devices) : IQueryHandler<GetLocationsQuery, PagedResult<LocationCardDto>>
 {
     private static readonly string[] Sorts = ["name", "code", "city"];
 
@@ -49,6 +50,10 @@ internal sealed class GetLocationsQueryHandler(IReadDbContext db) : IQueryHandle
         var items = await query.Skip((page - 1) * pageSize).Take(pageSize)
             .Select(l => new LocationCardDto(l.Id, l.Name, l.Code, l.City, l.Country, l.IsDefault, l.Status.ToString(), 0, 0, 0, 0, null))
             .ToListAsync(cancellationToken);
+        var counts = await devices.ByLocationAsync([.. items.Select(i => i.Id)], cancellationToken);
+        items = [.. items.Select(i => counts.TryGetValue(i.Id, out var c)
+            ? i with { Devices = c.Devices, Online = c.Online, Warning = c.Warning, Critical = c.Critical, HealthScore = c.HealthScore }
+            : i)];
         return new PagedResult<LocationCardDto>(items, total, page, pageSize);
     }
 }

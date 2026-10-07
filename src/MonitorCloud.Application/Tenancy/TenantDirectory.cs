@@ -19,9 +19,3 @@ internal sealed class TenantDirectory(IReadDbContext db) : ITenantDirectory, ILo
             .Select(l => l.Id)
             .ToListAsync(cancellationToken);
 }
-
-/// <summary>Placeholder until the Devices module exists (M3): every location is empty.</summary>
-internal sealed class NoDevicesCounter : ILocationDeviceCounter
-{
-    public Task<int> CountAsync(Guid locationId, CancellationToken cancellationToken) => Task.FromResult(0);
-}

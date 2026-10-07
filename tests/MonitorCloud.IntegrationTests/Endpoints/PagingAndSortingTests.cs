@@ -20,7 +20,8 @@ public sealed class PagingAndSortingTests(SqlServerFixture sql) : EndpointSuiteB
         BusinessEndpoints.Where(e => e.Method == "GET" && !e.HasParameters && !e.IsList)
             .Select(e => e.Key)
             .ShouldBe(
-                ["GET /api/v1/auth/me", "GET /api/v1/platform/tenants/summary", "GET /api/v1/roles", "GET /api/v1/subscription", "GET /api/v1/platform/plans", "GET /api/v1/platform/licensing/status"],
+                ["GET /api/v1/auth/me", "GET /api/v1/platform/tenants/summary", "GET /api/v1/roles", "GET /api/v1/subscription", "GET /api/v1/platform/plans", "GET /api/v1/platform/licensing/status",
+                 "GET /api/v1/devices/summary", "GET /api/v1/dashboard", "GET /api/v1/platform/dashboard"],
                 ignoreOrder: true,
                 customMessage: "A GET collection endpoint must be paged and marked [ListEndpoint], or be listed here.");
     }

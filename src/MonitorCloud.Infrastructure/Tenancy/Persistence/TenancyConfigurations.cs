@@ -49,3 +49,18 @@ internal sealed class LocationConfiguration : IEntityTypeConfiguration<Location>
         builder.HasOne<Tenant>().WithMany().HasForeignKey(x => x.TenantId).OnDelete(DeleteBehavior.Restrict);
     }
 }
+
+internal sealed class LocationEnrollmentCodeConfiguration : IEntityTypeConfiguration<LocationEnrollmentCode>
+{
+    public void Configure(EntityTypeBuilder<LocationEnrollmentCode> builder)
+    {
+        builder.ToTable("LocationEnrollmentCodes", Schemas.Tenancy);
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Id).ValueGeneratedNever();
+        builder.Property(x => x.CodeHash).HasMaxLength(128).IsRequired();
+        builder.HasIndex(x => x.CodeHash).IsUnique();
+        builder.Property(x => x.CodePrefix).HasMaxLength(8).IsRequired();
+        builder.HasIndex(x => new { x.TenantId, x.LocationId });
+        builder.HasOne<Location>().WithMany().HasForeignKey(x => x.LocationId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
