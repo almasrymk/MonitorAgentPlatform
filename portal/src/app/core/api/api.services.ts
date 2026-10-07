@@ -62,7 +62,7 @@ export class AuthApi {
 export class TenantsApi {
   private readonly http = inject(HttpClient);
 
-  list(q: ListQuery & { status?: string | null; plan?: string | null }): Observable<Paged<TenantCard>> {
+  list(q: ListQuery & { status?: string | null; plan?: string | null; subscriptionStatus?: string | null }): Observable<Paged<TenantCard>> {
     return this.http.get<Paged<TenantCard>>(`${BASE}/platform/tenants`, { params: query({ ...q }) });
   }
 

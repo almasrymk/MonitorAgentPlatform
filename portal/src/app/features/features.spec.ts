@@ -165,7 +165,7 @@ describe('feature screens', () => {
         (fixture.componentInstance as unknown as { status: { set(v: string): void } }).status.set('Suspended'));
       http.expectOne('/api/v1/platform/tenants/summary').flush({ total: 48, active: 46, expiringSoon: 0, suspended: 2 });
       const req = http.expectOne((r) => r.url === '/api/v1/platform/tenants');
-      expect(req.request.params.get('status')).toBe('Suspended');
+      expect(req.request.params.get('subscriptionStatus')).toBe('Suspended');
       expect(req.request.params.get('page')).toBe('1');
       req.flush(page);
     });
@@ -204,7 +204,7 @@ describe('feature screens', () => {
     it('invites a user', async () => {
       const { fixture } = await open();
       (fixture.nativeElement.querySelector('[data-testid="add-user"]') as HTMLButtonElement).click();
-      const component = fixture.componentInstance as unknown as { form: { (): { fullName: string; email: string } | null }; save(): Promise<void> };
+      const component = fixture.componentInstance as unknown as { form: () => { fullName: string; email: string } | null; save(): Promise<void> };
       const form = component.form()!;
       form.fullName = 'New Person';
       form.email = 'new@alpha.test';

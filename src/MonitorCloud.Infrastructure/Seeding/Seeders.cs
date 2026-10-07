@@ -6,6 +6,8 @@ using Microsoft.Extensions.Options;
 using MonitorCloud.Application.Abstractions.Context;
 using MonitorCloud.Domain.Identity;
 using MonitorCloud.Domain.Tenancy;
+using MonitorCloud.Application.Licensing;
+using MonitorCloud.Infrastructure.Licensing.Fake;
 using MonitorCloud.Infrastructure.Options;
 using MonitorCloud.Infrastructure.Persistence;
 
@@ -41,6 +43,9 @@ public sealed partial class DemoSeeder(
     AppDbContext db,
     Application.Identity.IPasswordHasher hasher,
     IHostEnvironment environment,
+    FakeLicensingStore licensingStore,
+    LicensingSyncService licensingSync,
+    IOptions<LicensingSettings> licensingSettings,
     TimeProvider clock,
     ILogger<DemoSeeder> logger)
 {
@@ -56,7 +61,10 @@ public sealed partial class DemoSeeder(
             return;
 
         var random = new Random(DemoData.Seed);
+        var licensingRandom = new Random(DemoData.Seed + 1);
         var now = clock.GetUtcNow();
+        var licensing = DemoLicensing.NewData(licensingRandom);
+        var customers = new Dictionary<Guid, (string Name, string Code)>();
         var hashes = new Dictionary<string, string>(StringComparer.Ordinal);
         string Hash(string password) => hashes.TryGetValue(password, out var h) ? h : hashes[password] = hasher.Hash(password);
 
@@ -67,10 +75,16 @@ public sealed partial class DemoSeeder(
         }
 
         foreach (var spec in DemoData.Detailed)
-            AddCustomer(spec, now, Hash, detailedUsers: true);
+        {
+            // About 5% of a detailed customer's devices are unlicensed; Acme follows 08 exactly (26 of 316).
+            var unlicensed = spec.Code == "ACME" ? 26 : (int)Math.Round(spec.Devices * 0.05);
+            AddCustomer(spec, spec.Devices - unlicensed, now, Hash, detailedUsers: true, licensing, licensingRandom, customers);
+        }
 
         var plans = new[] { "ENTERPRISE", "BUSINESS", "PROFESSIONAL", "STARTER" };
         var suspendedIndex = random.Next(9, 49);
+        // Four generated customers renew within 30 days (08 section 3): six "expiring soon" with Horizon and Gulf.
+        var expiring = Enumerable.Range(9, 40).Where(n => n != suspendedIndex).OrderBy(_ => licensingRandom.Next()).Take(4).ToHashSet();
         for (var number = 9; number <= 48; number++)
         {
             var roll = random.NextDouble();
@@ -81,22 +95,47 @@ public sealed partial class DemoSeeder(
                 .Select(i => DemoData.Cities[(Array.IndexOf(DemoData.Cities, city) + i - 1) % DemoData.Cities.Length])
                 .Select((c, i) => new DemoData.LocationSpec(i == 0 ? $"{c.City} Office" : $"{c.City} Branch", $"L{i + 1}", c.City, c.Country, c.TimeZone))
                 .ToArray();
+            var devices = random.Next(5, 41);
+            _ = random.Next(10, 360);
+            var renewsIn = expiring.Contains(number) ? licensingRandom.Next(5, 30) : licensingRandom.Next(45, 360);
             var spec = new DemoData.CustomerSpec(
-                $"Customer {number:00}", $"C{number:00}", plan, number == suspendedIndex, random.Next(5, 41), random.Next(10, 360),
+                $"Customer {number:00}", $"C{number:00}", plan, number == suspendedIndex, devices, renewsIn,
                 random.Next(2, 60), city.Country, city.City, city.TimeZone, locations);
-            AddCustomer(spec, now, Hash, detailedUsers: false);
+            AddCustomer(spec, devices - licensingRandom.Next(0, 3), now, Hash, detailedUsers: false, licensing, licensingRandom, customers);
         }
 
         await db.SaveChangesAsync(cancellationToken);
+
+        if (!licensingSettings.Value.IsLive)
+        {
+            licensingStore.Load(licensing);
+            if (!string.IsNullOrWhiteSpace(licensingSettings.Value.FakeDataPath))
+            {
+                var path = Path.GetFullPath(Path.Combine(environment.ContentRootPath, licensingSettings.Value.FakeDataPath));
+                FakeLicensingStore.Save(licensing, path);
+                await File.WriteAllTextAsync(Path.Combine(Path.GetDirectoryName(path)!, "README.md"), DemoLicensing.Readme(licensing, customers), cancellationToken);
+            }
+
+            // Entitlements come from the (fake) Licensing Platform, exactly as in production.
+            await licensingSync.ReconcileAllAsync(cancellationToken);
+        }
+
         LogSeeded(logger, DemoData.Detailed.Length + 40);
     }
 
-    private void AddCustomer(DemoData.CustomerSpec spec, DateTimeOffset now, Func<string, string> hash, bool detailedUsers)
+    private void AddCustomer(
+        DemoData.CustomerSpec spec, int licensedDevices, DateTimeOffset now, Func<string, string> hash, bool detailedUsers,
+        FakeLicensingData licensing, Random licensingRandom, Dictionary<Guid, (string Name, string Code)> customers)
     {
         var since = DateOnly.FromDateTime(now.UtcDateTime).AddMonths(-spec.SinceMonths);
-        var tenant = Tenant.Create(spec.Name, spec.Code, spec.Country, spec.City, spec.TimeZone, since, null, now);
+        var customerId = DemoLicensing.NewGuid(licensingRandom);
+        var tenant = Tenant.Create(spec.Name, spec.Code, spec.Country, spec.City, spec.TimeZone, since, customerId, now);
         tenant.ClearDomainEvents();
         db.Set<Tenant>().Add(tenant);
+        customers[customerId] = (spec.Name, spec.Code);
+        var sinceAt = new DateTimeOffset(since.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+        var renews = spec.Suspended ? now.AddDays(60) : now.AddDays(spec.RenewsInDays);
+        DemoLicensing.AddCustomer(licensing, licensingRandom, customerId, spec.Name, spec.Code, spec.Country, spec.Plan, spec.Suspended, sinceAt, renews, licensedDevices);
 
         db.Set<Location>().Add(Location.CreateDefault(tenant.Id, spec.TimeZone, now));
         var locations = spec.Locations
@@ -137,7 +176,6 @@ public sealed partial class DemoSeeder(
     [LoggerMessage(Level = LogLevel.Information, Message = "Demo data seeded: {Customers} customers")]
     private static partial void LogSeeded(ILogger logger, int customers);
 }
-
 /// <summary>Deletes every business row in dependency order (keeps the migrations history).</summary>
 internal static class DatabaseReset
 {

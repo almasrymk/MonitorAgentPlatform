@@ -21,7 +21,12 @@ const customerRoutes: Routes = [
     canActivate: [permissionGuard],
   },
   { path: 'devices', ...soon('nav.devices', 'M3', 'devices.read') },
-  { path: 'subscription', ...soon('nav.subscriptions', 'M2', 'subscription.read') },
+  {
+    path: 'subscription',
+    loadComponent: () => import('./features/subscription/subscription.page').then((m) => m.SubscriptionPage),
+    data: { breadcrumb: 'nav.subscriptions', permission: 'subscription.read' },
+    canActivate: [permissionGuard],
+  },
   { path: 'reports', ...soon('nav.reports', 'M9', 'reports.read') },
   {
     path: 'users',
@@ -58,7 +63,12 @@ export const routes: Routes = [
           { path: ':tenantId', canActivate: [workspaceGuard], data: { breadcrumb: ':workspace' }, children: customerRoutes },
         ],
       },
-      { path: 'plans', ...soon('nav.plans', 'M2', 'platform.plans.read') },
+      {
+        path: 'plans',
+        loadComponent: () => import('./features/platform/plans.page').then((m) => m.PlansPage),
+        data: { breadcrumb: 'nav.plans', permission: 'platform.plans.read' },
+        canActivate: [permissionGuard],
+      },
       { path: 'notifications', ...soon('nav.notifications', 'M6', 'platform.dashboard.read') },
       { path: 'archive', ...soon('nav.archive', 'M9', 'platform.tenants.read') },
       { path: 'reports', ...soon('nav.reports', 'M9', 'platform.dashboard.read') },

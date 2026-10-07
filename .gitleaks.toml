@@ -11,6 +11,8 @@ regexes = [
   '''TEST-ONLY-[A-Za-z0-9\-_]+''',
 ]
 paths = [
+  '''seed/licensing-fake\.json''',
+  '''seed/README\.md''',
   '''portal/package-lock\.json''',
   '''src/MonitorCloud\.Infrastructure/Persistence/Migrations/.*''',
 ]

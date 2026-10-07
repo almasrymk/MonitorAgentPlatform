@@ -60,7 +60,7 @@ public sealed class Tenant : AggregateRoot
         if (id is { } fixedId)
             tenant.Id = Guard.NotEmpty(fixedId, nameof(Id));
         tenant.Code = NormalizeCode(code ?? CodeFromName(tenant.Name));
-        tenant.Raise(new TenantCreatedV1(tenant.Id, tenant.TimeZone, now));
+        tenant.Raise(new TenantCreatedV1(tenant.Id, tenant.TimeZone, licensingCustomerId, now));
         return tenant;
     }
 
@@ -131,7 +131,7 @@ public sealed class Tenant : AggregateRoot
     }
 }
 
-public sealed record TenantCreatedV1(Guid TenantId, string TimeZone, DateTimeOffset At) : DomainEvent(At);
+public sealed record TenantCreatedV1(Guid TenantId, string TimeZone, Guid? LicensingCustomerId, DateTimeOffset At) : DomainEvent(At);
 
 public sealed record TenantSuspendedV1(Guid TenantId, string Reason, DateTimeOffset At) : DomainEvent(At);
 

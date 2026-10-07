@@ -5,6 +5,7 @@ using MonitorCloud.Application.Abstractions.Authorization;
 using MonitorCloud.Application.Abstractions.Messaging;
 using MonitorCloud.Application.Abstractions.Persistence;
 using MonitorCloud.Application.Common;
+using MonitorCloud.Application.Licensing.Contracts;
 using MonitorCloud.Domain.Identity;
 using MonitorCloud.Domain.Tenancy;
 using MonitorCloud.SharedKernel;
@@ -18,7 +19,7 @@ namespace MonitorCloud.Application.Tenancy;
 public sealed record GetTenantsQuery(string? Search, string? Plan, string? Health, string? SubscriptionStatus, string? Status, string? Sort, int? Page, int? PageSize)
     : IQuery<PagedResult<TenantCardDto>>;
 
-internal sealed class GetTenantsQueryHandler(IReadDbContext db) : IQueryHandler<GetTenantsQuery, PagedResult<TenantCardDto>>
+internal sealed class GetTenantsQueryHandler(IReadDbContext db, IEntitlementDirectory entitlements) : IQueryHandler<GetTenantsQuery, PagedResult<TenantCardDto>>
 {
     private static readonly string[] Sorts = ["name", "code", "customerSince", "status"];
 
@@ -38,6 +39,14 @@ internal sealed class GetTenantsQueryHandler(IReadDbContext db) : IQueryHandler<
         {
             var term = request.Search.Trim();
             tenants = tenants.Where(t => t.Name.Contains(term) || t.Code.Contains(term) || t.City.Contains(term));
+        }
+
+        // Plan, subscription status and "expiring" filters come from the Licensing cache.
+        var expiringOnly = string.Equals(request.SubscriptionStatus, "Expiring", StringComparison.OrdinalIgnoreCase);
+        if (!string.IsNullOrWhiteSpace(request.Plan) || !string.IsNullOrWhiteSpace(request.SubscriptionStatus))
+        {
+            var ids = await entitlements.FindTenantsAsync(request.Plan, expiringOnly ? null : request.SubscriptionStatus, expiringOnly, cancellationToken);
+            tenants = tenants.Where(t => ids.Contains(t.Id));
         }
 
         tenants = (sort.Value.Key, sort.Value.Descending) switch
@@ -62,6 +71,11 @@ internal sealed class GetTenantsQueryHandler(IReadDbContext db) : IQueryHandler<
                 locations.Count(l => l.TenantId == t.Id && !l.IsDefault),
                 null, null, null, null, null, null, null, null, null, null))
             .ToListAsync(cancellationToken);
+
+        var licensing = await entitlements.GetAsync([.. items.Select(i => i.Id)], cancellationToken);
+        items = [.. items.Select(i => licensing.TryGetValue(i.Id, out var e)
+            ? i with { PlanCode = e.PlanCode, PlanName = e.PlanName, SubscriptionStatus = e.SubscriptionStatus, ExpiringSoon = e.ExpiringSoon, LicensesUsed = e.ActiveSeats, LicenseLimit = e.MaxDevices, NextRenewal = e.RenewsAt }
+            : i)];
         return new PagedResult<TenantCardDto>(items, total, page, pageSize);
     }
 }
@@ -70,7 +84,7 @@ internal sealed class GetTenantsQueryHandler(IReadDbContext db) : IQueryHandler<
 [RequirePermission(Permissions.PlatformTenantsRead)]
 public sealed record GetTenantsSummaryQuery : IQuery<TenantsSummaryDto>;
 
-internal sealed class GetTenantsSummaryQueryHandler(IReadDbContext db) : IQueryHandler<GetTenantsSummaryQuery, TenantsSummaryDto>
+internal sealed class GetTenantsSummaryQueryHandler(IReadDbContext db, IEntitlementDirectory entitlements) : IQueryHandler<GetTenantsSummaryQuery, TenantsSummaryDto>
 {
     public async Task<Result<TenantsSummaryDto>> Handle(GetTenantsSummaryQuery request, CancellationToken cancellationToken)
     {
@@ -81,8 +95,7 @@ internal sealed class GetTenantsSummaryQueryHandler(IReadDbContext db) : IQueryH
             .ToListAsync(cancellationToken);
         var active = counts.Where(c => c.Status == TenantStatus.Active).Sum(c => c.Count);
         var suspended = counts.Where(c => c.Status == TenantStatus.Suspended).Sum(c => c.Count);
-        // "Expiring soon" needs subscription data (M2).
-        return new TenantsSummaryDto(active + suspended, active, 0, suspended);
+        return new TenantsSummaryDto(active + suspended, active, await entitlements.CountExpiringSoonAsync(cancellationToken), suspended);
     }
 }
 

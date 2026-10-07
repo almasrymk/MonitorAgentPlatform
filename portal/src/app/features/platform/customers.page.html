@@ -9,7 +9,7 @@
 
 <section class="toolbar">
   <mc-search-input data-testid="customer-search" [placeholder]="i18n.t('customers.search')" [value]="search()" (searched)="setFilter(() => search.set($event))" />
-  <mc-select [label]="i18n.t('customers.allPlans')" [options]="planOptions()" value="" />
+  <mc-select [label]="i18n.t('customers.allPlans')" [options]="planOptions()" [value]="plan()" (valueChange)="setFilter(() => plan.set($event))" data-testid="plan-filter" />
   <mc-select [label]="i18n.t('customers.allHealth')" [options]="healthOptions()" value="" />
   <mc-select [label]="i18n.t('customers.allStatuses')" [options]="statusOptions()" [value]="status()" (valueChange)="setFilter(() => status.set($event))" data-testid="status-filter" />
   <mc-select [label]="i18n.t('common.sortBy')" [options]="sortOptions()" [value]="sort()" (valueChange)="setFilter(() => sort.set($event))" />
@@ -37,16 +37,16 @@
           <mc-avatar [name]="card.name" [letters]="1" [size]="40" />
           <div class="name">
             <h2>{{ card.name }}</h2>
-            <span class="plan">{{ card.planName ?? i18n.t('customers.planPending') }}</span>
+            <span class="plan" data-testid="plan-name">{{ card.planName ?? i18n.t('customers.planPending') }}</span>
           </div>
-          <mc-status-pill [status]="card.status" />
+          <mc-status-pill [status]="pill(card)" />
         </header>
         <dl class="facts">
           <div><dt>{{ i18n.t('customers.locations') }}</dt><dd>{{ card.locations }}</dd></div>
           <div><dt>{{ i18n.t('customers.devices') }}</dt><dd>@if (card.devices === null || card.devices === undefined) { <mc-skeleton [height]="14" width="32px" /> } @else { {{ card.devices }} }</dd></div>
           <div><dt>{{ i18n.t('customers.healthScore') }}</dt><dd><mc-skeleton [height]="14" width="40px" /></dd></div>
-          <div><dt>{{ i18n.t('customers.licenseUsage') }}</dt><dd><mc-skeleton [height]="14" width="56px" /></dd></div>
-          <div><dt>{{ i18n.t('customers.nextRenewal') }}</dt><dd><mc-skeleton [height]="14" width="64px" /></dd></div>
+          <div class="wide"><dt>{{ i18n.t('customers.licenseUsage') }}</dt><dd>@if (card.licensesUsed === null || card.licensesUsed === undefined) { <mc-skeleton [height]="14" width="56px" /> } @else { <mc-usage-bar [used]="card.licensesUsed" [limit]="card.licenseLimit" [label]="i18n.t('customers.licenseUsage')" /> }</dd></div>
+          <div><dt>{{ i18n.t('customers.nextRenewal') }}</dt><dd data-testid="renewal">{{ renewal(card) }}</dd></div>
           <div><dt>{{ i18n.t('customers.since') }}</dt><dd>{{ since(card) }}</dd></div>
         </dl>
         <footer>
@@ -68,7 +68,7 @@
 } @else {
   <mc-data-table [columns]="columns()" [rows]="result()!.items" [loading]="loading()" [sort]="sort()" (sortChange)="setFilter(() => sort.set($event ?? 'name'))">
     <ng-template mcCell="name" let-row><strong>{{ $any(row).name }}</strong></ng-template>
-    <ng-template mcCell="status" let-row><mc-status-pill [status]="$any(row).status" /></ng-template>
+    <ng-template mcCell="status" let-row><mc-status-pill [status]="pill($any(row))" /></ng-template>
     <ng-template mcCell="plan" let-row>{{ $any(row).planName ?? '—' }}</ng-template>
     <ng-template mcCell="actions" let-row>
       @if ($any(row).status !== 'Archived') {

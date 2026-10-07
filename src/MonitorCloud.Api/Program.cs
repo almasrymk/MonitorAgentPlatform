@@ -16,6 +16,7 @@ try
     builder.Services.AddApi(builder.Configuration, builder.Environment);
 
     var app = builder.Build();
+    app.Services.LoadFakeLicensingData(app.Environment.ContentRootPath);
 
     // `dotnet run --project src/MonitorCloud.Api -- seed --reset` drops the demo data and seeds again (08).
     if (args.Length > 0 && args[0] == "seed")

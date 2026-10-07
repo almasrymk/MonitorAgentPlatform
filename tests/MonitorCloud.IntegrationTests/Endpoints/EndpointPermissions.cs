@@ -36,6 +36,10 @@ public static class EndpointPermissions
         ["POST /api/v1/platform/users/{id:guid}/deactivate"] = "platform.users.manage",
         ["POST /api/v1/platform/users/{id:guid}/reset-password"] = "platform.users.manage",
         ["GET /api/v1/platform/audit"] = "platform.audit.read",
+        ["GET /api/v1/platform/plans"] = "platform.plans.read",
+        ["GET /api/v1/platform/licensing/status"] = "platform.dashboard.read",
+        ["POST /api/v1/platform/licensing/sync"] = "platform.licensing.sync",
+        ["GET /api/v1/subscription"] = "subscription.read",
 
         ["GET /api/v1/locations"] = "locations.read",
         ["POST /api/v1/locations"] = "locations.manage",

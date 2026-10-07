@@ -21,6 +21,7 @@ import { Select } from '../../shared/ui/select';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { StatusPill } from '../../shared/ui/status-pill';
+import { UsageBar } from '../../shared/ui/usage-bar';
 
 interface Action {
   kind: 'workspace' | 'suspend' | 'archive';
@@ -33,7 +34,7 @@ interface Action {
  */
 @Component({
   selector: 'mc-customers-page',
-  imports: [PageHeader, KpiTile, SearchInput, Select, Avatar, StatusPill, Button, Icon, Skeleton, Pagination, ConfirmWithReasonDialog, DataTable, CellDef, EmptyState, ErrorState],
+  imports: [PageHeader, KpiTile, SearchInput, Select, Avatar, StatusPill, Button, Icon, Skeleton, Pagination, ConfirmWithReasonDialog, DataTable, CellDef, EmptyState, ErrorState, UsageBar],
   templateUrl: './customers.page.html',
   styleUrl: './customers.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -49,6 +50,7 @@ export class CustomersPage {
   protected readonly pageSize = 24;
   protected readonly search = signal('');
   protected readonly status = signal('');
+  protected readonly plan = signal('');
   protected readonly sort = signal('name');
   protected readonly page = signal(1);
   protected readonly view = signal<'grid' | 'list'>('grid');
@@ -64,10 +66,15 @@ export class CustomersPage {
   protected readonly statusOptions = computed(() => [
     { value: '', label: this.i18n.t('customers.allStatuses') },
     { value: 'Active', label: this.i18n.t('status.active') },
+    { value: 'Trial', label: this.i18n.t('status.trial') },
+    { value: 'Expiring', label: this.i18n.t('status.expiring') },
     { value: 'Suspended', label: this.i18n.t('status.suspended') },
-    { value: 'Archived', label: this.i18n.t('status.archived') },
+    { value: 'Expired', label: this.i18n.t('status.expired') },
   ]);
-  protected readonly planOptions = computed(() => [{ value: '', label: this.i18n.t('customers.allPlans') }]);
+  protected readonly planOptions = computed(() => [
+    { value: '', label: this.i18n.t('customers.allPlans') },
+    ...['ENTERPRISE', 'BUSINESS', 'PROFESSIONAL', 'STARTER'].map((code) => ({ value: code, label: this.i18n.t(`plan.${code}`) })),
+  ]);
   protected readonly healthOptions = computed(() => [{ value: '', label: this.i18n.t('customers.allHealth') }]);
   protected readonly sortOptions = computed(() => [
     { value: 'name', label: this.i18n.t('customers.sortName') },
@@ -95,7 +102,7 @@ export class CustomersPage {
     try {
       const [summary, result] = await Promise.all([
         firstValueFrom(this.api.summary()),
-        firstValueFrom(this.api.list({ search: this.search(), status: this.status(), sort: this.sort(), page: this.page(), pageSize: this.pageSize })),
+        firstValueFrom(this.api.list({ search: this.search(), plan: this.plan(), subscriptionStatus: this.status(), sort: this.sort(), page: this.page(), pageSize: this.pageSize })),
       ]);
       this.summary.set(summary);
       this.result.set(result);
@@ -169,6 +176,23 @@ export class CustomersPage {
       return '';
     }
     return this.i18n.t(`customers.dialog.${action.kind}`, { name: action.tenant.name });
+  }
+
+  /** Suspended customer, else "Expiring" when the renewal is within 30 days, else the subscription status. */
+  protected pill(card: TenantCard): string {
+    if (card.status !== 'Active') {
+      return card.status;
+    }
+    if (card.expiringSoon) {
+      return 'expiring';
+    }
+    return card.subscriptionStatus && card.subscriptionStatus !== 'None' ? card.subscriptionStatus : card.status;
+  }
+
+  protected renewal(card: TenantCard): string {
+    return card.nextRenewal
+      ? new Date(card.nextRenewal).toLocaleDateString(this.i18n.language() === 'ar' ? 'ar-EG' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+      : '—';
   }
 
   protected since(card: TenantCard): string {

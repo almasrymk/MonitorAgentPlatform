@@ -35,7 +35,9 @@ public sealed record TenantCardDto(
     decimal? HealthScore,
     int? LicensesUsed,
     int? LicenseLimit,
-    DateTimeOffset? NextRenewal);
+    DateTimeOffset? NextRenewal,
+    string? SubscriptionStatus = null,
+    bool ExpiringSoon = false);
 
 public sealed record TenantsSummaryDto(int Total, int Active, int ExpiringSoon, int Suspended);
 

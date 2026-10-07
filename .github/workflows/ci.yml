@@ -5,6 +5,8 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  schedule:
+    - cron: '30 2 * * *'
 
 permissions:
   contents: read
@@ -19,6 +21,7 @@ env:
 
 jobs:
   backend:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     services:
@@ -79,6 +82,7 @@ jobs:
           retention-days: 7
 
   portal:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     defaults:
@@ -102,6 +106,7 @@ jobs:
         run: npm run build:check
 
   e2e:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     timeout-minutes: 40
     services:
@@ -159,6 +164,7 @@ jobs:
             api.log
           retention-days: 7
   secrets-scan:
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -169,3 +175,25 @@ jobs:
         run: |
           curl -sSfL https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz | tar -xz gitleaks
           ./gitleaks git --config .gitleaks.toml --redact --verbose --exit-code 1 .
+
+  # Live contract against a Licensing Platform with LP-1..LP-5 (nightly and on demand). Configure the repository
+  # variable LICENSING_CONTRACT_URL and the secrets LICENSING_CONTRACT_CLIENT_ID / _CLIENT_SECRET / _PRODUCT_KEY /
+  # _CUSTOMER_ID (and optionally _LIMITED_KEY, _SUSPENDED_KEY) from tools/MonitorCloud.LicensingSeeder.
+  licensing-contract:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      LICENSING_CONTRACT_URL: ${{ vars.LICENSING_CONTRACT_URL }}
+      LICENSING_CONTRACT_CLIENT_ID: ${{ secrets.LICENSING_CONTRACT_CLIENT_ID }}
+      LICENSING_CONTRACT_CLIENT_SECRET: ${{ secrets.LICENSING_CONTRACT_CLIENT_SECRET }}
+      LICENSING_CONTRACT_PRODUCT_KEY: ${{ secrets.LICENSING_CONTRACT_PRODUCT_KEY }}
+      LICENSING_CONTRACT_CUSTOMER_ID: ${{ secrets.LICENSING_CONTRACT_CUSTOMER_ID }}
+      LICENSING_CONTRACT_LIMITED_KEY: ${{ secrets.LICENSING_CONTRACT_LIMITED_KEY }}
+      LICENSING_CONTRACT_SUSPENDED_KEY: ${{ secrets.LICENSING_CONTRACT_SUSPENDED_KEY }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - run: dotnet test tests/MonitorCloud.ContractTests -c Release

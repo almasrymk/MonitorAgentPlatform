@@ -2,6 +2,8 @@ using Microsoft.Extensions.DependencyInjection;
 using MonitorCloud.Application.Identity;
 using MonitorCloud.Domain.Identity;
 using MonitorCloud.Domain.Tenancy;
+using MonitorCloud.Application.Licensing;
+using MonitorCloud.Infrastructure.Licensing.Fake;
 using MonitorCloud.Infrastructure.Persistence;
 
 namespace MonitorCloud.TestShared.Builders;
@@ -23,6 +25,9 @@ public sealed record TestTenant(Tenant Tenant, Location DefaultLocation, Locatio
 public sealed record TestWorld(User PlatformAdmin, User PlatformSupport, TestTenant A, TestTenant B)
 {
     public const string Password = "Test-Pass#2026";
+
+    /// <summary>The Licensing customer of a test tenant (A: Enterprise with 3 seats, B: Starter with 1 seat).</summary>
+    public Guid LicensingCustomerOf(TestTenant tenant) => tenant.Tenant.LicensingCustomerId!.Value;
 
     public User UserOf(string role, TestTenant tenant) => role switch
     {
@@ -47,13 +52,20 @@ public sealed record TestWorld(User PlatformAdmin, User PlatformSupport, TestTen
             var a = AddTenant(db, "Alpha Test Company", "ALPHA", "alpha.test", hash, now);
             var b = AddTenant(db, "Beta Test Company", "BETA", "beta.test", hash, now);
             await db.SaveChangesAsync();
+
+            // The fake Licensing Platform knows both customers; the sync fills their entitlements.
+            var licensing = TestLicensing.NewData();
+            licensing.AddCustomer(a.Tenant.LicensingCustomerId!.Value, a.Tenant.Name, "ENTERPRISE", now, devices: 3);
+            licensing.AddCustomer(b.Tenant.LicensingCustomerId!.Value, b.Tenant.Name, "STARTER", now, devices: 1);
+            sp.GetRequiredService<FakeLicensingStore>().Load(licensing);
+            await sp.GetRequiredService<LicensingSyncService>().ReconcileAllAsync(CancellationToken.None);
             return new TestWorld(admin, support, a, b);
         });
     }
 
     private static TestTenant AddTenant(AppDbContext db, string name, string code, string domain, string hash, DateTimeOffset now)
     {
-        var tenant = Tenant.Create(name, code, "Egypt", "Cairo", "Africa/Cairo", new DateOnly(2025, 1, 1), null, now);
+        var tenant = Tenant.Create(name, code, "Egypt", "Cairo", "Africa/Cairo", new DateOnly(2025, 1, 1), Guid.CreateVersion7(), now);
         tenant.ClearDomainEvents();
         var defaultLocation = Location.CreateDefault(tenant.Id, "Africa/Cairo", now);
         var location1 = Location.Create(tenant.Id, new LocationDetails($"{code} North", $"{code}-N", "Cairo", "Egypt", "1 Sample Street", "Africa/Cairo", null, null, null), now);

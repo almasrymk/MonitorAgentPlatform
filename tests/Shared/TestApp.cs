@@ -46,6 +46,9 @@ public class TestApp(SqlServerFixture sql) : WebApplicationFactory<Program>, IAs
         builder.UseSetting("Jwt:DeviceSigningKey", DeviceSigningKey);
         builder.UseSetting("Cors:Origins:0", "http://localhost:4300");
         builder.UseSetting("RateLimiting:Auth:PermitLimit", "100000");
+        builder.UseSetting("Licensing:Mode", "Fake");
+        builder.UseSetting("Licensing:SyncEnabled", "false");
+        builder.UseSetting("Licensing:FakeDataPath", "");
         builder.ConfigureAppConfiguration(config => config.AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["Serilog:MinimumLevel:Default"] = "Warning",

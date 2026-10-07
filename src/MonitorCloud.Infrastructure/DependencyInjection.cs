@@ -7,7 +7,6 @@ using Microsoft.Extensions.Options;
 using MonitorCloud.Application;
 using MonitorCloud.Application.Abstractions.Audit;
 using MonitorCloud.Application.Abstractions.Context;
-using MonitorCloud.Application.Abstractions.Entitlements;
 using MonitorCloud.Application.Abstractions.Persistence;
 using MonitorCloud.Infrastructure.Audit;
 using MonitorCloud.Infrastructure.Licensing;
@@ -43,7 +42,7 @@ public static class DependencyInjection
 
         services.AddScoped<ISqlConnectionFactory, SqlConnectionFactory>();
         services.AddScoped<IAuditLogger, AuditLogger>();
-        services.AddSingleton<IEntitlementReader, NoEntitlementReader>();
+        services.AddLicensing(configuration);
 
         services.AddSingleton<Application.Identity.IPasswordHasher, Identity.PasswordHasherAdapter>();
         services.AddSingleton<Application.Identity.ITokenService, Identity.TokenService>();
@@ -73,7 +72,8 @@ public static class DependencyInjection
 
         services.AddHealthChecks()
             .AddDbContextCheck<AppDbContext>("database", tags: ["ready"])
-            .AddCheck<OutboxLagHealthCheck>("outbox", tags: ["ready"]);
+            .AddCheck<OutboxLagHealthCheck>("outbox", tags: ["ready"])
+            .AddCheck<LicensingHealthCheck>("licensing", tags: ["ready"]);
 
         return services;
     }
@@ -90,4 +90,11 @@ public static class DependencyInjection
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await db.Database.MigrateAsync(cancellationToken);
     }
+}
+
+public static class LicensingStartup
+{
+    /// <summary>Loads <c>Licensing:FakeDataPath</c> into the fake Licensing Platform (Fake mode only).</summary>
+    public static void LoadFakeLicensingData(this IServiceProvider services, string contentRoot) =>
+        Licensing.LicensingRegistration.LoadFakeData(services, contentRoot);
 }

@@ -481,6 +481,271 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/subscription": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SubscriptionDto"];
+                        "application/json": components["schemas"]["SubscriptionDto"];
+                        "text/json": components["schemas"]["SubscriptionDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["PlanDto"][];
+                        "application/json": components["schemas"]["PlanDto"][];
+                        "text/json": components["schemas"]["PlanDto"][];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/licensing/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["LicensingStatusDto"];
+                        "application/json": components["schemas"]["LicensingStatusDto"];
+                        "text/json": components["schemas"]["LicensingStatusDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/platform/licensing/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["SyncOutcome"];
+                        "application/json": components["schemas"]["SyncOutcome"];
+                        "text/json": components["schemas"]["SyncOutcome"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Service Unavailable */
+                503: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/locations": {
         parameters: {
             query?: never;
@@ -2528,6 +2793,20 @@ export interface components {
         LanguageRequest: {
             language: null | string;
         };
+        LicensingStatusDto: {
+            mode: string;
+            /** Format: date-time */
+            lastSuccessAt: null | string;
+            /** Format: date-time */
+            lastAttemptAt: null | string;
+            /** Format: date-time */
+            lastFullReconcileAt: null | string;
+            lastError: null | string;
+            /** Format: int32 */
+            consecutiveFailures: number;
+            degraded: boolean;
+            portalUrl: null | string;
+        };
         LocationCardDto: {
             /** Format: uuid */
             id: string;
@@ -2581,6 +2860,13 @@ export interface components {
             email: null | string;
             password: null | string;
         };
+        OsUsageDto: {
+            osFamily: string;
+            /** Format: int32 */
+            devices: number;
+            /** Format: double */
+            percent: number;
+        };
         PagedResultOfAuditRecordDto: {
             items: components["schemas"]["AuditRecordDto"][];
             /** Format: int32 */
@@ -2617,6 +2903,22 @@ export interface components {
             /** Format: int32 */
             pageSize: number;
         };
+        PlanDto: {
+            code: string;
+            name: string;
+            /** Format: int32 */
+            version: number;
+            features: string[];
+            /** Format: int32 */
+            deviceLimit: null | number;
+            /** Format: int32 */
+            durationDays: null | number;
+            /** Format: double */
+            price: number;
+            currency: string;
+            /** Format: int32 */
+            customers: number;
+        };
         ProblemDetails: {
             type?: null | string;
             title?: null | string;
@@ -2639,6 +2941,39 @@ export interface components {
             name: string;
             permissionSummary: string;
             permissions: string[];
+        };
+        SubscriptionDto: {
+            planCode: null | string;
+            planName: null | string;
+            status: string;
+            features: string[];
+            /** Format: date-time */
+            startsAt: null | string;
+            /** Format: date-time */
+            renewsAt: null | string;
+            /** Format: int32 */
+            daysRemaining: null | number;
+            expiringSoon: boolean;
+            /** Format: int32 */
+            devicesUsed: number;
+            /** Format: int32 */
+            deviceLimit: null | number;
+            /** Format: int32 */
+            licensedDevices: number;
+            /** Format: int32 */
+            unlicensedDevices: number;
+            usageByOs: components["schemas"]["OsUsageDto"][];
+            /** Format: date-time */
+            syncedAt: null | string;
+            stale: boolean;
+        };
+        SyncOutcome: {
+            succeeded: boolean;
+            /** Format: int32 */
+            tenantsChecked: number;
+            /** Format: int32 */
+            tenantsChanged: number;
+            error: null | string;
         };
         TenantCardDto: {
             /** Format: uuid */
@@ -2670,6 +3005,9 @@ export interface components {
             licenseLimit: null | number;
             /** Format: date-time */
             nextRenewal: null | string;
+            subscriptionStatus?: null | string;
+            /** @default false */
+            expiringSoon: boolean;
         };
         TenantDto: {
             /** Format: uuid */

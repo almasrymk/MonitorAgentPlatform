@@ -97,3 +97,8 @@
     font-weight: var(--mc-fw-medium);
   }
 }
+
+.facts .wide {
+  grid-column: 1 / -1;
+}
+

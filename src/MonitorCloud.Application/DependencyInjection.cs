@@ -36,6 +36,14 @@ public static class DependencyInjection
         services.AddScoped<ITenantDirectory>(sp => sp.GetRequiredService<TenantDirectory>());
         services.AddScoped<ILocationDirectory>(sp => sp.GetRequiredService<TenantDirectory>());
         services.TryAddScoped<ILocationDeviceCounter, NoDevicesCounter>();
+        services.AddScoped<ILinkedTenantDirectory, LinkedTenantDirectory>();
+        services.AddScoped<ITenantProvisioning, TenantProvisioning>();
+
+        services.AddScoped<Licensing.LicensingSyncService>();
+        services.AddScoped<Licensing.Contracts.IEntitlementRefresher>(sp => sp.GetRequiredService<Licensing.LicensingSyncService>());
+        services.AddScoped<Abstractions.Entitlements.IEntitlementReader, Licensing.EntitlementReader>();
+        services.AddScoped<Licensing.Contracts.IEntitlementDirectory, Licensing.EntitlementDirectory>();
+        services.TryAddScoped<Licensing.IDeviceLicenseStats, Licensing.NoDeviceLicenseStats>();
 
         // Integration event handlers: every IIntegrationEventHandler<T> implementation in this assembly.
         foreach (var type in assembly.GetTypes().Where(t => t is { IsAbstract: false, IsInterface: false }))

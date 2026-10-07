@@ -35,6 +35,17 @@ public static class ErrorCodes
     public const string RateLimited = "RATE_LIMITED";
     public const string NotFound = "NOT_FOUND";
     public const string InternalError = "INTERNAL_ERROR";
+    public const string LicensingUnavailable = "LICENSING_UNAVAILABLE";
+    public const string LicensingCustomerNotFound = "LICENSING_CUSTOMER_NOT_FOUND";
+    public const string LicInvalidLicense = "LIC_INVALID_LICENSE";
+    public const string LicSuspended = "LIC_SUSPENDED";
+    public const string LicRevoked = "LIC_REVOKED";
+    public const string LicExpired = "LIC_EXPIRED";
+    public const string LicSubscriptionExpired = "LIC_SUBSCRIPTION_EXPIRED";
+    public const string LicSubscriptionInactive = "LIC_SUBSCRIPTION_INACTIVE";
+    public const string LicActivationLimitReached = "LIC_ACTIVATION_LIMIT_REACHED";
+    public const string LicDeviceNotActivated = "LIC_DEVICE_NOT_ACTIVATED";
+    public const string LicInvalidDevice = "LIC_INVALID_DEVICE";
 
     public static IReadOnlyList<string> All { get; } = typeof(ErrorCodes)
         .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)

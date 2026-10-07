@@ -1,0 +1,76 @@
+<mc-page-header [title]="i18n.t('subscription.title')" [subtitle]="i18n.t('subscription.subtitle')" />
+<mc-tabs [tabs]="tabs()" [active]="tab()" (activeChange)="tab.set($event)" />
+
+@if (failed()) {
+  <mc-error-state (retry)="load()" />
+} @else if (loading()) {
+  <section class="grid">
+    @for (i of [1, 2, 3, 4]; track i) {
+      <mc-card><mc-skeleton [height]="120" /></mc-card>
+    }
+  </section>
+} @else if (subscription(); as s) {
+  @if (tab() === 'overview') {
+    @if (s.stale) {
+      <p class="stale" role="status" data-testid="stale">{{ i18n.t('subscription.stale', { at: s.syncedAt ? (s.syncedAt | date: 'medium' : undefined : locale()) ?? '—' : '—' }) }}</p>
+    }
+    <section class="grid">
+      <mc-card [title]="i18n.t('subscription.currentPlan')" data-testid="current-plan">
+        <div class="plan-row">
+          <span class="plan-name">{{ s.planName ?? i18n.t('subscription.noPlan') }}</span>
+          <mc-status-pill [status]="pill()" />
+        </div>
+        <mc-usage-bar [used]="s.devicesUsed" [limit]="s.deviceLimit" [label]="i18n.t('subscription.devicesUsed')" />
+        <p class="muted">{{ i18n.t('subscription.devicesUsedText', { used: s.devicesUsed, limit: s.deviceLimit ?? '∞' }) }}</p>
+        @if (s.renewsAt) {
+          <p class="muted">{{ i18n.t('subscription.renewsOn', { date: (s.renewsAt | date: 'longDate' : undefined : locale()) ?? '' }) }}</p>
+        }
+        <button type="button" mcButton="primary-solid" size="sm" data-testid="upgrade" (click)="contactOpen.set(true)">{{ i18n.t('subscription.upgrade') }}</button>
+      </mc-card>
+
+      <mc-card [title]="i18n.t('subscription.licenseStatus')">
+        <div class="donut" [style.--licensed.%]="licensedPercent()" role="img"
+          [attr.aria-label]="i18n.t('subscription.donutLabel', { licensed: s.licensedDevices, unlicensed: s.unlicensedDevices })">
+          <span class="donut-value">{{ s.licensedDevices + s.unlicensedDevices }}</span>
+        </div>
+        <ul class="legend">
+          <li><span class="dot licensed"></span>{{ i18n.t('status.licensed') }} <strong>{{ s.licensedDevices }}</strong></li>
+          <li><span class="dot unlicensed"></span>{{ i18n.t('status.unlicensed') }} <strong>{{ s.unlicensedDevices }}</strong></li>
+        </ul>
+      </mc-card>
+
+      <mc-card [title]="i18n.t('subscription.usageByOs')">
+        @if (s.usageByOs.length === 0) {
+          <mc-empty-state icon="devices" [title]="i18n.t('subscription.noDevices')" />
+        } @else {
+          @for (os of s.usageByOs; track os.osFamily) {
+            <div class="os-row">
+              <span>{{ os.osFamily }}</span>
+              <mc-usage-bar [used]="os.devices" [limit]="s.devicesUsed || null" />
+              <span class="muted">{{ os.percent }}%</span>
+            </div>
+          }
+        }
+      </mc-card>
+
+      <mc-card [title]="i18n.t('subscription.upcomingRenewal')" data-testid="renewal">
+        @if (s.renewsAt) {
+          <p class="big">{{ s.renewsAt | date: 'mediumDate' : undefined : locale() }}</p>
+          <p class="muted">{{ i18n.t('subscription.daysRemaining', { days: s.daysRemaining ?? 0 }) }}</p>
+        } @else {
+          <p class="muted">{{ i18n.t('subscription.noRenewal') }}</p>
+        }
+        <button type="button" mcButton="secondary" size="sm" (click)="contactOpen.set(true)">{{ i18n.t('subscription.manage') }}</button>
+      </mc-card>
+    </section>
+  } @else {
+    <mc-empty-state icon="devices" [title]="i18n.t('subscription.devicesSoon')" />
+  }
+}
+
+<mc-dialog [open]="contactOpen()" (openChange)="contactOpen.set($event)" [title]="i18n.t('subscription.contactTitle')">
+  <p>{{ i18n.t('subscription.contactText') }}</p>
+  <div dialogActions>
+    <button type="button" mcButton="primary-solid" (click)="contactOpen.set(false)">{{ i18n.t('common.close') }}</button>
+  </div>
+</mc-dialog>

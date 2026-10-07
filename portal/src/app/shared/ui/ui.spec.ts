@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 
 import { I18nService } from '../../core/i18n/i18n.service';
@@ -134,7 +134,7 @@ describe('design-system components', () => {
   });
 
   describe('Button directive', () => {
-    @Component({ imports: [Button], template: '<button mcButton="danger-outline" size="sm">x</button><button mcButton>y</button>' })
+    @Component({ imports: [Button], template: '<button mcButton="danger-outline" size="sm">x</button><button mcButton>y</button>', changeDetection: ChangeDetectionStrategy.OnPush })
     class Host {}
 
     it('applies variant and size classes', async () => {
@@ -185,6 +185,7 @@ describe('design-system components', () => {
       template: `<mc-data-table [columns]="columns" [rows]="rows()" [loading]="loading()" emptyText="Nothing" [(sort)]="sort">
         <ng-template mcCell="name" let-row><b class="custom">{{ $any(row).name }}</b></ng-template>
       </mc-data-table>`,
+      changeDetection: ChangeDetectionStrategy.OnPush,
     })
     class Host {
       columns = [{ key: 'name', label: 'Name', sortable: true }, { key: 'city', label: 'City' }];
