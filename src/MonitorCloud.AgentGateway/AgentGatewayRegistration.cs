@@ -27,6 +27,7 @@ public static class AgentGatewayRegistration
         services.AddSingleton<PresenceMonitor>();
         services.AddHostedService(sp => sp.GetRequiredService<PresenceMonitor>());
         services.AddHostedService<GatewayShutdown>();
+        services.AddScoped<Application.Abstractions.Messaging.IIntegrationEventHandler<Domain.Devices.DeviceRetiredV1>, CloseRetiredSessions>();
         services.AddHealthChecks().AddCheck<GatewayHealthCheck>("gateway", tags: ["ready"]);
         return services;
     }

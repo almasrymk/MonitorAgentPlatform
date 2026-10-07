@@ -1,5 +1,6 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
@@ -7,6 +8,8 @@ import { DashboardsApi } from '../../core/api/api.services';
 import { LocationStatusRow, ProblemDevice, TenantDashboard } from '../../core/api/models';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { areaRoot } from '../../core/layout/area';
+import { LiveService } from '../../core/live/live.service';
+import { ScopeStore } from '../../core/state/scope.store';
 import { Button } from '../../shared/ui/button';
 import { Card } from '../../shared/ui/card';
 import { CellDef, Column, DataTable } from '../../shared/ui/data-table';
@@ -97,9 +100,25 @@ export class CustomerDashboardPage {
 
   constructor() {
     void this.load();
+    const live = inject(LiveService);
+    live.watch({ kind: 'tenant', id: inject(ScopeStore).workspace()?.id ?? null }, inject(DestroyRef));
+    live.summary$.pipe(takeUntilDestroyed()).subscribe((event) => {
+      if (event.scope === 'tenant') {
+        void this.load(true);
+      }
+    });
   }
 
-  async load(): Promise<void> {
+  /** quiet: a live refresh keeps the current content instead of showing skeletons. */
+  async load(quiet = false): Promise<void> {
+    if (quiet && this.data()) {
+      try {
+        this.data.set(await firstValueFrom(this.api.tenant()));
+      } catch {
+        // Keep the current numbers.
+      }
+      return;
+    }
     this.loading.set(true);
     this.failed.set(false);
     try {

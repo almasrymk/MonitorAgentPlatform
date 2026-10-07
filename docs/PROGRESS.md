@@ -248,3 +248,49 @@ the enrollment tests of 09 section 2 and the device-token tests pass; the device
   default location at provisioning, one maintenance job).
 - CI's e2e job raises the login rate limit (`RateLimiting__Auth__PermitLimit`), because every e2e test signs in.
 - Device lists now ignore answers to superseded requests (a slow first page could overwrite a search result).
+
+## M4 - Agent gateway and simulator (done 2026-10-07)
+
+### Tasks
+
+| Id | Status | Notes |
+|---|---|---|
+| MC-401 | Done | `MonitorCloud.AgentProtocol` generated from `agent.proto` (since M0, net8.0 + net10.0) |
+| MC-402 | Done | `MonitorCloud.AgentGateway`: `IAgentTransport` + gRPC adapter, device token required (Device policy, tenant and device from the token only), `AgentSession`, in-memory `IAgentSessionRegistry`, `AgentMessageRouter` (handlers per message kind; guaranteed messages without a handler are not acknowledged until M5), Hello within 10 s (`HELLO_REQUIRED`), `PROTOCOL_UNSUPPORTED`, `DEVICE_RETIRED`, `CREDENTIAL_REVOKED`, `TENANT_ARCHIVED`, one session per device (`DUPLICATE_SESSION`, three replacements in 5 minutes are audited as a possible clone and raise `DeviceCloneSuspectedV1`), `SESSION_ROTATE` after 12 h, `SERVER_SHUTDOWN` with retry 5-30 s, retiring a device closes its stream |
+| MC-403 | Done | `PresenceMonitor` every 10 s: no message for 3 heartbeats -> `HEARTBEAT_TIMEOUT` and Offline; a closed stream -> Offline after 15 s unless the device reconnects; Goodbye -> Offline at once with the reason; last contact written for connected devices. `DeviceCameOnlineV1` / `DeviceWentOfflineV1` |
+| MC-404 | Done | SignalR hub `/hubs/live` (token in `access_token`), `SubscribePlatform/Tenant/Location/Device` checked against the caller's tenant and location scope; `deviceStateChanged` to tenant, location and device groups; `summaryChanged` coalesced to one per group every 2 s |
+| MC-405 | Done | `tools/MonitorCloud.SimulatedAgent` (library: enroll, token, stream, Hello, heartbeats, Goodbye; used by `MonitorCloud.GatewayTests`) and `tools/MonitorCloud.DeviceSimulator` (`enroll --count`, `run --devices [--seconds]`; uses the demo product keys and creates the location enrollment code as the tenant administrator; device secrets in the git-ignored `seed/simulator.local.json`; reconnects with back-off and honours `retry_after_seconds`) |
+| MC-406 | Done | Portal `LiveService` (SignalR client loaded on demand, reference-counted groups, re-joins after reconnect); device cards update in place, device tiles, the customer dashboard and the location pages refetch on `summaryChanged` |
+| MC-407 | **Blocked** | Needs the intended production host to run `simulator run --devices 1` from outside its network (05 section 12). No host or credentials are available on this machine. **Owner action:** deploy the API to the target host and run the check; if HTTP/2 streams do not pass the reverse proxy, the WebSocket fallback behind `IAgentTransport` is the plan's answer (ADR needed then). Locally the gateway runs on its own HTTP/2 endpoint (`http://localhost:5301`, Development) next to REST/SignalR on 5300, because HTTP/2 without TLS needs a dedicated endpoint |
+
+### Test results (2026-10-07)
+
+| Suite | Count | Result |
+|---|---|---|
+| Backend unit | 307 | passed |
+| Architecture | 253 | passed |
+| Integration | 170 | passed |
+| Gateway (20 new: gateway tests 1-3, 7 and 11 of 09 section 5, retire closes the stream, hub scope, shutdown) | 23 | passed |
+| Contract, fake | 16 | passed |
+| Portal unit (6 new: LiveService, live card updates) | 126 | passed |
+| Portal e2e (new flow 2: simulated devices online, then offline without a reload) | 19 | passed |
+
+Acceptance: gateway tests 1-3, 7 and 11 pass; `simulator run --devices 20` showed the 20 devices online in Cairo HQ,
+and the e2e flow sees simulated devices go Offline through the live hub without a reload; the hosting check is
+blocked (see MC-407).
+
+### Stubbed or deferred, with reason
+
+- The `device-offline` alert 2 minutes after a device goes offline (and its resolution on reconnect, `Info` for
+  `HOST_SHUTTING_DOWN`/`UPDATING`) needs the Monitoring module (alerts, M5/M6); `DeviceWentOfflineV1` carries the
+  reason for it. The platform alert "possible cloned device" likewise; today it is audited.
+- Telemetry, inventory, issues, snapshots and live mode messages are routed but not yet handled (M5): they are not
+  acknowledged, so agents keep them.
+- `simulator --scenario` and `simulator load` come with telemetry (M5) and the load tests (M10).
+- The device screen header reacts to live events once the device screen exists (M5).
+
+### Notes for the product owner
+
+- Run the hosting check of MC-407 on the target host before relying on gRPC in production.
+- A bug found by the e2e flow: the portal missed the Offline change after a Goodbye because the broadcast was
+  cancelled together with the agent's call. Live events no longer use the caller's cancellation.

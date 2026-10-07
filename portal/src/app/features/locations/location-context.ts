@@ -14,7 +14,16 @@ export class LocationContext {
   readonly loading = signal(true);
   readonly failed = signal(false);
 
-  async load(id: string): Promise<void> {
+  /** quiet: a live refresh keeps the current content. */
+  async load(id: string, quiet = false): Promise<void> {
+    if (quiet && this.dashboard() && id === this.id()) {
+      try {
+        this.dashboard.set(await firstValueFrom(this.api.location(id)));
+      } catch {
+        // Keep the current numbers.
+      }
+      return;
+    }
     this.id.set(id);
     this.loading.set(true);
     this.failed.set(false);

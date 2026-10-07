@@ -1,11 +1,12 @@
 // Device simulator (05 section 11): enrolls simulated devices and keeps their gRPC streams open.
 //
 //   simulator enroll --count 20 [--tenant acme] [--location CAIRO-HQ]
-//   simulator run --devices 20 [--tenant acme] [--location CAIRO-HQ]
+//   simulator run --devices 20 [--tenant acme] [--location CAIRO-HQ] [--seconds 60]  (stop with Goodbye after 60 s)
 //
 // Options: --api http://localhost:5300, --store seed/simulator.local.json (git-ignored: it holds device secrets),
 // --licensing seed/licensing-fake.json (demo product keys, Fake mode), --admin-email / --admin-password (to create
-// the location enrollment code; default admin@{tenant}.test with the demo password of 08).
+// the location enrollment code; default admin@{tenant}.test with the demo password of 08), --run-id <id> (new
+// fingerprints for this run, e.g. for tests: re-enrolling one fingerprint is limited to 5 per hour).
 // Metrics, scenarios and load runs arrive with telemetry ingestion (M5) and load tests (M10).
 
 using System.Net.Http.Headers;
@@ -30,27 +31,50 @@ var store = Store.Load(options.StorePath);
 var wanted = options.Command == "enroll" ? options.Count : options.Devices;
 var mine = store.Devices.Where(d => d.Tenant == options.Tenant).ToList();
 
-if (mine.Count < wanted)
+// Devices whose credential no longer works (retired, reinstalled elsewhere) enroll again: same fingerprint, so the
+// cloud reactivates the same device in its previous location.
+var stale = new List<StoredDevice>();
+foreach (var device in mine.Take(wanted))
+{
+    try
+    {
+        await cloud.TokenAsync(new AgentIdentity(device.DeviceId, device.DeviceSecret, device.Fingerprint, device.Hostname, device.GatewayUrl));
+    }
+    catch (InvalidOperationException)
+    {
+        stale.Add(device);
+    }
+}
+
+if (mine.Count < wanted || stale.Count > 0)
 {
     var key = ProductKeys.For(options.LicensingPath, options.Tenant);
     var code = await LocationCodes.CreateAsync(http, options);
+    foreach (var device in stale)
+    {
+        var identity = await cloud.EnrollAsync(new EnrollRequest(key, device.Fingerprint, device.Hostname, LocationCode: code));
+        var renewed = device with { DeviceId = identity.DeviceId, DeviceSecret = identity.DeviceSecret, GatewayUrl = identity.GatewayUrl };
+        store.Devices[store.Devices.IndexOf(device)] = renewed;
+        mine[mine.IndexOf(device)] = renewed;
+        store.Save(options.StorePath);
+        Console.WriteLine($"Enrolled {identity.Hostname} again ({identity.DeviceId})");
+    }
+
     for (var n = mine.Count + 1; n <= wanted; n++)
     {
-        var fingerprint = $"sim-{options.Tenant}-{n:0000}";
+        var fingerprint = options.RunId is null ? $"sim-{options.Tenant}-{n:0000}" : $"sim-{options.Tenant}-{options.RunId}-{n:0000}";
         var identity = await cloud.EnrollAsync(new EnrollRequest(key, fingerprint, $"SIM-{options.Tenant.ToUpperInvariant()}-{n:00}", LocationCode: code));
         var saved = new StoredDevice(options.Tenant, identity.DeviceId, identity.DeviceSecret, identity.Fingerprint, identity.Hostname, identity.GatewayUrl);
         store.Devices.Add(saved);
         mine.Add(saved);
+        store.Save(options.StorePath);
         Console.WriteLine($"Enrolled {identity.Hostname} ({identity.DeviceId})");
     }
-
-    store.Save(options.StorePath);
 }
-
 if (options.Command == "enroll")
     return 0;
 
-using var stop = new CancellationTokenSource();
+using var stop = options.Seconds > 0 ? new CancellationTokenSource(TimeSpan.FromSeconds(options.Seconds)) : new CancellationTokenSource();
 Console.CancelKeyPress += (_, e) =>
 {
     e.Cancel = true;
@@ -119,7 +143,7 @@ async Task RunDeviceAsync(StoredDevice device, GrpcChannel grpc, CancellationTok
     }
 }
 
-internal sealed record Options(string Command, int Count, int Devices, string Tenant, string Location, string Api, string? Gateway, string StorePath, string LicensingPath, string? AdminEmail, string AdminPassword)
+internal sealed record Options(string Command, int Count, int Devices, int Seconds, string Tenant, string Location, string Api, string? Gateway, string StorePath, string LicensingPath, string? AdminEmail, string AdminPassword, string? RunId)
 {
     public static Options Parse(string[] args)
     {
@@ -132,9 +156,9 @@ internal sealed record Options(string Command, int Count, int Devices, string Te
         int Number(string name, int fallback) => int.TryParse(Value(name), out var n) && n > 0 ? n : fallback;
         var tenant = (Value("--tenant") ?? "acme").ToLowerInvariant();
         return new Options(
-            args.Length > 0 ? args[0] : string.Empty, Number("--count", 1), Number("--devices", 1), tenant, (Value("--location") ?? "CAIRO-HQ").ToUpperInvariant(),
+            args.Length > 0 ? args[0] : string.Empty, Number("--count", 1), Number("--devices", 1), Number("--seconds", 0), tenant, (Value("--location") ?? "CAIRO-HQ").ToUpperInvariant(),
             Value("--api") ?? "http://localhost:5300", Value("--gateway"), Value("--store") ?? Path.Combine("seed", "simulator.local.json"),
-            Value("--licensing") ?? Path.Combine("seed", "licensing-fake.json"), Value("--admin-email"), Value("--admin-password") ?? "Demo@12345");
+            Value("--licensing") ?? Path.Combine("seed", "licensing-fake.json"), Value("--admin-email"), Value("--admin-password") ?? "Demo@12345", Value("--run-id"));
     }
 }
 

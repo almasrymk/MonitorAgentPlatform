@@ -231,6 +231,23 @@ public sealed class GatewayTests(SqlServerFixture sql) : IAsyncLifetime
         agent.Disconnected.ShouldNotBeNull().Code.ShouldBe("TENANT_ARCHIVED");
     }
 
+    [Fact]
+    public async Task Retiring_a_connected_device_closes_its_stream()
+    {
+        var identity = Identity(_world.A.Device1);
+        await using var agent = await AgentAsync(identity);
+        (await agent.ConnectAsync(await Cloud.TokenAsync(identity))).ShouldNotBeNull();
+
+        using (var admin = _app.ClientFor(_world.A.Administrator))
+            (await admin.PostAsync(new Uri($"/api/v1/devices/{identity.DeviceId}/retire", UriKind.Relative), null)).EnsureSuccessStatusCode();
+        await _app.Services.GetRequiredService<OutboxDispatcher>().DispatchBatchAsync(CancellationToken.None);
+        await agent.Completion.WaitAsync(TimeSpan.FromSeconds(5));
+
+        agent.Disconnected.ShouldNotBeNull().Code.ShouldBe("DEVICE_RETIRED");
+        agent.Disconnected.RetryAfterSeconds.ShouldBe(0u);
+        Registry.Find(identity.DeviceId).ShouldBeNull();
+    }
+
     // ---------------------------------------------------------------- 3
 
     [Fact]

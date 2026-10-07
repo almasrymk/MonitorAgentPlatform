@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, effect, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, input, untracked } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { I18nService } from '../../core/i18n/i18n.service';
 import { BreadcrumbLabels } from '../../core/layout/breadcrumb-labels';
+import { LiveService } from '../../core/live/live.service';
 import { EntityHeader } from '../../shared/ui/headers';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { ErrorState } from '../../shared/ui/states';
@@ -60,6 +62,16 @@ export class LocationPage {
 
   constructor() {
     effect(() => void this.context.load(this.id()));
+    const live = inject(LiveService);
+    effect((onCleanup) => {
+      const id = this.id();
+      onCleanup(untracked(() => live.subscribe({ kind: 'location', id })));
+    });
+    live.summary$.pipe(takeUntilDestroyed()).subscribe((event) => {
+      if (event.scope === 'location' && event.id === this.id()) {
+        void this.context.load(this.id(), true);
+      }
+    });
     const labels = inject(BreadcrumbLabels);
     effect(() => {
       const l = this.context.dashboard()?.location;

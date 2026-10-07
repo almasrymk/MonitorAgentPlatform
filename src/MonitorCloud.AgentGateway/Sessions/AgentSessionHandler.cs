@@ -74,7 +74,8 @@ public sealed partial class AgentSessionHandler(
                 if (message.BodyCase == AgentMessage.BodyOneofCase.Goodbye)
                 {
                     goodbye = true;
-                    await SendCommandAsync(new MarkDevicesOfflineCommand([new OfflineDevice(deviceId, tenantId, message.Goodbye.Reason.ToString())]), callCancelled);
+                    // The agent closes the stream right after Goodbye: finish the update even when the call is gone.
+                    await SendCommandAsync(new MarkDevicesOfflineCommand([new OfflineDevice(deviceId, tenantId, message.Goodbye.Reason.ToString())]), CancellationToken.None);
                     break;
                 }
 

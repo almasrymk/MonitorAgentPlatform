@@ -22,7 +22,9 @@ public sealed class LiveNotifier(IHubContext<LiveHub> hub, TimeProvider clock) :
         {
             var payload = new { change.DeviceId, change.Connection, change.Health, change.LicenseState, change.Cpu, change.Ram, change.Disk, change.LastSeenAt, change.LocationId };
             await hub.Clients.Groups(LiveGroups.Tenant(change.TenantId), LiveGroups.Location(change.LocationId), LiveGroups.Device(change.DeviceId))
-                .SendAsync("deviceStateChanged", payload, cancellationToken);
+                // Not the caller's token: a Goodbye arrives just before the agent closes its stream, and the change must
+                // still reach the portal after the request is gone.
+                .SendAsync("deviceStateChanged", payload, CancellationToken.None);
         }
 
         foreach (var tenantId in changes.Select(c => c.TenantId).Distinct())

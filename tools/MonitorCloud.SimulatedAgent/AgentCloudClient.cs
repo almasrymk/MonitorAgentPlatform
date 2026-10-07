@@ -13,7 +13,23 @@ public sealed class AgentCloudClient(HttpClient http)
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
-    public async Task<AgentIdentity> EnrollAsync(EnrollRequest request, CancellationToken cancellationToken = default)
+    /// <summary>Enrolls; a 429 (10 enrollments per minute per IP) is retried after <c>Retry-After</c>, up to <paramref name="attempts"/> times.</summary>
+    public async Task<AgentIdentity> EnrollAsync(EnrollRequest request, int attempts = 5, CancellationToken cancellationToken = default)
+    {
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                return await EnrollOnceAsync(request, cancellationToken);
+            }
+            catch (RateLimitedException limited) when (attempt < attempts)
+            {
+                await Task.Delay(limited.RetryAfter, cancellationToken);
+            }
+        }
+    }
+
+    private async Task<AgentIdentity> EnrollOnceAsync(EnrollRequest request, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         using var response = await http.PostAsJsonAsync(new Uri("/api/agent/v1/enroll", UriKind.Relative), new
@@ -23,6 +39,8 @@ public sealed class AgentCloudClient(HttpClient http)
             protocolVersion = request.ProtocolVersion, locationCode = request.LocationCode,
         }, Json, cancellationToken);
         var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+            throw new RateLimitedException(response.Headers.RetryAfter?.Delta ?? TimeSpan.FromSeconds(60));
         if (!response.IsSuccessStatusCode)
             throw new InvalidOperationException($"Enrollment of {request.Fingerprint} failed: {(int)response.StatusCode} {body}");
         using var document = JsonDocument.Parse(body);
@@ -48,4 +66,10 @@ public sealed class AgentCloudClient(HttpClient http)
         "macos" => "macOS Sonoma 14.5",
         _ => "Windows Server 2022",
     };
+}
+
+/// <summary>The cloud answered 429.</summary>
+public sealed class RateLimitedException(TimeSpan retryAfter) : Exception($"Rate limited; retry after {retryAfter.TotalSeconds:0} s.")
+{
+    public TimeSpan RetryAfter { get; } = retryAfter;
 }

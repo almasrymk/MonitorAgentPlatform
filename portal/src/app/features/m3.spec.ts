@@ -218,6 +218,22 @@ describe('M3 screens', () => {
       }
     });
 
+    it('updates cards in place from live device state', async () => {
+      const { fixture, host } = await open({});
+      http.expectOne((r) => r.url === '/api/v1/locations').flush(page([]));
+      http.expectOne((r) => r.url === '/api/v1/devices').flush(page([device()]));
+      await settle();
+      fixture.detectChanges();
+      const browser = fixture.componentInstance as unknown as { applyLive(e: object): void };
+
+      browser.applyLive({ deviceId: 'd1', locationId: 'l1', connection: 'Offline', health: 'Unknown', licenseState: 'Licensed', cpu: null, ram: null, disk: null, lastSeenAt: null });
+      browser.applyLive({ deviceId: 'other', locationId: 'l1', connection: 'Online', health: 'Healthy', licenseState: 'Licensed', cpu: 1, ram: 1, disk: 1, lastSeenAt: null });
+      fixture.detectChanges();
+
+      expect(text(host, '[data-testid="device-status"]')).toBe('Offline');
+      expect(host.querySelectorAll('[data-testid="device-card"]').length).toBe(1);
+    });
+
     it('navigates to the device screen', async () => {
       const { fixture } = await open({ showLocationFilter: true }, ['devices.read']);
       http.expectOne((r) => r.url === '/api/v1/devices').flush(page([device()]));

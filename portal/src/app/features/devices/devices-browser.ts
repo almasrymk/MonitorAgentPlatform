@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -8,6 +9,8 @@ import { DeviceListItem, DevicesSummary, LocationCard, Paged } from '../../core/
 import { AuthService } from '../../core/auth/auth.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { areaRoot } from '../../core/layout/area';
+import { DeviceStateEvent, LiveService } from '../../core/live/live.service';
+import { ScopeStore } from '../../core/state/scope.store';
 import { ToastService } from '../../core/ui/toast.service';
 import { relativeTime } from '../../shared/format';
 import { Button } from '../../shared/ui/button';
@@ -55,6 +58,8 @@ export class DevicesBrowser {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  private readonly live = inject(LiveService);
+  private readonly scope = inject(ScopeStore);
 
   readonly locationId = input<string | null>(null);
   /** Fixed licence filter (Subscription device tabs). */
@@ -152,6 +157,46 @@ export class DevicesBrowser {
       });
     });
     void this.loadLocations();
+
+    // Live: cards update in place on deviceStateChanged; tiles refetch on summaryChanged (MC-406).
+    effect((onCleanup) => {
+      const locationId = this.locationId();
+      const release = untracked(() =>
+        this.live.subscribe(locationId ? { kind: 'location', id: locationId } : { kind: 'tenant', id: this.scope.workspace()?.id ?? null }),
+      );
+      onCleanup(release);
+    });
+    this.live.deviceState$.pipe(takeUntilDestroyed()).subscribe((event) => this.applyLive(event));
+    this.live.summary$.pipe(takeUntilDestroyed()).subscribe((event) => {
+      const mine = this.locationId() ? event.scope === 'location' && event.id === this.locationId() : event.scope === 'tenant';
+      if (mine && this.showSummary()) {
+        void this.refreshSummary();
+      }
+    });
+  }
+
+  /** Replaces the live fields of a listed device (the list itself is not re-sorted until the next load). */
+  protected applyLive(event: DeviceStateEvent): void {
+    const result = this.result();
+    if (!result?.items.some((d) => d.id === event.deviceId)) {
+      return;
+    }
+    this.result.set({
+      ...result,
+      items: result.items.map((d) =>
+        d.id === event.deviceId
+          ? { ...d, connection: event.connection, health: event.health, licenseState: event.licenseState, cpu: event.cpu, ram: event.ram, disk: event.disk, lastSeenAt: event.lastSeenAt }
+          : d,
+      ),
+    });
+  }
+
+  private async refreshSummary(): Promise<void> {
+    try {
+      this.summary.set(await firstValueFrom(this.api.summary(this.locationId() ?? (this.locationFilter() || null))));
+    } catch {
+      // Keep the last tiles.
+    }
   }
 
   /** Only the newest request may update the view: a slow older answer must not overwrite a newer filter. */
