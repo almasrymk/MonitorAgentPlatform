@@ -9,6 +9,8 @@ regexes = [
   '''DEV-ONLY-[A-Za-z0-9\-_]+''',
   '''CI-ONLY-[A-Za-z0-9\-_!]+''',
   '''TEST-ONLY-[A-Za-z0-9\-_]+''',
+  # The product-key / enrollment-code alphabet (Crockford-like, no 0/1/I/O), not a secret.
+  '''ABCDEFGHJKLMNPQRSTUVWXYZ23456789''',
 ]
 paths = [
   '''seed/licensing-fake\.json''',
