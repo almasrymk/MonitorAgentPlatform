@@ -13,14 +13,58 @@ const soon = (breadcrumb: string, milestone: string, permission?: string) => ({
 /** Customer area routes, shared by `/app` (tenant roles) and `/admin/customers/:tenantId` (workspace). */
 const customerRoutes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'overview' },
-  { path: 'overview', ...soon('nav.dashboard', 'M3', 'dashboard.read') },
   {
-    path: 'locations',
-    loadComponent: () => import('./features/locations/locations.page').then((m) => m.LocationsPage),
-    data: { breadcrumb: 'nav.locations', permission: 'locations.read' },
+    path: 'overview',
+    loadComponent: () => import('./features/dashboard/customer-dashboard.page').then((m) => m.CustomerDashboardPage),
+    data: { breadcrumb: 'nav.dashboard', permission: 'dashboard.read' },
     canActivate: [permissionGuard],
   },
-  { path: 'devices', ...soon('nav.devices', 'M3', 'devices.read') },
+  {
+    path: 'locations',
+    data: { breadcrumb: 'nav.locations' },
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./features/locations/locations.page').then((m) => m.LocationsPage),
+        data: { permission: 'locations.read' },
+        canActivate: [permissionGuard],
+      },
+      {
+        path: ':id',
+        loadComponent: () => import('./features/locations/location.page').then((m) => m.LocationPage),
+        data: { breadcrumb: ':location', permission: 'locations.read' },
+        canActivate: [permissionGuard],
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'overview' },
+          {
+            path: 'overview',
+            loadComponent: () => import('./features/locations/location-overview.page').then((m) => m.LocationOverviewPage),
+            data: { breadcrumb: 'locations.tabOverview', permission: 'dashboard.read' },
+            canActivate: [permissionGuard],
+          },
+          {
+            path: 'devices',
+            loadComponent: () => import('./features/locations/location-devices.page').then((m) => m.LocationDevicesPage),
+            data: { breadcrumb: 'locations.tabDevices', permission: 'devices.read' },
+            canActivate: [permissionGuard],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    path: 'devices',
+    data: { breadcrumb: 'nav.devices' },
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./features/devices/devices.page').then((m) => m.DevicesPage),
+        data: { permission: 'devices.read' },
+        canActivate: [permissionGuard],
+      },
+      { path: ':deviceId', ...soon('devices.details', 'M5', 'devices.read') },
+    ],
+  },
   {
     path: 'subscription',
     loadComponent: () => import('./features/subscription/subscription.page').then((m) => m.SubscriptionPage),

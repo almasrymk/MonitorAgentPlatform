@@ -1,0 +1,104 @@
+@if (showSummary()) {
+  <section class="tiles" data-testid="device-tiles">
+    @if (summary()) {
+      @for (t of tiles(); track t.key) {
+        <mc-kpi-tile [attr.data-testid]="'tile-' + t.key" [icon]="t.icon" [tone]="t.tone" [label]="t.label" [value]="t.value" [caption]="t.caption" />
+      }
+    } @else {
+      @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+        <mc-skeleton [height]="96" />
+      }
+    }
+  </section>
+}
+
+<section class="toolbar">
+  <mc-search-input data-testid="device-search" [placeholder]="i18n.t('devices.search')" [value]="search()" (searched)="setFilter(() => search.set($event))" />
+  @if (showLocationFilter()) {
+    <mc-select [label]="i18n.t('devices.allLocations')" [options]="locationOptions()" [value]="locationFilter()" (valueChange)="setFilter(() => locationFilter.set($event))" data-testid="location-filter" />
+  }
+  <mc-select [label]="i18n.t('devices.allOs')" [options]="osOptions()" [value]="os()" (valueChange)="setFilter(() => os.set($event))" data-testid="os-filter" />
+  <mc-select [label]="i18n.t('devices.allStatuses')" [options]="statusOptions()" [value]="status()" (valueChange)="setFilter(() => status.set($event))" data-testid="status-filter" />
+  @if (!license()) {
+    <mc-select [label]="i18n.t('devices.allLicenses')" [options]="licenseOptions()" [value]="licenseFilter()" (valueChange)="setFilter(() => licenseFilter.set($event))" data-testid="license-filter" />
+  }
+  <mc-select [label]="i18n.t('common.sortBy')" [options]="sortOptions()" [value]="sort()" (valueChange)="setFilter(() => sort.set($event))" data-testid="sort" />
+  <mc-view-toggle [view]="view()" (viewChange)="view.set($event)" />
+  @if (canEnroll()) {
+    <button type="button" mcButton="primary-solid" data-testid="add-device" (click)="enrollOpen.set(true)"><mc-icon name="plus" [size]="16" /> {{ i18n.t('devices.add') }}</button>
+  }
+</section>
+
+@if (failed()) {
+  <mc-error-state (retry)="load()" />
+} @else if (loading() && !result()) {
+  <section class="grid">
+    @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
+      <mc-skeleton [height]="220" />
+    }
+  </section>
+} @else if (result()?.items?.length === 0) {
+  <mc-empty-state icon="devices" [title]="i18n.t('devices.empty')" [message]="canEnroll() ? i18n.t('devices.emptyEnroll') : undefined" />
+} @else if (view() === 'grid') {
+  <section class="grid" data-testid="device-grid">
+    @for (d of result()!.items; track d.id) {
+      <mc-device-card [device]="d" [canManage]="canManage()" (action)="act($event)" (open)="open($event)" data-testid="device-card" />
+    }
+  </section>
+} @else {
+  <mc-data-table [columns]="columns()" [rows]="result()!.items" [loading]="loading()" data-testid="device-table">
+    <ng-template mcCell="name" let-row><strong>{{ device(row).name }}</strong></ng-template>
+    <ng-template mcCell="osFamily" let-row><span class="os"><mc-os-icon [os]="device(row).osFamily" [size]="16" /> {{ device(row).osName ?? device(row).osFamily }}</span></ng-template>
+    <ng-template mcCell="localIp" let-row><span class="mono">{{ device(row).localIp ?? '—' }}</span></ng-template>
+    <ng-template mcCell="status" let-row><mc-status-pill [status]="statusOf(device(row))" /></ng-template>
+    <ng-template mcCell="licenseState" let-row><mc-status-pill [status]="device(row).licenseState" /></ng-template>
+    <ng-template mcCell="cpu" let-row>{{ device(row).cpu === null ? '—' : device(row).cpu + '%' }}</ng-template>
+    <ng-template mcCell="ram" let-row>{{ device(row).ram === null ? '—' : device(row).ram + '%' }}</ng-template>
+    <ng-template mcCell="disk" let-row>{{ device(row).disk === null ? '—' : device(row).disk + '%' }}</ng-template>
+    <ng-template mcCell="lastSeenAt" let-row>{{ seen(device(row).lastSeenAt) }}</ng-template>
+    <ng-template mcCell="locationName" let-row>{{ device(row).locationName ?? '—' }}</ng-template>
+  </mc-data-table>
+}
+
+@if (result(); as r) {
+  <mc-pagination [page]="r.page" [pageSize]="r.pageSize" [total]="r.total" (pageChange)="goTo($event)" />
+}
+
+@if (showSummary()) {
+  <mc-card [title]="i18n.t('devices.recentAlerts')" class="alerts">
+    <mc-empty-state icon="bell" [title]="i18n.t('dashboard.noAlerts')" [message]="i18n.t('dashboard.alertsSoon')" />
+  </mc-card>
+}
+
+<mc-dialog [open]="pending() !== null" (openChange)="closeDialog($event)" [title]="dialogTitle()">
+  @if (pending(); as p) {
+    @switch (p.action) {
+      @case ('rename') {
+        <label class="field">
+          <span>{{ i18n.t('devices.name') }}</span>
+          <input name="device-name" data-testid="rename-input" [ngModel]="p.name" (ngModelChange)="updateName($event)" maxlength="200" required />
+        </label>
+      }
+      @case ('move') {
+        <mc-select [label]="i18n.t('devices.targetLocation')" [options]="moveOptions()" [value]="p.locationId" (valueChange)="updateLocation($event)" data-testid="move-select" />
+      }
+      @case ('unlicense') {
+        <p>{{ i18n.t('devices.confirm.unlicense') }}</p>
+      }
+      @case ('retire') {
+        <p>{{ i18n.t('devices.confirm.retire') }}</p>
+      }
+    }
+  }
+  <div dialogActions>
+    <button type="button" mcButton="secondary" (click)="pending.set(null)">{{ i18n.t('common.cancel') }}</button>
+    <button type="button" [mcButton]="pending()?.action === 'retire' || pending()?.action === 'unlicense' ? 'danger-outline' : 'primary-solid'" data-testid="confirm-action"
+      [disabled]="busy() || (pending()?.action === 'rename' && !pending()?.name?.trim())" (click)="confirm()">
+      {{ i18n.t('devices.apply.' + (pending()?.action ?? 'rename')) }}
+    </button>
+  </div>
+</mc-dialog>
+
+@if (locationId(); as id) {
+  <mc-add-device-dialog [open]="enrollOpen()" (openChange)="enrollOpen.set($event)" [locationId]="id" (created)="enrolled()" />
+}

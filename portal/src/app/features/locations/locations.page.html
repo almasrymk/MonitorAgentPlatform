@@ -9,7 +9,7 @@
 } @else if (loading() && !result()) {
   <section class="grid">
     @for (i of [1, 2, 3, 4]; track i) {
-      <div class="card"><mc-skeleton [height]="160" /></div>
+      <mc-skeleton [height]="220" />
     }
   </section>
 } @else if (result()?.items?.length === 0) {
@@ -17,25 +17,12 @@
 } @else {
   <section class="grid">
     @for (location of result()!.items; track location.id) {
-      <article class="card" data-testid="location-card">
-        <div class="image" aria-hidden="true"><span>{{ location.name.charAt(0) }}</span></div>
-        <div class="body">
-          <header>
-            <h2>{{ location.isDefault ? i18n.t('locations.unassigned') : location.name }}</h2>
-            <mc-status-pill [status]="location.status" />
-          </header>
-          <p class="place">{{ place(location) }}</p>
-          <dl class="counts">
-            <div><dt>{{ i18n.t('locations.devices') }}</dt><dd>{{ location.devices }}</dd></div>
-            <div><dt>{{ i18n.t('locations.online') }}</dt><dd>{{ location.online }}</dd></div>
-            <div><dt>{{ i18n.t('locations.warning') }}</dt><dd>{{ location.warning }}</dd></div>
-            <div><dt>{{ i18n.t('locations.critical') }}</dt><dd>{{ location.critical }}</dd></div>
-          </dl>
-          @if (canManage() && !location.isDefault) {
-            <button type="button" mcButton="ghost" size="sm" (click)="edit(location)"><mc-icon name="edit" [size]="14" /> {{ i18n.t('common.edit') }}</button>
-          }
-        </div>
-      </article>
+      <div class="cell">
+        <mc-location-card [location]="location" [link]="[location.id, 'overview']" />
+        @if (canManage() && !location.isDefault) {
+          <button type="button" mcButton="ghost" size="sm" class="edit" (click)="edit(location)"><mc-icon name="edit" [size]="14" /> {{ i18n.t('common.edit') }}</button>
+        }
+      </div>
     }
   </section>
   @if (result(); as r) {

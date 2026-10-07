@@ -14,7 +14,7 @@ import { Icon } from '../../shared/ui/icon';
 import { Pagination } from '../../shared/ui/pagination';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
-import { StatusPill } from '../../shared/ui/status-pill';
+import { LocationCard as LocationCardView } from '../../shared/ui/location-card';
 
 interface LocationForm {
   id: string | null;
@@ -32,10 +32,10 @@ interface LocationForm {
 
 const TIME_ZONES = ['Africa/Cairo', 'Asia/Dubai', 'Asia/Riyadh', 'Asia/Qatar', 'Asia/Kuwait', 'Asia/Muscat', 'Asia/Bahrain', 'Asia/Amman', 'Europe/London', 'UTC'];
 
-/** Locations (07 section 5.4). Device counts and health arrive with the Devices module (M3). */
+/** Locations (07 section 5.4): location cards with device counts and health; a card opens the location overview. */
 @Component({
   selector: 'mc-locations-page',
-  imports: [FormsModule, PageHeader, Button, Icon, Drawer, StatusPill, Skeleton, Pagination, EmptyState, ErrorState],
+  imports: [FormsModule, PageHeader, Button, Icon, Drawer, LocationCardView, Skeleton, Pagination, EmptyState, ErrorState],
   templateUrl: './locations.page.html',
   styleUrl: './locations.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -92,10 +92,6 @@ export class LocationsPage {
       contactEmail: location.contactEmail ?? '',
       contactPhone: location.contactPhone ?? '',
     });
-  }
-
-  protected place(location: LocationCard): string {
-    return [location.city, location.country].filter((p) => !!p).join(', ') || '—';
   }
 
   async save(): Promise<void> {

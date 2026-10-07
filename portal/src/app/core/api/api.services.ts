@@ -5,6 +5,14 @@ import { Observable } from 'rxjs';
 import {
   AuditRecord,
   AuthResult,
+  DeviceDetails,
+  DeviceListItem,
+  DevicesSummary,
+  EnrollmentCode,
+  EnrollmentCodeCreated,
+  LocationDashboard,
+  PlatformDashboard,
+  TenantDashboard,
   Location,
   LocationCard,
   LocationRequest,
@@ -62,7 +70,7 @@ export class AuthApi {
 export class TenantsApi {
   private readonly http = inject(HttpClient);
 
-  list(q: ListQuery & { status?: string | null; plan?: string | null; subscriptionStatus?: string | null }): Observable<Paged<TenantCard>> {
+  list(q: ListQuery & { status?: string | null; plan?: string | null; health?: string | null; subscriptionStatus?: string | null }): Observable<Paged<TenantCard>> {
     return this.http.get<Paged<TenantCard>>(`${BASE}/platform/tenants`, { params: query({ ...q }) });
   }
 
@@ -180,5 +188,75 @@ export class PlatformUsersApi {
 
   audit(q: ListQuery & { action?: string | null; tenantId?: string | null }): Observable<Paged<AuditRecord>> {
     return this.http.get<Paged<AuditRecord>>(`${BASE}/platform/audit`, { params: query({ ...q }) });
+  }
+}
+
+export interface DeviceQuery extends ListQuery {
+  locationId?: string | null;
+  os?: string | null;
+  status?: string | null;
+  license?: string | null;
+}
+
+@Injectable({ providedIn: 'root' })
+export class DevicesApi {
+  private readonly http = inject(HttpClient);
+
+  list(q: DeviceQuery): Observable<Paged<DeviceListItem>> {
+    return this.http.get<Paged<DeviceListItem>>(`${BASE}/devices`, { params: query({ ...q }) });
+  }
+
+  summary(locationId?: string | null): Observable<DevicesSummary> {
+    return this.http.get<DevicesSummary>(`${BASE}/devices/summary`, { params: query({ locationId }) });
+  }
+
+  get(id: string): Observable<DeviceDetails> {
+    return this.http.get<DeviceDetails>(`${BASE}/devices/${id}`);
+  }
+
+  update(id: string, body: { name: string; locationId: string }): Observable<DeviceListItem> {
+    return this.http.put<DeviceListItem>(`${BASE}/devices/${id}`, body);
+  }
+
+  retire(id: string): Observable<void> {
+    return this.http.post<void>(`${BASE}/devices/${id}/retire`, {});
+  }
+
+  unlicense(id: string): Observable<void> {
+    return this.http.post<void>(`${BASE}/devices/${id}/unlicense`, {});
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class EnrollmentCodesApi {
+  private readonly http = inject(HttpClient);
+
+  create(locationId: string, body: { expiresInHours: number; maxUses?: number | null }): Observable<EnrollmentCodeCreated> {
+    return this.http.post<EnrollmentCodeCreated>(`${BASE}/locations/${locationId}/enrollment-codes`, body);
+  }
+
+  list(locationId: string): Observable<EnrollmentCode[]> {
+    return this.http.get<EnrollmentCode[]>(`${BASE}/locations/${locationId}/enrollment-codes`);
+  }
+
+  revoke(locationId: string, codeId: string): Observable<void> {
+    return this.http.delete<void>(`${BASE}/locations/${locationId}/enrollment-codes/${codeId}`);
+  }
+}
+
+@Injectable({ providedIn: 'root' })
+export class DashboardsApi {
+  private readonly http = inject(HttpClient);
+
+  tenant(trendDays = 7): Observable<TenantDashboard> {
+    return this.http.get<TenantDashboard>(`${BASE}/dashboard`, { params: query({ trendDays }) });
+  }
+
+  location(id: string, trendDays = 7): Observable<LocationDashboard> {
+    return this.http.get<LocationDashboard>(`${BASE}/locations/${id}/dashboard`, { params: query({ trendDays }) });
+  }
+
+  platform(trendDays = 7): Observable<PlatformDashboard> {
+    return this.http.get<PlatformDashboard>(`${BASE}/platform/dashboard`, { params: query({ trendDays }) });
   }
 }

@@ -13,11 +13,12 @@ import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { StatusPill } from '../../shared/ui/status-pill';
 import { TabItem, Tabs } from '../../shared/ui/tabs';
 import { UsageBar } from '../../shared/ui/usage-bar';
+import { DevicesBrowser } from '../devices/devices-browser';
 
-/** Subscription & Licenses (07 section 5.8). Device tabs fill in with the Devices module (M3). */
+/** Subscription & Licenses (07 section 5.8): overview and the device tabs (all, licensed, unlicensed). */
 @Component({
   selector: 'mc-subscription-page',
-  imports: [DatePipe, PageHeader, Tabs, Card, StatusPill, UsageBar, Button, Dialog, Skeleton, EmptyState, ErrorState],
+  imports: [DatePipe, PageHeader, Tabs, Card, StatusPill, UsageBar, Button, Dialog, Skeleton, EmptyState, ErrorState, DevicesBrowser],
   templateUrl: './subscription.page.html',
   styleUrl: './subscription.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

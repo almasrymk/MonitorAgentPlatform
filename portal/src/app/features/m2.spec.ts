@@ -81,13 +81,19 @@ describe('M2 screens', () => {
       expect(host.textContent).toContain('Contact your account manager');
     });
 
-    it('shows the device tabs as coming with the Devices module', async () => {
+    it('shows the devices of a licence state in the device tabs', async () => {
       const { fixture, host } = await render(SubscriptionPage);
       http.expectOne('/api/v1/subscription').flush(subscription);
       await settle();
       (fixture.componentInstance as unknown as { tab: { set(v: string): void } }).tab.set('licensed');
       fixture.detectChanges();
-      expect(host.querySelector('mc-empty-state')).not.toBeNull();
+      await settle();
+      const request = http.expectOne((r) => r.url === '/api/v1/devices');
+      expect(request.request.params.get('license')).toBe('licensed');
+      request.flush({ items: [], total: 0, page: 1, pageSize: 24 });
+      await settle();
+      fixture.detectChanges();
+      expect(host.querySelector('[data-testid="subscription-devices"] mc-empty-state')).not.toBeNull();
     });
 
     it('shows the error state', async () => {

@@ -254,8 +254,8 @@ describe('feature screens', () => {
       http.expectOne((r) => r.url === '/api/v1/locations').flush({ items: [{ id: 'l1', name: 'Cairo HQ', code: 'CAIRO-HQ', city: 'Cairo', country: 'Egypt', isDefault: false, status: 'Active', devices: 0, online: 0, warning: 0, critical: 0, healthScore: null }], total: 1, page: 1, pageSize: 24 });
       await settle();
       fixture.detectChanges();
-      expect(text(host, '[data-testid="location-card"] h2')).toBe('Cairo HQ');
-      expect(text(host, '.place')).toBe('Cairo, Egypt');
+      expect(text(host, '[data-testid="location-card"] h3')).toBe('Cairo HQ');
+      expect(text(host, '[data-testid="location-card"] .muted')).toBe('Cairo, Egypt');
       (host.querySelector('[data-testid="add-location"]') as HTMLButtonElement).click();
       const component = fixture.componentInstance as unknown as { form: () => { name: string; code: string } | null; save(): Promise<void> };
       component.form()!.name = 'Giza';

@@ -1,14 +1,20 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs';
 
 import { I18nService } from '../i18n/i18n.service';
 import { ScopeStore } from '../state/scope.store';
+import { BreadcrumbLabels } from './breadcrumb-labels';
 
 interface Crumb {
   label: string;
   url: string | null;
+}
+
+interface RawCrumb {
+  key: string;
+  url: string;
 }
 
 /** Built from the `breadcrumb` data of the active routes (`:workspace` = the open customer's name). */
@@ -43,7 +49,18 @@ export class Breadcrumb {
   protected readonly i18n = inject(I18nService);
   private readonly router = inject(Router);
   private readonly scope = inject(ScopeStore);
-  protected readonly crumbs = signal<Crumb[]>([]);
+  private readonly labels = inject(BreadcrumbLabels);
+  private readonly raw = signal<RawCrumb[]>([]);
+  protected readonly crumbs = computed<Crumb[]>(() => {
+    const crumbs: Crumb[] = [];
+    for (const { key, url } of this.raw()) {
+      const label = key === ':workspace' ? (this.scope.workspace()?.name ?? '') : key.startsWith(':') ? (this.labels.values()[key] ?? '') : this.i18n.t(key);
+      if (!crumbs.some((c) => c.label === label)) {
+        crumbs.push({ label, url });
+      }
+    }
+    return crumbs;
+  });
 
   constructor() {
     this.update();
@@ -53,7 +70,7 @@ export class Breadcrumb {
   }
 
   private update(): void {
-    const crumbs: Crumb[] = [];
+    const crumbs: RawCrumb[] = [];
     let route: ActivatedRoute | null = this.router.routerState.root;
     const segments: string[] = [];
     while (route) {
@@ -63,13 +80,10 @@ export class Breadcrumb {
       segments.push(...urlSegments);
       const key = snapshot?.data?.['breadcrumb'] as string | undefined;
       if (key && (urlSegments.length > 0 || crumbs.length === 0)) {
-        const label = key === ':workspace' ? (this.scope.workspace()?.name ?? '') : this.i18n.t(key);
-        if (!crumbs.some((c) => c.label === label)) {
-          crumbs.push({ label, url: '/' + segments.join('/') });
-        }
+        crumbs.push({ key, url: '/' + segments.join('/') });
       }
       route = route.firstChild;
     }
-    this.crumbs.set(crumbs);
+    this.raw.set(crumbs);
   }
 }

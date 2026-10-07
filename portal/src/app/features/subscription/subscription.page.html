@@ -64,7 +64,7 @@
       </mc-card>
     </section>
   } @else {
-    <mc-empty-state icon="devices" [title]="i18n.t('subscription.devicesSoon')" />
+    <mc-devices-browser [license]="tab() === 'all' ? null : tab()" data-testid="subscription-devices" />
   }
 }
 

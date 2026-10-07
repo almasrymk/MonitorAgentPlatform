@@ -10,13 +10,10 @@
 <section class="toolbar">
   <mc-search-input data-testid="customer-search" [placeholder]="i18n.t('customers.search')" [value]="search()" (searched)="setFilter(() => search.set($event))" />
   <mc-select [label]="i18n.t('customers.allPlans')" [options]="planOptions()" [value]="plan()" (valueChange)="setFilter(() => plan.set($event))" data-testid="plan-filter" />
-  <mc-select [label]="i18n.t('customers.allHealth')" [options]="healthOptions()" value="" />
+  <mc-select [label]="i18n.t('customers.allHealth')" [options]="healthOptions()" [value]="health()" (valueChange)="setFilter(() => health.set($event))" data-testid="health-filter" />
   <mc-select [label]="i18n.t('customers.allStatuses')" [options]="statusOptions()" [value]="status()" (valueChange)="setFilter(() => status.set($event))" data-testid="status-filter" />
   <mc-select [label]="i18n.t('common.sortBy')" [options]="sortOptions()" [value]="sort()" (valueChange)="setFilter(() => sort.set($event))" />
-  <div class="view-toggle" role="group" [attr.aria-label]="i18n.t('common.view')">
-    <button type="button" mcButton="icon" [attr.aria-pressed]="view() === 'grid'" [attr.aria-label]="i18n.t('common.grid')" (click)="view.set('grid')"><mc-icon name="grid" /></button>
-    <button type="button" mcButton="icon" [attr.aria-pressed]="view() === 'list'" [attr.aria-label]="i18n.t('common.list')" (click)="view.set('list')"><mc-icon name="list" /></button>
-  </div>
+  <mc-view-toggle [view]="view()" (viewChange)="view.set($event)" />
 </section>
 
 @if (failed()) {
@@ -24,7 +21,7 @@
 } @else if (loading() && !result()) {
   <section class="grid">
     @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
-      <div class="card"><mc-skeleton [height]="180" /></div>
+      <mc-skeleton [height]="240" />
     }
   </section>
 } @else if (result()?.items?.length === 0) {
@@ -32,37 +29,7 @@
 } @else if (view() === 'grid') {
   <section class="grid">
     @for (card of result()!.items; track card.id) {
-      <article class="card" data-testid="customer-card">
-        <header>
-          <mc-avatar [name]="card.name" [letters]="1" [size]="40" />
-          <div class="name">
-            <h2>{{ card.name }}</h2>
-            <span class="plan" data-testid="plan-name">{{ card.planName ?? i18n.t('customers.planPending') }}</span>
-          </div>
-          <mc-status-pill [status]="pill(card)" />
-        </header>
-        <dl class="facts">
-          <div><dt>{{ i18n.t('customers.locations') }}</dt><dd>{{ card.locations }}</dd></div>
-          <div><dt>{{ i18n.t('customers.devices') }}</dt><dd>@if (card.devices === null || card.devices === undefined) { <mc-skeleton [height]="14" width="32px" /> } @else { {{ card.devices }} }</dd></div>
-          <div><dt>{{ i18n.t('customers.healthScore') }}</dt><dd><mc-skeleton [height]="14" width="40px" /></dd></div>
-          <div class="wide"><dt>{{ i18n.t('customers.licenseUsage') }}</dt><dd>@if (card.licensesUsed === null || card.licensesUsed === undefined) { <mc-skeleton [height]="14" width="56px" /> } @else { <mc-usage-bar [used]="card.licensesUsed" [limit]="card.licenseLimit" [label]="i18n.t('customers.licenseUsage')" /> }</dd></div>
-          <div><dt>{{ i18n.t('customers.nextRenewal') }}</dt><dd data-testid="renewal">{{ renewal(card) }}</dd></div>
-          <div><dt>{{ i18n.t('customers.since') }}</dt><dd>{{ since(card) }}</dd></div>
-        </dl>
-        <footer>
-          @if (card.status !== 'Archived') {
-            <button type="button" mcButton="primary-solid" size="sm" data-testid="open-workspace" (click)="ask('workspace', card)">{{ i18n.t('customers.openWorkspace') }}</button>
-          }
-          @if (canManage() && card.status !== 'Archived') {
-            <button type="button" mcButton="secondary" size="sm" (click)="ask('archive', card)">{{ i18n.t('customers.archive') }}</button>
-            @if (card.status === 'Suspended') {
-              <button type="button" mcButton="success-outline" size="sm" (click)="resume(card)">{{ i18n.t('customers.reactivate') }}</button>
-            } @else {
-              <button type="button" mcButton="danger-outline" size="sm" (click)="ask('suspend', card)">{{ i18n.t('customers.suspend') }}</button>
-            }
-          }
-        </footer>
-      </article>
+      <mc-customer-card [card]="card" [canManage]="canManage()" (action)="onCard($event, card)" data-testid="customer-card" />
     }
   </section>
 } @else {
@@ -70,6 +37,7 @@
     <ng-template mcCell="name" let-row><strong>{{ $any(row).name }}</strong></ng-template>
     <ng-template mcCell="status" let-row><mc-status-pill [status]="pill($any(row))" /></ng-template>
     <ng-template mcCell="plan" let-row>{{ $any(row).planName ?? '—' }}</ng-template>
+    <ng-template mcCell="health" let-row><mc-health-bar [value]="$any(row).healthScore" [label]="i18n.t('customers.healthScore')" /></ng-template>
     <ng-template mcCell="actions" let-row>
       @if ($any(row).status !== 'Archived') {
         <button type="button" mcButton="primary-outline" size="sm" (click)="ask('workspace', $any(row))">{{ i18n.t('customers.openWorkspace') }}</button>

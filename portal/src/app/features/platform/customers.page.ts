@@ -8,12 +8,10 @@ import { AuthService } from '../../core/auth/auth.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { ScopeStore } from '../../core/state/scope.store';
 import { ToastService } from '../../core/ui/toast.service';
-import { Avatar } from '../../shared/ui/avatar';
 import { Button } from '../../shared/ui/button';
 import { ConfirmWithReasonDialog } from '../../shared/ui/confirm-with-reason-dialog';
 import { CellDef, Column, DataTable } from '../../shared/ui/data-table';
 import { PageHeader } from '../../shared/ui/headers';
-import { Icon } from '../../shared/ui/icon';
 import { KpiTile } from '../../shared/ui/kpi-tile';
 import { Pagination } from '../../shared/ui/pagination';
 import { SearchInput } from '../../shared/ui/search-input';
@@ -21,20 +19,19 @@ import { Select } from '../../shared/ui/select';
 import { Skeleton } from '../../shared/ui/skeleton';
 import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { StatusPill } from '../../shared/ui/status-pill';
-import { UsageBar } from '../../shared/ui/usage-bar';
+import { CustomerAction, CustomerCard } from '../../shared/ui/customer-card';
+import { HealthBar } from '../../shared/ui/health-bar';
+import { ViewToggle } from '../../shared/ui/view-toggle';
 
 interface Action {
   kind: 'workspace' | 'suspend' | 'archive';
   tenant: TenantCard;
 }
 
-/**
- * Customers (07 section 5.2). In M1 the cards show plan placeholders and locations; device, health, licence and
- * renewal fields show skeletons until M2-M5.
- */
+/** Customers (07 section 5.2): customer cards with plan, devices, health, licence usage and renewal. */
 @Component({
   selector: 'mc-customers-page',
-  imports: [PageHeader, KpiTile, SearchInput, Select, Avatar, StatusPill, Button, Icon, Skeleton, Pagination, ConfirmWithReasonDialog, DataTable, CellDef, EmptyState, ErrorState, UsageBar],
+  imports: [PageHeader, KpiTile, SearchInput, Select, StatusPill, Button, Skeleton, Pagination, ConfirmWithReasonDialog, DataTable, CellDef, EmptyState, ErrorState, CustomerCard, HealthBar, ViewToggle],
   templateUrl: './customers.page.html',
   styleUrl: './customers.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -51,6 +48,7 @@ export class CustomersPage {
   protected readonly search = signal('');
   protected readonly status = signal('');
   protected readonly plan = signal('');
+  protected readonly health = signal('');
   protected readonly sort = signal('name');
   protected readonly page = signal(1);
   protected readonly view = signal<'grid' | 'list'>('grid');
@@ -75,7 +73,10 @@ export class CustomersPage {
     { value: '', label: this.i18n.t('customers.allPlans') },
     ...['ENTERPRISE', 'BUSINESS', 'PROFESSIONAL', 'STARTER'].map((code) => ({ value: code, label: this.i18n.t(`plan.${code}`) })),
   ]);
-  protected readonly healthOptions = computed(() => [{ value: '', label: this.i18n.t('customers.allHealth') }]);
+  protected readonly healthOptions = computed(() => [
+    { value: '', label: this.i18n.t('customers.allHealth') },
+    ...['healthy', 'warning', 'critical'].map((h) => ({ value: h, label: this.i18n.t(`status.${h}`) })),
+  ]);
   protected readonly sortOptions = computed(() => [
     { value: 'name', label: this.i18n.t('customers.sortName') },
     { value: '-customerSince', label: this.i18n.t('customers.sortNewest') },
@@ -86,6 +87,8 @@ export class CustomersPage {
     { key: 'status', label: this.i18n.t('common.status'), sortable: true },
     { key: 'plan', label: this.i18n.t('customers.plan') },
     { key: 'locations', label: this.i18n.t('customers.locations') },
+    { key: 'devices', label: this.i18n.t('customers.devices') },
+    { key: 'health', label: this.i18n.t('customers.healthScore') },
     { key: 'city', label: this.i18n.t('customers.city') },
     { key: 'actions', label: '' },
   ]);
@@ -102,7 +105,7 @@ export class CustomersPage {
     try {
       const [summary, result] = await Promise.all([
         firstValueFrom(this.api.summary()),
-        firstValueFrom(this.api.list({ search: this.search(), plan: this.plan(), subscriptionStatus: this.status(), sort: this.sort(), page: this.page(), pageSize: this.pageSize })),
+        firstValueFrom(this.api.list({ search: this.search(), plan: this.plan(), health: this.health(), subscriptionStatus: this.status(), sort: this.sort(), page: this.page(), pageSize: this.pageSize })),
       ]);
       this.summary.set(summary);
       this.result.set(result);
@@ -126,6 +129,14 @@ export class CustomersPage {
 
   protected ask(kind: Action['kind'], tenant: TenantCard): void {
     this.action.set({ kind, tenant });
+  }
+
+  protected onCard(action: CustomerAction, tenant: TenantCard): void {
+    if (action === 'reactivate') {
+      void this.resume(tenant);
+    } else {
+      this.ask(action, tenant);
+    }
   }
 
   protected async resume(tenant: TenantCard): Promise<void> {
@@ -187,15 +198,5 @@ export class CustomersPage {
       return 'expiring';
     }
     return card.subscriptionStatus && card.subscriptionStatus !== 'None' ? card.subscriptionStatus : card.status;
-  }
-
-  protected renewal(card: TenantCard): string {
-    return card.nextRenewal
-      ? new Date(card.nextRenewal).toLocaleDateString(this.i18n.language() === 'ar' ? 'ar-EG' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-      : '—';
-  }
-
-  protected since(card: TenantCard): string {
-    return new Date(card.customerSince).toLocaleDateString(this.i18n.language() === 'ar' ? 'ar-EG' : 'en-GB', { year: 'numeric', month: 'short' });
   }
 }

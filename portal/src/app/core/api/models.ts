@@ -13,6 +13,19 @@ export type LocationRequest = Schemas['LocationRequest'];
 export type UserListItem = Schemas['UserListItemDto'];
 export type Role = Schemas['RoleDto'];
 export type AuditRecord = Schemas['AuditRecordDto'];
+export type DeviceListItem = Schemas['DeviceListItemDto'];
+export type DeviceDetails = Schemas['DeviceDto'];
+export type DevicesSummary = Schemas['DevicesSummaryDto'];
+export type EnrollmentCodeCreated = Schemas['EnrollmentCodeCreatedDto'];
+export type EnrollmentCode = Schemas['EnrollmentCodeDto'];
+export type KpiTileData = Schemas['KpiTileDto'];
+export type HealthBreakdown = Schemas['HealthBreakdownDto'];
+export type NamedCount = Schemas['NamedCountDto'];
+export type ProblemDevice = Schemas['ProblemDeviceDto'];
+export type LocationStatusRow = Schemas['LocationStatusRowDto'];
+export type TenantDashboard = Schemas['TenantDashboardDto'];
+export type LocationDashboard = Schemas['LocationDashboardDto'];
+export type PlatformDashboard = Schemas['PlatformDashboardDto'];
 
 export interface Paged<T> {
   items: T[];

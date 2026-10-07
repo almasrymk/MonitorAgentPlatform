@@ -33,6 +33,8 @@ import { Icon } from './icon';
     footer { display: flex; justify-content: flex-end; gap: var(--mc-space-2); padding: 0 var(--mc-space-5) var(--mc-space-5); }
     footer:empty { display: none; }
   `,
+  // Escape also closes when focus left the dialog (e.g. the focused button was replaced).
+  host: { '(document:keydown.escape)': 'open() && close()' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Dialog {
