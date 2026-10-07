@@ -29,7 +29,7 @@ public sealed record AgentHello(
     int AppliedConfigVersion, string? LocalIp, string? MacAddress);
 
 /// <summary>What the gateway needs for <c>Welcome</c>.</summary>
-public sealed record AgentSessionStart(Guid LocationId, ulong LastReceivedSequence, int ConfigVersion, bool Licensed);
+public sealed record AgentSessionStart(Guid LocationId, ulong LastReceivedSequence, int ConfigVersion, bool Licensed, bool Restricted = false);
 
 /// <summary>
 /// A device opened its stream and sent Hello: checks device, credential and tenant, updates the agent facts, marks it
@@ -83,7 +83,8 @@ internal sealed class OpenAgentSessionCommandHandler(
         await live.DeviceStateChangedAsync([DeviceLive.Change(state)], cancellationToken);
 
         var seat = await seats.FindAsync(device.Id, cancellationToken);
-        return new AgentSessionStart(state.LocationId, (ulong)Math.Max(0, state.LastEventSequence), 0, (seat?.State ?? "Licensed") == "Licensed");
+        var restricted = state.LicenseState == LicenseStateValue.Unlicensed && state.UnlicensedSince is { } since && now >= since.Add(policy.UnlicensedGrace);
+        return new AgentSessionStart(state.LocationId, (ulong)Math.Max(0, state.LastEventSequence), 0, (seat?.State ?? "Licensed") == "Licensed", restricted);
     }
 }
 

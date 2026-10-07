@@ -22,4 +22,5 @@ internal sealed class SqlConnectionFactory(DatabaseOptionsAccessor options, ITen
         };
 }
 
-internal sealed record DatabaseOptionsAccessor(string ConnectionString);
+/// <summary>The database connection string for code that writes outside EF Core (telemetry bulk copy).</summary>
+public sealed record DatabaseOptionsAccessor(string ConnectionString);

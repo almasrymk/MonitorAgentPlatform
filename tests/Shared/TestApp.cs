@@ -51,6 +51,7 @@ public class TestApp(SqlServerFixture sql) : WebApplicationFactory<Program>, IAs
         builder.UseSetting("Licensing:FakeDataPath", "");
         builder.UseSetting("Agent:BackgroundJobsEnabled", "false");
         builder.UseSetting("Gateway:PresenceEnabled", "false");
+        builder.UseSetting("Telemetry:JobsEnabled", "false");
         builder.UseSetting("Gateway:HelloTimeoutSeconds", "2");
         builder.UseSetting("RateLimiting:Enroll:PermitLimit", "100000");
         builder.UseSetting("RateLimiting:AgentToken:PermitLimit", "100000");

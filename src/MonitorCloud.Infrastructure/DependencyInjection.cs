@@ -55,6 +55,14 @@ public static class DependencyInjection
         services.AddSingleton<Application.Devices.IDeviceTokenService, Devices.DeviceTokenService>();
         services.AddScoped<Application.Licensing.Contracts.IEnrollmentAttemptLog, Licensing.EnrollmentAttemptLog>();
         services.AddHostedService<Devices.DeviceMaintenanceJob>();
+        services.AddOptions<Telemetry.TelemetryOptions>().Bind(configuration.GetSection(Telemetry.TelemetryOptions.Section));
+        services.AddSingleton<Telemetry.TelemetryWriter>();
+        services.AddSingleton<Application.Telemetry.Contracts.ITelemetryIngest>(sp => sp.GetRequiredService<Telemetry.TelemetryWriter>());
+        services.AddHostedService(sp => sp.GetRequiredService<Telemetry.TelemetryWriter>());
+        services.AddSingleton<Telemetry.TelemetryJobs>();
+        services.AddHostedService(sp => sp.GetRequiredService<Telemetry.TelemetryJobs>());
+        services.AddSingleton<Application.Telemetry.Contracts.ILiveSnapshotStore, Telemetry.LiveSnapshotStore>();
+        services.AddSingleton<Application.Abstractions.Serialization.IInventoryCodec, Telemetry.InventoryCodecAdapter>();
         services.AddScoped<Seeding.BootstrapSeeder>();
         services.AddScoped<Seeding.DemoSeeder>();
 

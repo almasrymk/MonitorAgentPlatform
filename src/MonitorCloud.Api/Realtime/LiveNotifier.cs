@@ -35,6 +35,16 @@ public sealed class LiveNotifier(IHubContext<LiveHub> hub, TimeProvider clock) :
             ScheduleSummary(LiveGroups.Platform, "platform", null);
     }
 
+    public Task LiveSampleAsync(LiveSampleChange sample, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(sample);
+        return hub.Clients.Group(LiveGroups.Device(sample.DeviceId)).SendAsync("liveSample",
+            new { sample.DeviceId, sample.At, sample.Cpu, sample.Ram, sample.DiskActive, sample.RxBps, sample.TxBps, sample.CpuTempC }, CancellationToken.None);
+    }
+
+    public Task SnapshotUpdatedAsync(Guid deviceId, DateTimeOffset capturedAt, CancellationToken cancellationToken) =>
+        hub.Clients.Group(LiveGroups.Device(deviceId)).SendAsync("snapshotUpdated", new { deviceId, capturedAt }, CancellationToken.None);
+
     private void ScheduleSummary(string group, string scope, Guid? id)
     {
         if (!_scheduled.TryAdd(group, 0))

@@ -123,7 +123,20 @@ public sealed partial class DemoSeeder(
             await licensingSync.ReconcileAllAsync(cancellationToken);
         }
 
+        // Part 3 (M5): metric history, disk usage and snapshots (bulk copy, after the devices exist).
+        var telemetry = new DemoTelemetry(db.Database.GetConnectionString()!, now, new Random(DemoData.Seed + 3));
+        await telemetry.RunAsync(cancellationToken);
+
+        // 08 section 4: one valid enrollment code for Acme / Cairo HQ, printed at seed time.
+        var cairo = await db.Set<Location>().FirstAsync(l => l.Code == "CAIRO-HQ", cancellationToken);
+        var code = Application.Tenancy.EnrollmentCodes.New();
+        db.Set<LocationEnrollmentCode>().Add(LocationEnrollmentCode.Create(cairo.TenantId, cairo.Id, Application.Tenancy.EnrollmentCodes.Hash(code),
+            Application.Tenancy.EnrollmentCodes.Prefix(code), TimeSpan.FromDays(30), null, null, now));
+        await db.SaveChangesAsync(cancellationToken);
+        LogEnrollmentCode(logger, code);
+
         LogSeeded(logger, DemoData.Detailed.Length + 40, devices.Created);
+        LogTelemetry(logger, telemetry.Rows);
     }
 
     private void AddCustomer(
@@ -181,6 +194,12 @@ public sealed partial class DemoSeeder(
             tenant.Suspend("Subscription suspended", now);
         tenant.ClearDomainEvents();
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Demo enrollment code for Acme / Cairo HQ (valid 30 days): {Code}")]
+    private static partial void LogEnrollmentCode(ILogger logger, string code);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Demo telemetry seeded: {Rows} metric rows")]
+    private static partial void LogTelemetry(ILogger logger, int rows);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Demo data seeded: {Customers} customers, {Devices} devices")]
     private static partial void LogSeeded(ILogger logger, int customers, int devices);

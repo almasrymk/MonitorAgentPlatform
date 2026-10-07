@@ -57,6 +57,7 @@ public static class ErrorCodes
     public const string CredentialRevoked = "CREDENTIAL_REVOKED";
     public const string TenantArchived = "TENANT_ARCHIVED";
     public const string ProtocolUnsupported = "PROTOCOL_UNSUPPORTED";
+    public const string InventoryNotFound = "INVENTORY_NOT_FOUND";
 
     public static IReadOnlyList<string> All { get; } = typeof(ErrorCodes)
         .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)

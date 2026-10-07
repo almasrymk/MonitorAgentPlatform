@@ -109,7 +109,13 @@ async Task RunDeviceAsync(StoredDevice device, GrpcChannel grpc, CancellationTok
             {
                 backoff = TimeSpan.FromSeconds(1);
                 Console.WriteLine($"{device.Hostname}: online (session {welcome.SessionId})");
+                await agent.InventoryAsync(InventoryKind.Hardware, cancellationToken);
+                await agent.InventoryAsync(InventoryKind.Os, cancellationToken);
+                using var telemetry = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                var pump = PumpTelemetryAsync(agent, telemetry.Token);
                 await agent.RunHeartbeatsAsync(cancellationToken);
+                await telemetry.CancelAsync();
+                await pump;
                 if (cancellationToken.IsCancellationRequested)
                 {
                     await agent.GoodbyeAsync(GoodbyeReason.ServiceStopping, CancellationToken.None);
@@ -140,6 +146,26 @@ async Task RunDeviceAsync(StoredDevice device, GrpcChannel grpc, CancellationTok
         }
 
         backoff = TimeSpan.FromSeconds(Math.Min(300, backoff.TotalSeconds * 2));
+    }
+}
+
+// One completed minute and a snapshot every minute (05 section 2, steady state); live samples follow SetTelemetryMode.
+async Task PumpTelemetryAsync(SimulatedAgent agent, CancellationToken cancellationToken)
+{
+    try
+    {
+        await agent.SnapshotAsync(cancellationToken);
+        while (!cancellationToken.IsCancellationRequested && !agent.Completion.IsCompleted)
+        {
+            var now = DateTimeOffset.UtcNow;
+            await Task.Delay(TimeSpan.FromSeconds(60 - now.Second), cancellationToken);
+            await agent.SendMetricsAsync(DateTimeOffset.UtcNow.AddMinutes(-1), cancellationToken: cancellationToken);
+            await agent.SnapshotAsync(cancellationToken);
+        }
+    }
+    catch (Exception ex) when (ex is OperationCanceledException or Grpc.Core.RpcException or InvalidOperationException)
+    {
+        // The stream ended; the run loop reconnects.
     }
 }
 

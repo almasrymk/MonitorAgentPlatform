@@ -46,7 +46,7 @@ public sealed partial class AgentSessionHandler(
         }
 
         var now = clock.GetUtcNow();
-        using var session = new AgentSession(deviceId, tenantId, start.Value.LocationId, transport, now);
+        using var session = new AgentSession(deviceId, tenantId, start.Value.LocationId, transport, now, start.Value.LastReceivedSequence, start.Value.Restricted);
         var replaced = registry.Register(session);
         if (replaced is not null)
         {

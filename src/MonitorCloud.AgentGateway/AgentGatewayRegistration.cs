@@ -22,6 +22,11 @@ public static class AgentGatewayRegistration
         });
         services.AddOptions<AgentGatewayOptions>().Bind(configuration.GetSection(AgentGatewayOptions.Section));
         services.AddSingleton<IAgentSessionRegistry, AgentSessionRegistry>();
+        services.AddSingleton<IAgentMessageHandler, Handlers.MetricBatchHandler>();
+        services.AddSingleton<IAgentMessageHandler, Handlers.SnapshotHandler>();
+        services.AddSingleton<IAgentMessageHandler, Handlers.InventoryHandler>();
+        services.AddSingleton<IAgentMessageHandler, Handlers.LiveSampleHandler>();
+        services.AddSingleton<Application.Devices.Contracts.ILiveModeControl, LiveModeController>();
         services.AddSingleton<AgentMessageRouter>();
         services.AddSingleton<AgentSessionHandler>();
         services.AddSingleton<PresenceMonitor>();

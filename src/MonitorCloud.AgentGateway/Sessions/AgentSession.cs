@@ -5,10 +5,37 @@ using MonitorCloud.AgentProtocol.V1;
 namespace MonitorCloud.AgentGateway.Sessions;
 
 /// <summary>A live device stream after a successful Hello.</summary>
-public sealed class AgentSession(Guid deviceId, Guid tenantId, Guid locationId, IAgentTransport transport, DateTimeOffset connectedAt) : IDisposable
+public sealed class AgentSession(Guid deviceId, Guid tenantId, Guid locationId, IAgentTransport transport, DateTimeOffset connectedAt, ulong lastAccepted = 0, bool restricted = false) : IDisposable
 {
     private readonly CancellationTokenSource _closed = new();
     private long _lastMessageTicks = connectedAt.UtcTicks;
+    private long _lastAccepted = (long)lastAccepted;
+    private long _lastLiveTicks;
+
+    /// <summary>Unlicensed after the grace period: only Hello, Heartbeat, Goodbye and ConfigApplied are processed (rule 9).</summary>
+    public bool Restricted { get; } = restricted;
+
+    /// <summary>Accepts a guaranteed sequence once; false for a duplicate (at or below the last accepted, rule 4).</summary>
+    public bool TryAccept(ulong sequence)
+    {
+        while (true)
+        {
+            var current = Interlocked.Read(ref _lastAccepted);
+            if ((long)sequence <= current)
+                return false;
+            if (Interlocked.CompareExchange(ref _lastAccepted, (long)sequence, current) == current)
+                return true;
+        }
+    }
+
+    /// <summary>Throttles live samples to the requested interval.</summary>
+    public bool TryTakeLiveSlot(DateTimeOffset now, TimeSpan minInterval)
+    {
+        var last = Interlocked.Read(ref _lastLiveTicks);
+        if (now.UtcTicks - last < minInterval.Ticks)
+            return false;
+        return Interlocked.CompareExchange(ref _lastLiveTicks, now.UtcTicks, last) == last;
+    }
 
     public string SessionId { get; } = Guid.CreateVersion7().ToString("N");
     public Guid DeviceId { get; } = deviceId;

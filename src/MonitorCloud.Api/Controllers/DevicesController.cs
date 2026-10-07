@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using MonitorCloud.Application.Common;
 using MonitorCloud.Application.Devices;
+using MonitorCloud.Application.Telemetry;
 
 namespace MonitorCloud.Api.Controllers;
 
@@ -47,4 +48,38 @@ public sealed class DevicesController(ISender sender) : ApiControllerBase(sender
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> Unlicense(Guid id, CancellationToken cancellationToken) =>
         FromResult(await Sender.Send(new UnlicenseDeviceCommand(id), cancellationToken));
+
+    [HttpGet("{id:guid}/overview")]
+    [ProducesResponseType<DeviceOverviewDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> Overview(Guid id, CancellationToken cancellationToken) =>
+        FromResult(await Sender.Send(new GetDeviceOverviewQuery(id), cancellationToken));
+
+    [HttpGet("{id:guid}/metrics")]
+    [ProducesResponseType<DeviceMetricsDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> Metrics(Guid id, [FromQuery] DateTimeOffset? from, [FromQuery] DateTimeOffset? to, [FromQuery] string? metrics, CancellationToken cancellationToken) =>
+        FromResult(await Sender.Send(new GetDeviceMetricsQuery(id, from, to, metrics), cancellationToken));
+
+    [HttpGet("{id:guid}/disks")]
+    [ProducesResponseType<IReadOnlyList<DiskDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> Disks(Guid id, CancellationToken cancellationToken) =>
+        FromResult(await Sender.Send(new GetDeviceDisksQuery(id), cancellationToken));
+
+    [HttpGet("{id:guid}/inventory/{kind}")]
+    [ProducesResponseType<InventoryDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> Inventory(Guid id, string kind, CancellationToken cancellationToken) =>
+        FromResult(await Sender.Send(new GetDeviceInventoryQuery(id, kind), cancellationToken));
+
+    /// <summary>Keeps live mode on for 60 s (05 section 4); 204 whether or not the device is connected.</summary>
+    [HttpPost("{id:guid}/live-sessions")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> LiveSession(Guid id, CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(new StartLiveSessionCommand(id), cancellationToken);
+        return result.IsSuccess ? NoContent() : Problem(result.Error!);
+    }
 }
