@@ -196,3 +196,55 @@ fake answered a plain list. The fake now matches the live shape.
 
 - The LP changes are on a branch, not merged: review and merge `feature/monitor-cloud-integration` in the Licensing
   Platform when ready. Monitor Cloud runs in `Fake` mode until then.
+
+## M3 - Devices and enrollment (done 2026-10-07)
+
+### Tasks
+
+| Id | Status | Notes |
+|---|---|---|
+| MC-301 | Done | `Device`, `DeviceCredential` (HMAC hash, 5 failures in 10 min block the id for 10 min), `DeviceState` (read model with `UnlicensedSince`, ADR 0004), `InventoryDocument` (Brotli JSON + SHA-256); `GET /devices` (filters location, search, os, status, license; sorts severity, name, lastSeen, cpu; paging), `/devices/summary`, `/devices/{id}` with ETag, `PUT` rename/move with `If-Match`, `retire`, `unlicense` |
+| MC-302 | Done | `LocationEnrollmentCode` (`LOC-XXXXXX-XXXXXX`, 60 bits, only hash and prefix stored, shown once); create/list/revoke under `/locations/{id}/enrollment-codes` with install commands for Windows, Linux and macOS |
+| MC-303 | Done | `POST /api/agent/v1/enroll` (enrollment = activation, tenant provisioned for a new Licensing customer, location code, re-enrollment issues a new secret, retired device reactivated in its old location, the seat is released again when enrollment fails afterwards, `LIC_*` codes passed through), `/token` (device JWT, 60 min, own key and audience), `/credential/rotate` (device token only); limits: 10/min per IP, 5/h per fingerprint; `EnrollmentAttempt` log (key prefix only, 90 days) |
+| MC-304 | Done | `DeviceMaintenanceJob` every 5 minutes: refreshes due licences (renew, `Unlicensed` on rejection, retry in an hour when Licensing is unavailable), applies the D19 grace rule (health `Unknown` after 14 days), removes old attempts; seat released through the outbox on retire and unlicense |
+| MC-305 | Done | `DemoSeeder` part 2: 2,373 devices over the 48 customers with state, metrics, licence rows (fake ES256 tokens) and the inventory of the 8 fixed Cairo HQ devices. Acme matches 08 exactly (per-location online, health, offline, unlicensed and Cairo HQ OS counts); licensed fingerprints equal the seats of the fake licences |
+| MC-306 | Done | `/dashboard`, `/locations/{id}/dashboard`, `/platform/dashboard`, device counts on `/locations` and `/platform/tenants` (plus the health filter); incident and alert blocks return empty series until M6 |
+| MC-307 | Done | `DeviceCard`, `CustomerCard`, `LocationCard`, `OsIcon`, `ProgressBar`, `HealthBar`, `RingGauge`, `DonutChart` (Apache ECharts 6.1.0, loaded on demand, legend and text summary), `HBar`, `ViewToggle`, `CountBadge`, `CopyButton`, `Menu` |
+| MC-308 | Done | Customers (cards complete, health filter), Customer dashboard / workspace overview, Locations (cards), Location overview, Location devices with Add Device dialog and rename/move/unlicense/retire, Devices (all) with location filter, Subscription device tabs (all / licensed / unlicensed). The device screen itself is M5 (route shows "coming soon") |
+
+### Test results (2026-10-07)
+
+| Suite | Count | Result |
+|---|---|---|
+| Backend unit (62 new: device, credential, state, health truth table, enrollment code, attempt, inventory) | 307 | passed |
+| Architecture | 253 | passed |
+| Integration (47 new: enrollment, device credentials, devices, enrollment codes, refresh and grace jobs, seeded dashboards) | 170 | passed |
+| Gateway | 3 | passed |
+| Contract, fake (live: skipped without `LICENSING_CONTRACT_*`) | 16 | passed |
+| Portal unit | 120 | passed |
+| Portal e2e (6 new device and dashboard flows) | 18 | passed |
+
+Coverage: Domain 99.3% line, Application 97.7% line / 89.4% branch, backend 96.2% line; portal 88.5% statements.
+
+Acceptance: every tile and card number equals an independent SQL count over the seed (`SeedDashboardTests`);
+the enrollment tests of 09 section 2 and the device-token tests pass; the device list p95 is below 150 ms over
+100 requests on the seed (`Device_list_p95_is_below_150_ms_over_100_requests`).
+
+### Stubbed or deferred, with reason
+
+- **Screenshot baselines for Customers and Location devices are not created.** The design images in `docs/design/`
+  are missing from the repository, so there is nothing to review a baseline against. Baselines would also differ
+  between Windows and the Linux CI runner. The screens were checked against the plan's block lists (07 sections
+  5.2-5.6) on the seed.
+- Incident Trend, Incidents by Severity, Recent Alerts and alert-based issues show empty states until alerts exist
+  (M6). The Platform Admin Dashboard screen stays "coming soon"; its API is ready.
+- Device screen (`/devices/:id`): M5. Live updates of cards (`deviceStateChanged`): M4/M5.
+- Seeded devices have no credentials (the device simulator of M4 enrolls its own devices).
+- Default device configuration at enrollment (05 section 1.1) arrives with the Configuration module (M8).
+
+### Notes for the product owner
+
+- ADR 0004 records five details of the Devices module (state column, licence aggregate, enrollment-code location,
+  default location at provisioning, one maintenance job).
+- CI's e2e job raises the login rate limit (`RateLimiting__Auth__PermitLimit`), because every e2e test signs in.
+- Device lists now ignore answers to superseded requests (a slow first page could overwrite a search result).

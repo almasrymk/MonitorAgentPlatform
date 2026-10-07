@@ -79,8 +79,10 @@ test.describe('Devices and dashboards', () => {
     await signedIn(page, accounts.platformAdmin, /\/admin\/dashboard$/);
     await page.getByTestId('nav-customers').click();
 
+    await page.getByTestId('customer-search').locator('input').fill('Gulf');
     const gulf = page.getByTestId('customer-card').filter({ hasText: 'Gulf Engineering' });
     await expect(gulf.getByTestId('customer-devices')).toHaveText('428');
+    await page.getByTestId('customer-search').locator('input').fill('');
     await page.getByTestId('health-filter').locator('select').selectOption('critical');
     await expect(page.getByTestId('customer-card').filter({ hasText: 'Acme Corporation' })).toHaveCount(1);
   });

@@ -154,7 +154,11 @@ export class DevicesBrowser {
     void this.loadLocations();
   }
 
+  /** Only the newest request may update the view: a slow older answer must not overwrite a newer filter. */
+  private request = 0;
+
   async load(): Promise<void> {
+    const request = ++this.request;
     this.loading.set(true);
     this.failed.set(false);
     const locationId = this.locationId() ?? (this.locationFilter() || null);
@@ -167,12 +171,19 @@ export class DevicesBrowser {
         ),
         this.showSummary() ? firstValueFrom(this.api.summary(locationId)) : Promise.resolve(null),
       ]);
+      if (request !== this.request) {
+        return;
+      }
       this.result.set(result);
       this.summary.set(summary);
     } catch {
-      this.failed.set(true);
+      if (request === this.request) {
+        this.failed.set(true);
+      }
     } finally {
-      this.loading.set(false);
+      if (request === this.request) {
+        this.loading.set(false);
+      }
     }
   }
 

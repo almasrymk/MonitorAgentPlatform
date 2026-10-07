@@ -125,6 +125,8 @@ jobs:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__Monitor: Server=localhost,1433;Database=MonitorCloud;User Id=sa;Password=CI-ONLY-Sql-Pa55word!;TrustServerCertificate=True
       E2E_API_RUNNING: "1"
+      # Every e2e test signs in; the per-IP login limit (20/min) would refuse them.
+      RateLimiting__Auth__PermitLimit: "1000"
       CI: "true"
     steps:
       - uses: actions/checkout@v5

@@ -38,6 +38,7 @@ public sealed class SeededDemoFixture : IAsyncLifetime
 /// MC-306 acceptance: every number of the dashboards and cards equals an independent SQL count over the seed
 /// (raw SQL against the tables, not the application's queries).
 /// </summary>
+[Collection(SqlCollection.Name)]
 public sealed class SeedDashboardTests(SeededDemoFixture fixture) : IClassFixture<SeededDemoFixture>
 {
     private TestApp App => fixture.App;
