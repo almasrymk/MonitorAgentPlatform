@@ -62,7 +62,21 @@ const customerRoutes: Routes = [
         data: { permission: 'devices.read' },
         canActivate: [permissionGuard],
       },
-      { path: ':deviceId', ...soon('devices.details', 'M5', 'devices.read') },
+      {
+        path: ':deviceId',
+        loadComponent: () => import('./features/devices/device/device.page').then((m) => m.DevicePage),
+        data: { breadcrumb: ':device', permission: 'devices.read' },
+        canActivate: [permissionGuard],
+        children: [
+          { path: '', pathMatch: 'full', redirectTo: 'overview' },
+          { path: 'overview', loadComponent: () => import('./features/devices/device/device-overview.page').then((m) => m.DeviceOverviewPage), data: { breadcrumb: 'device.tab.overview' } },
+          { path: 'monitor-points', ...soon('device.tab.monitorPoints', 'M8', 'devices.read') },
+          { path: 'applications', loadComponent: () => import('./features/devices/device/device-applications.page').then((m) => m.DeviceApplicationsPage), data: { breadcrumb: 'device.tab.applications' } },
+          { path: 'reports', ...soon('device.tab.reports', 'M9', 'reports.read') },
+          { path: 'settings', ...soon('device.tab.settings', 'M8', 'devices.read') },
+          { path: 'about', loadComponent: () => import('./features/devices/device/device-about.page').then((m) => m.DeviceAboutPage), data: { breadcrumb: 'device.tab.about' } },
+        ],
+      },
     ],
   },
   {

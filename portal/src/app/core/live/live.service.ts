@@ -24,6 +24,24 @@ export interface SummaryEvent {
   id: string | null;
 }
 
+/** `liveSample` (live mode only, 06 section 5). */
+export interface LiveSampleEvent {
+  deviceId: string;
+  at: string;
+  cpu: number;
+  ram: number;
+  diskActive: number;
+  rxBps: number;
+  txBps: number;
+  cpuTempC: number | null;
+}
+
+/** `snapshotUpdated`: a hint to refetch the device overview. */
+export interface SnapshotEvent {
+  deviceId: string;
+  capturedAt: string;
+}
+
 export type LiveTarget = { kind: 'platform' } | { kind: 'tenant'; id?: string | null } | { kind: 'location'; id: string } | { kind: 'device'; id: string };
 
 const METHODS = {
@@ -46,6 +64,8 @@ export class LiveService {
 
   readonly deviceState$ = new Subject<DeviceStateEvent>();
   readonly summary$ = new Subject<SummaryEvent>();
+  readonly liveSample$ = new Subject<LiveSampleEvent>();
+  readonly snapshot$ = new Subject<SnapshotEvent>();
   readonly connected = signal(false);
 
   constructor() {
@@ -138,6 +158,8 @@ export class LiveService {
         .build();
       connection.on('deviceStateChanged', (event: DeviceStateEvent) => this.deviceState$.next(event));
       connection.on('summaryChanged', (event: SummaryEvent) => this.summary$.next(event));
+      connection.on('liveSample', (event: LiveSampleEvent) => this.liveSample$.next(event));
+      connection.on('snapshotUpdated', (event: SnapshotEvent) => this.snapshot$.next(event));
       connection.onreconnected(() => {
         this.connected.set(true);
         for (const { target } of this.counts.values()) {

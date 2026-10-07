@@ -6,6 +6,10 @@ import {
   AuditRecord,
   AuthResult,
   DeviceDetails,
+  DeviceDisk,
+  DeviceMetrics,
+  DeviceOverview,
+  InventoryDoc,
   DeviceListItem,
   DevicesSummary,
   EnrollmentCode,
@@ -224,6 +228,28 @@ export class DevicesApi {
 
   unlicense(id: string): Observable<void> {
     return this.http.post<void>(`${BASE}/devices/${id}/unlicense`, {});
+  }
+
+  overview(id: string): Observable<DeviceOverview> {
+    return this.http.get<DeviceOverview>(`${BASE}/devices/${id}/overview`);
+  }
+
+  metrics(id: string, from: string, to: string, metrics: string): Observable<DeviceMetrics> {
+    return this.http.get<DeviceMetrics>(`${BASE}/devices/${id}/metrics`, { params: query({ from, to, metrics }) });
+  }
+
+  disks(id: string): Observable<DeviceDisk[]> {
+    return this.http.get<DeviceDisk[]>(`${BASE}/devices/${id}/disks`);
+  }
+
+  /** An inventory document; a missing one is expected (not reported yet) and shows no error toast. */
+  inventory(id: string, kind: string): Observable<InventoryDoc> {
+    return this.http.get<InventoryDoc>(`${BASE}/devices/${id}/inventory/${kind}`, { context: new HttpContext().set(SKIP_ERROR_TOAST, true) });
+  }
+
+  /** Keeps live mode on for 60 s; never shows an error toast (the screen works without it). */
+  liveSession(id: string): Observable<void> {
+    return this.http.post<void>(`${BASE}/devices/${id}/live-sessions`, {}, { context: new HttpContext().set(SKIP_ERROR_TOAST, true) });
   }
 }
 

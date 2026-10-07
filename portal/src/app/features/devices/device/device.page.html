@@ -1,0 +1,38 @@
+@if (context.failed()) {
+  <mc-error-state (retry)="context.load(deviceId())" />
+} @else if (context.device(); as d) {
+  <header class="header" data-testid="device-header">
+    <span class="os"><mc-os-icon [os]="d.osFamily" [size]="28" /></span>
+    <div class="title">
+      <div class="title-row">
+        <h1 data-testid="device-title">{{ d.name }}</h1>
+        <mc-status-pill [status]="status()" data-testid="device-header-status" />
+        <mc-status-pill [status]="d.licenseState" />
+      </div>
+      <p class="meta">
+        <a [routerLink]="[root(), 'locations', d.locationId, 'overview']">{{ d.customerName }} | {{ d.locationName }}</a>
+        <span class="sep" aria-hidden="true">|</span>
+        <span>{{ d.osName ?? d.osFamily }}</span>
+      </p>
+    </div>
+    <dl class="fields">
+      <div><dt>{{ i18n.t('device.ip') }}</dt><dd class="mono">{{ d.localIp ?? '—' }} @if (d.localIp) { <mc-copy-button [text]="d.localIp" [label]="i18n.t('device.copyIp')" /> }</dd></div>
+      <div><dt>{{ i18n.t('device.lastSeen') }}</dt><dd [attr.title]="d.lastSeenAt | date: 'medium' : undefined : locale()">{{ lastSeen() }}</dd></div>
+      <div><dt>{{ i18n.t('device.uptime') }}</dt><dd>{{ up() }}</dd></div>
+      <div><dt>{{ i18n.t('device.agentVersion') }}</dt><dd>{{ d.agentVersion ?? '—' }}</dd></div>
+    </dl>
+  </header>
+
+  @if (!context.online()) {
+    <p class="offline" role="status" data-testid="offline-banner">{{ i18n.t('device.offlineSince', { when: lastSeen() }) }}</p>
+  }
+
+  <nav class="tabs" [attr.aria-label]="i18n.t('device.tabs')">
+    @for (tab of tabs; track tab.path) {
+      <a [routerLink]="tab.path" routerLinkActive="active" ariaCurrentWhenActive="page" [attr.data-testid]="'device-tab-' + tab.path">{{ i18n.t(tab.key) }}</a>
+    }
+  </nav>
+  <router-outlet />
+} @else {
+  <mc-skeleton [height]="96" />
+}

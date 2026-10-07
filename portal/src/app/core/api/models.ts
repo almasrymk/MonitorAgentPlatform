@@ -26,6 +26,10 @@ export type LocationStatusRow = Schemas['LocationStatusRowDto'];
 export type TenantDashboard = Schemas['TenantDashboardDto'];
 export type LocationDashboard = Schemas['LocationDashboardDto'];
 export type PlatformDashboard = Schemas['PlatformDashboardDto'];
+export type DeviceOverview = Schemas['DeviceOverviewDto'];
+export type DeviceMetrics = Schemas['DeviceMetricsDto'];
+export type DeviceDisk = Schemas['DiskDto'];
+export type InventoryDoc = Schemas['InventoryDto'];
 
 export interface Paged<T> {
   items: T[];
