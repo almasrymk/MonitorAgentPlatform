@@ -38,8 +38,8 @@ public sealed class DeviceTokenTests(SqlServerFixture sql) : EndpointSuiteBase(s
         using var client = App.ClientWithToken(token);
         var failures = new List<string>();
 
-        // Agent endpoints are the ones that take device tokens (credential rotation).
-        foreach (var endpoint in Endpoints.Where(e => !EndpointCatalog.AnonymousAllowList.Contains(e.Key) && !e.IsAgent))
+        // Agent endpoints take device tokens (credential rotation, the gRPC gateway, tested in GatewayTests).
+        foreach (var endpoint in Endpoints.Where(e => !EndpointCatalog.AnonymousAllowList.Contains(e.Key) && !e.IsAgent && !e.Route.StartsWith("/monitor.agent.", StringComparison.Ordinal)))
         {
             using var request = Request(endpoint, Guid.CreateVersion7());
             using var response = await client.SendAsync(request);

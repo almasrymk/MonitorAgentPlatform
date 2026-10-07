@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- The core of the device simulator (05 section 11), reused by MonitorCloud.GatewayTests. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\MonitorCloud.AgentProtocol\MonitorCloud.AgentProtocol.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Grpc.Net.Client" />
+  </ItemGroup>
+</Project>

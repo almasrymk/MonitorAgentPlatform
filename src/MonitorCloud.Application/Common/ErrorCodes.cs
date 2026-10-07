@@ -54,6 +54,9 @@ public static class ErrorCodes
     public const string EnrollTenantNotActive = "ENROLL_TENANT_NOT_ACTIVE";
     public const string EnrollProtocolUnsupported = "ENROLL_PROTOCOL_UNSUPPORTED";
     public const string EnrollmentCodeNotFound = "ENROLLMENT_CODE_NOT_FOUND";
+    public const string CredentialRevoked = "CREDENTIAL_REVOKED";
+    public const string TenantArchived = "TENANT_ARCHIVED";
+    public const string ProtocolUnsupported = "PROTOCOL_UNSUPPORTED";
 
     public static IReadOnlyList<string> All { get; } = typeof(ErrorCodes)
         .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)

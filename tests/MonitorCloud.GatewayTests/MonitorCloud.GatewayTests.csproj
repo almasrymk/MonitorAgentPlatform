@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="..\Shared\MonitorCloud.TestShared.csproj" />
+    <ProjectReference Include="..\..\tools\MonitorCloud.SimulatedAgent\MonitorCloud.SimulatedAgent.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
@@ -9,6 +10,7 @@
     <PackageReference Include="coverlet.collector" PrivateAssets="all" />
     <PackageReference Include="Shouldly" />
     <PackageReference Include="NSubstitute" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit" />

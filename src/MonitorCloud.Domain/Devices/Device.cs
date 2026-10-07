@@ -118,6 +118,15 @@ public sealed class Device : AggregateRoot, ILocationScoped
         Raise(new DeviceEnrolledV1(Id, TenantId, LocationId, Name, OsFamily, now));
     }
 
+    /// <summary>The agent's stream is open again after the device was offline.</summary>
+    public void CameOnline(DateTimeOffset now) => Raise(new DeviceCameOnlineV1(Id, TenantId, LocationId, now));
+
+    /// <summary>Missed heartbeats, a closed stream or a Goodbye (<paramref name="reason"/>: the goodbye reason or "timeout").</summary>
+    public void WentOffline(string reason, DateTimeOffset now) => Raise(new DeviceWentOfflineV1(Id, TenantId, LocationId, reason, now));
+
+    /// <summary>Several sessions replaced each other: probably two machines with the same identity.</summary>
+    public void SuspectClone(int replacements, DateTimeOffset now) => Raise(new DeviceCloneSuspectedV1(Id, TenantId, replacements, now));
+
     /// <summary>Asks the Licensing module to release the seat while the device stays (Unlicensed, D19).</summary>
     public void RequestUnlicense(DateTimeOffset now)
     {
@@ -155,4 +164,10 @@ public sealed record DeviceMovedV1(Guid DeviceId, Guid TenantId, Guid FromLocati
 public sealed record DeviceRetiredV1(Guid DeviceId, Guid TenantId, Guid LocationId, string Fingerprint, DateTimeOffset At) : DomainEvent(At);
 
 /// <summary>A user released the device's seat but kept the device (Unlicensed, D19).</summary>
+public sealed record DeviceCameOnlineV1(Guid DeviceId, Guid TenantId, Guid LocationId, DateTimeOffset At) : DomainEvent(At);
+
+public sealed record DeviceWentOfflineV1(Guid DeviceId, Guid TenantId, Guid LocationId, string Reason, DateTimeOffset At) : DomainEvent(At);
+
+public sealed record DeviceCloneSuspectedV1(Guid DeviceId, Guid TenantId, int Replacements, DateTimeOffset At) : DomainEvent(At);
+
 public sealed record DeviceUnlicenseRequestedV1(Guid DeviceId, Guid TenantId, string Fingerprint, DateTimeOffset At) : DomainEvent(At);

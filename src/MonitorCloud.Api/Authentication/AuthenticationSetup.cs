@@ -59,6 +59,14 @@ public static class AuthenticationSetup
             };
             options.Events = new JwtBearerEvents
             {
+                // SignalR sends the access token as a query parameter during negotiation (06 section 5).
+                OnMessageReceived = context =>
+                {
+                    var token = context.Request.Query["access_token"].ToString();
+                    if (!device && token.Length > 0 && context.HttpContext.Request.Path.StartsWithSegments(ApiServiceCollectionExtensions.LiveHubPath, StringComparison.OrdinalIgnoreCase))
+                        context.Token = token;
+                    return Task.CompletedTask;
+                },
                 OnTokenValidated = context =>
                 {
                     var typ = context.Principal?.FindFirst("typ")?.Value;

@@ -79,6 +79,8 @@ public sealed class DeviceState : Entity, ILocationScoped
 
     public void SetOsFamily(OsFamily osFamily) => OsFamily = osFamily;
 
+    public void SetAppliedConfigVersion(int version) => AppliedConfigVersion = version;
+
     public void SetConnection(ConnectionState connection, DateTimeOffset now, TimeSpan grace)
     {
         if (connection == ConnectionState.Online && Connection == ConnectionState.Offline)

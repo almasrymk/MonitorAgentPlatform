@@ -55,6 +55,7 @@ public static class DependencyInjection
         services.AddScoped<ILocationDeviceCounter>(sp => sp.GetRequiredService<Devices.DeviceStatsDirectory>());
         services.AddScoped<Licensing.Contracts.IDeviceLicenseStats, Devices.DeviceLicenseStats>();
         services.AddScoped<Devices.DeviceGraceService>();
+        services.TryAddSingleton<Abstractions.Realtime.ILiveNotifier, Abstractions.Realtime.NoLiveNotifier>();
         services.AddScoped<Devices.Contracts.IDeviceDashboardReader, Devices.DeviceDashboardReader>();
 
         // Integration event handlers: every IIntegrationEventHandler<T> implementation in this assembly.

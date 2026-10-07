@@ -2,10 +2,13 @@ using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using MonitorCloud.Api.Authentication;
 using MonitorCloud.Api.Infrastructure;
 using MonitorCloud.Application;
 using MonitorCloud.Application.Abstractions.Context;
+using MonitorCloud.AgentGateway;
+using MonitorCloud.Api.Realtime;
 using MonitorCloud.Infrastructure;
 using Serilog;
 
@@ -17,6 +20,7 @@ public static class ApiServiceCollectionExtensions
     public const string AuthRateLimit = "auth";
     public const string EnrollRateLimit = "agent-enroll";
     public const string AgentTokenRateLimit = "agent-token";
+    public const string LiveHubPath = "/hubs/live";
 
     public static IServiceCollection AddApi(this IServiceCollection services, IConfiguration configuration, IHostEnvironment environment)
     {
@@ -28,6 +32,9 @@ public static class ApiServiceCollectionExtensions
         services.AddApplication();
         services.AddInfrastructure(configuration);
         services.AddMonitorAuthentication();
+        services.AddAgentGateway(configuration);
+        services.AddSignalR(o => o.AddFilter<HubCallerFilter>());
+        services.AddSingleton<Application.Abstractions.Realtime.ILiveNotifier, LiveNotifier>();
 
         services.AddProblemDetails(options => options.CustomizeProblemDetails = ProblemDetailsEnricher.Enrich);
         services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -128,6 +135,8 @@ public static class ApiServiceCollectionExtensions
         }).AllowAnonymous();
 
         app.MapControllers();
+        app.MapHub<LiveHub>(LiveHubPath);
+        app.MapAgentGateway();
         return app;
     }
 }

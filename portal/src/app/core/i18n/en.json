@@ -390,5 +390,8 @@
   "devices.productKeyHint": "Replace <product key> with your product key before running the command.",
   "devices.lifetime.hour": "1 hour",
   "devices.lifetime.days": "{n} days",
-  "devices.lifetime.day": "1 day"
+  "devices.lifetime.day": "1 day",
+  "error.CREDENTIAL_REVOKED": "The device credential is revoked.",
+  "error.TENANT_ARCHIVED": "The customer account is archived.",
+  "error.PROTOCOL_UNSUPPORTED": "The agent protocol version is not supported."
 }

@@ -3,6 +3,6 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MonitorCloud.AgentProtocol\MonitorCloud.AgentProtocol.csproj" />
+    <ProjectReference Include="..\MonitorCloud.SimulatedAgent\MonitorCloud.SimulatedAgent.csproj" />
   </ItemGroup>
 </Project>

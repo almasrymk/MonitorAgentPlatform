@@ -390,5 +390,8 @@
   "devices.productKeyHint": "استبدل <product key> بمفتاح المنتج الخاص بك قبل تشغيل الأمر.",
   "devices.lifetime.hour": "ساعة واحدة",
   "devices.lifetime.days": "{n} أيام",
-  "devices.lifetime.day": "يوم واحد"
+  "devices.lifetime.day": "يوم واحد",
+  "error.CREDENTIAL_REVOKED": "بيانات اعتماد الجهاز ملغاة.",
+  "error.TENANT_ARCHIVED": "حساب العميل مؤرشف.",
+  "error.PROTOCOL_UNSUPPORTED": "إصدار بروتوكول الوكيل غير مدعوم."
 }
