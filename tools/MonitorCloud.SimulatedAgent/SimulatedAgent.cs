@@ -33,6 +33,15 @@ public sealed class SimulatedAgent(AgentIdentity identity, GrpcChannel channel) 
 
     public uint HeartbeatSeconds { get; private set; } = 30;
 
+    private readonly ConcurrentDictionary<ulong, long> _pending = new();
+    private readonly ConcurrentQueue<double> _ackLatencies = new();
+
+    /// <summary>Milliseconds from sending a guaranteed message to its acknowledgement (load tests).</summary>
+    public IReadOnlyCollection<double> AckLatenciesMs => [.. _ackLatencies];
+
+    /// <summary>Guaranteed messages sent and not acknowledged yet.</summary>
+    public int Unacknowledged => _pending.Count;
+
     /// <summary>The highest sequence the cloud acknowledged.</summary>
     public ulong Acknowledged { get; private set; }
 
@@ -154,6 +163,7 @@ public sealed class SimulatedAgent(AgentIdentity identity, GrpcChannel channel) 
     {
         ArgumentNullException.ThrowIfNull(message);
         message.Sequence = Interlocked.Increment(ref _sequence);
+        _pending[message.Sequence] = System.Diagnostics.Stopwatch.GetTimestamp();
         return SendAsync(message, cancellationToken);
     }
 
@@ -220,6 +230,8 @@ public sealed class SimulatedAgent(AgentIdentity identity, GrpcChannel channel) 
                         break;
                     case CloudMessage.BodyOneofCase.Ack:
                         Acknowledged = Math.Max(Acknowledged, message.Ack.Sequence);
+                        if (_pending.TryRemove(message.Ack.Sequence, out var sentAt))
+                            _ackLatencies.Enqueue(System.Diagnostics.Stopwatch.GetElapsedTime(sentAt).TotalMilliseconds);
                         break;
                     case CloudMessage.BodyOneofCase.SetMode:
                         StartLiveMode(message.SetMode, cancellationToken);

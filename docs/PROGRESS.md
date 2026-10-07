@@ -294,3 +294,50 @@ blocked (see MC-407).
 - Run the hosting check of MC-407 on the target host before relying on gRPC in production.
 - A bug found by the e2e flow: the portal missed the Offline change after a Goodbye because the broadcast was
   cancelled together with the agent's call. Live events no longer use the caller's cancellation.
+
+## M5 - Telemetry and the device screen (done 2026-10-07)
+
+### Tasks
+
+| Id | Status | Notes |
+|---|---|---|
+| MC-501 | Done | Schema `telemetry`: `MetricMinutes`, `MetricHours` (page compression), `DiskUsageHours`, `LiveSnapshots`. `TelemetryWriter`: bounded channel (wait when full = back-pressure); flush every 2 s or 1,000 rows; `SqlBulkCopy` into staging, idempotent insert, hourly disk upsert, one set-based `DeviceStates` update (CPU, RAM, disk, uptime, last telemetry, last sequence); acknowledgements only after commit; retry with back-off while the database is down. Duplicate sequences are acknowledged and ignored; minutes beyond retention are acknowledged and dropped; unlicensed devices after the grace period are acknowledged and dropped (rule 9) |
+| MC-502 | Done | `Snapshot` -> `ILiveSnapshotStore` (memory, persisted at most once a minute) + `snapshotUpdated`; `InventoryUpdate` -> `UpsertInventoryCommand` (stored only when the hash changes), acknowledged after the save |
+| MC-503 | Done | `POST /devices/{id}/live-sessions`; `LiveModeController` sends `SetTelemetryMode(LIVE, 2 s, 60 s)` on first interest and again every 30 s while renewed; `LiveSample` -> `liveSample` to `device:{id}` (throttled, never stored) |
+| MC-504 | Partly | `MetricRollupJob` (every 5 min, weighted averages, idempotent `MERGE`) and `TelemetryRetention` (daily, batches of 50,000) done. `MonitorPointSampler` moves to M6 with the monitor points it samples (ADR 0005) |
+| MC-505 | Done | `/devices/{id}/overview` (snapshot), `/metrics` (minutes up to 6 h, else hours; max 1,500 points), `/disks` (latest per partition, Warning 85%, Critical 92%), `/inventory/{kind}`; resource averages of the location dashboard from `DeviceStates` (M3) |
+| MC-506 | Done | `DemoSeeder` part 3: 237,720 hourly rows (7 days, the eight detailed customers), 48,240 minutes (6 h, Cairo HQ online devices, the current values hold for the last 20 minutes so WEB-SRV-01 shows its 92% CPU plateau), disk usage for the fixed devices (C: of SQL-DB-01 filling), 134 snapshots, and the Cairo HQ enrollment code printed at seed time. Alerts, notifications, audit history, reports and archive of 08 section 4 come with M6 and M9 |
+| MC-507 | Done | `mc-chart` (ECharts on demand), `TrendChart`, `Sparkline`, `SpeedGauge`, `Accordion`, `Timeline` |
+| MC-508 | Done | Device details: header, live mode while visible and online, offline banner, Service Status, CPU / RAM / Disk / Network cards (gauge, facts, history for the top-bar range, top 5), Disk Status, Hardware & OS; Applications tab (Programs, Services, Users with search); About tab (masked fingerprint). Monitor Points, Reports and Settings tabs: M8/M9 |
+
+### Test results (2026-10-07)
+
+| Suite | Count | Result |
+|---|---|---|
+| Backend unit | 307 | passed |
+| Architecture | 253 | passed |
+| Integration | 170 | passed |
+| Gateway (11 new: tests 4, 5, 8 and 12 of 09 section 5, rollup, retention, device screen queries) | 34 | passed |
+| Contract, fake | 16 | passed |
+| Portal unit (9 new) | 135 | passed |
+| Portal e2e (new flow 3: live samples every 2 s while open, none after closing) | 20 | passed |
+
+Coverage: Domain 98.6% line, Application 95.3% line / 84.3% branch, backend 95.9% line; portal 89.3% statements.
+
+Load test (`docs/perf/2026-10-07.md`): 1,500 simulated devices for 10 minutes on a 4-core laptop. No data loss
+(14,987 of 14,987 batches stored), acknowledgement p95 2.0 s, device list p95 37 ms and dashboard p95 61 ms during
+the load, gateway memory 300-337 MB.
+
+### Stubbed or deferred, with reason
+
+- **The design image of the device screen is missing.** As in M3, there is no screenshot baseline; the screen
+  follows the block list of 07 section 5.7.
+- Monitor points carousel and Messages & Issues board need the Monitoring module (M6).
+- `MonitorPointSampler`: M6 (see MC-504).
+- The `clock-skew` alert (rule 8) needs alerts (M6).
+
+### Notes for the product owner
+
+- ADR 0005 records five telemetry details. Among them: a `DiskPercentMax` column, and a separate HTTP/2 port for
+  the gateway in Development.
+- The device screen needs no extra configuration. Live mode stops by itself 60 s after the screen closes.

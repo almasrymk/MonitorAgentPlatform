@@ -2,6 +2,7 @@
 //
 //   simulator enroll --count 20 [--tenant acme] [--location CAIRO-HQ]
 //   simulator run --devices 20 [--tenant acme] [--location CAIRO-HQ] [--seconds 60]  (stop with Goodbye after 60 s)
+//   simulator load --devices 1500 --duration 10m --report docs/perf/load.json [--server-process MonitorCloud.Api]
 //
 // Options: --api http://localhost:5300, --store seed/simulator.local.json (git-ignored: it holds device secrets),
 // --licensing seed/licensing-fake.json (demo product keys, Fake mode), --admin-email / --admin-password (to create
@@ -18,7 +19,7 @@ using MonitorCloud.AgentProtocol.V1;
 using MonitorCloud.SimulatedAgent;
 
 var options = Options.Parse(args);
-if (options.Command is not ("enroll" or "run"))
+if (options.Command is not ("enroll" or "run" or "load"))
 {
     Console.Error.WriteLine("Usage: simulator enroll --count <n> | run --devices <n>  [--tenant acme] [--location CAIRO-HQ] [--api <url>]");
     Console.Error.WriteLine("Scenarios and load runs (--scenario, load) arrive with M5 and M10.");
@@ -28,6 +29,8 @@ if (options.Command is not ("enroll" or "run"))
 using var http = new HttpClient { BaseAddress = new Uri(options.Api.TrimEnd('/') + "/") };
 var cloud = new AgentCloudClient(http);
 var store = Store.Load(options.StorePath);
+if (options.Command == "load")
+    return await LoadTest.RunAsync(http, cloud, store, options, options.Devices, options.Duration, options.Report, options.ServerProcess);
 var wanted = options.Command == "enroll" ? options.Count : options.Devices;
 var mine = store.Devices.Where(d => d.Tenant == options.Tenant).ToList();
 
@@ -169,7 +172,7 @@ async Task PumpTelemetryAsync(SimulatedAgent agent, CancellationToken cancellati
     }
 }
 
-internal sealed record Options(string Command, int Count, int Devices, int Seconds, string Tenant, string Location, string Api, string? Gateway, string StorePath, string LicensingPath, string? AdminEmail, string AdminPassword, string? RunId)
+internal sealed record Options(string Command, int Count, int Devices, int Seconds, string Tenant, string Location, string Api, string? Gateway, string StorePath, string LicensingPath, string? AdminEmail, string AdminPassword, string? RunId, TimeSpan Duration, string Report, string? ServerProcess)
 {
     public static Options Parse(string[] args)
     {
@@ -184,7 +187,16 @@ internal sealed record Options(string Command, int Count, int Devices, int Secon
         return new Options(
             args.Length > 0 ? args[0] : string.Empty, Number("--count", 1), Number("--devices", 1), Number("--seconds", 0), tenant, (Value("--location") ?? "CAIRO-HQ").ToUpperInvariant(),
             Value("--api") ?? "http://localhost:5300", Value("--gateway"), Value("--store") ?? Path.Combine("seed", "simulator.local.json"),
-            Value("--licensing") ?? Path.Combine("seed", "licensing-fake.json"), Value("--admin-email"), Value("--admin-password") ?? "Demo@12345", Value("--run-id"));
+            Value("--licensing") ?? Path.Combine("seed", "licensing-fake.json"), Value("--admin-email"), Value("--admin-password") ?? "Demo@12345", Value("--run-id"),
+            ParseDuration(Value("--duration")), Value("--report") ?? Path.Combine("docs", "perf", "load.json"), Value("--server-process"));
+    }
+
+    private static TimeSpan ParseDuration(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return TimeSpan.FromMinutes(10);
+        var number = double.Parse(value.TrimEnd('s', 'm', 'h'), System.Globalization.CultureInfo.InvariantCulture);
+        return value.EndsWith('h') ? TimeSpan.FromHours(number) : value.EndsWith('s') ? TimeSpan.FromSeconds(number) : TimeSpan.FromMinutes(number);
     }
 }
 
