@@ -37,7 +37,8 @@ public sealed partial class BootstrapSeeder(AppDbContext db, Application.Identit
 
 /// <summary>
 /// The demo data of 08, deterministic (<c>new Random(20261006)</c>, dates relative to the moment of seeding).
-/// Part 1 (M1): platform users, the 48 customers, their locations and users.
+/// Part 1 (M1): platform users, the 48 customers, their locations and users. Part 2 (M3): devices, device state,
+/// licence rows and the inventory of the fixed devices.
 /// </summary>
 public sealed partial class DemoSeeder(
     AppDbContext db,
@@ -64,6 +65,8 @@ public sealed partial class DemoSeeder(
         var licensingRandom = new Random(DemoData.Seed + 1);
         var now = clock.GetUtcNow();
         var licensing = DemoLicensing.NewData(licensingRandom);
+        var devices = new DemoDevices(db, new Random(DemoData.Seed + 2), now, TimeSpan.FromDays(licensingSettings.Value.UnlicensedGraceDays),
+            licensingSettings.Value.IsLive ? null : licensingStore);
         var customers = new Dictionary<Guid, (string Name, string Code)>();
         var hashes = new Dictionary<string, string>(StringComparer.Ordinal);
         string Hash(string password) => hashes.TryGetValue(password, out var h) ? h : hashes[password] = hasher.Hash(password);
@@ -78,7 +81,7 @@ public sealed partial class DemoSeeder(
         {
             // About 5% of a detailed customer's devices are unlicensed; Acme follows 08 exactly (26 of 316).
             var unlicensed = spec.Code == "ACME" ? 26 : (int)Math.Round(spec.Devices * 0.05);
-            AddCustomer(spec, spec.Devices - unlicensed, now, Hash, detailedUsers: true, licensing, licensingRandom, customers);
+            AddCustomer(spec, spec.Devices - unlicensed, now, Hash, detailedUsers: true, licensing, licensingRandom, customers, devices, Array.IndexOf(DemoData.Detailed, spec) + 1);
         }
 
         var plans = new[] { "ENTERPRISE", "BUSINESS", "PROFESSIONAL", "STARTER" };
@@ -95,13 +98,13 @@ public sealed partial class DemoSeeder(
                 .Select(i => DemoData.Cities[(Array.IndexOf(DemoData.Cities, city) + i - 1) % DemoData.Cities.Length])
                 .Select((c, i) => new DemoData.LocationSpec(i == 0 ? $"{c.City} Office" : $"{c.City} Branch", $"L{i + 1}", c.City, c.Country, c.TimeZone))
                 .ToArray();
-            var devices = random.Next(5, 41);
+            var deviceCount = random.Next(5, 41);
             _ = random.Next(10, 360);
             var renewsIn = expiring.Contains(number) ? licensingRandom.Next(5, 30) : licensingRandom.Next(45, 360);
             var spec = new DemoData.CustomerSpec(
-                $"Customer {number:00}", $"C{number:00}", plan, number == suspendedIndex, devices, renewsIn,
+                $"Customer {number:00}", $"C{number:00}", plan, number == suspendedIndex, deviceCount, renewsIn,
                 random.Next(2, 60), city.Country, city.City, city.TimeZone, locations);
-            AddCustomer(spec, devices - licensingRandom.Next(0, 3), now, Hash, detailedUsers: false, licensing, licensingRandom, customers);
+            AddCustomer(spec, deviceCount - licensingRandom.Next(0, 3), now, Hash, detailedUsers: false, licensing, licensingRandom, customers, devices, number);
         }
 
         await db.SaveChangesAsync(cancellationToken);
@@ -120,12 +123,12 @@ public sealed partial class DemoSeeder(
             await licensingSync.ReconcileAllAsync(cancellationToken);
         }
 
-        LogSeeded(logger, DemoData.Detailed.Length + 40);
+        LogSeeded(logger, DemoData.Detailed.Length + 40, devices.Created);
     }
 
     private void AddCustomer(
         DemoData.CustomerSpec spec, int licensedDevices, DateTimeOffset now, Func<string, string> hash, bool detailedUsers,
-        FakeLicensingData licensing, Random licensingRandom, Dictionary<Guid, (string Name, string Code)> customers)
+        FakeLicensingData licensing, Random licensingRandom, Dictionary<Guid, (string Name, string Code)> customers, DemoDevices devices, int tenantNumber)
     {
         var since = DateOnly.FromDateTime(now.UtcDateTime).AddMonths(-spec.SinceMonths);
         var customerId = DemoLicensing.NewGuid(licensingRandom);
@@ -168,13 +171,19 @@ public sealed partial class DemoSeeder(
             }
         }
 
+        var license = licensing.Licenses[^1];
+        var plans = spec.Code == "ACME"
+            ? DemoDevices.Acme
+            : devices.GenericPlan(spec.Devices, spec.Devices - licensedDevices, locations.Count);
+        devices.AddCustomer(tenant, spec.Code, locations, plans, license, [.. DemoLicensing.Plans.First(p => p.Code == spec.Plan).Features], spec.Plan, tenantNumber);
+
         if (spec.Suspended)
             tenant.Suspend("Subscription suspended", now);
         tenant.ClearDomainEvents();
     }
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Demo data seeded: {Customers} customers")]
-    private static partial void LogSeeded(ILogger logger, int customers);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Demo data seeded: {Customers} customers, {Devices} devices")]
+    private static partial void LogSeeded(ILogger logger, int customers, int devices);
 }
 /// <summary>Deletes every business row in dependency order (keeps the migrations history).</summary>
 internal static class DatabaseReset

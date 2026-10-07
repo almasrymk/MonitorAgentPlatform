@@ -36,12 +36,14 @@ internal sealed class DeviceSeats(IAppDbContext db, IReadDbContext read) : IDevi
 internal sealed class EntitlementStatistics(IReadDbContext db, TimeProvider clock, IOptions<LicensingSettings> settings) : IEntitlementStatistics
 {
     public async Task<IReadOnlyList<PlanDistribution>> DistributionAsync(CancellationToken ct) =>
-        await db.Query<TenantEntitlement>()
+        (await db.Query<TenantEntitlement>()
             .Where(e => e.PlanCode != null && (e.SubscriptionStatus == SubscriptionStatus.Active || e.SubscriptionStatus == SubscriptionStatus.Trial))
             .GroupBy(e => new { e.PlanCode, e.PlanName })
-            .Select(g => new PlanDistribution(g.Key.PlanCode!, g.Key.PlanName ?? g.Key.PlanCode!, g.Count()))
-            .OrderByDescending(p => p.Customers)
-            .ToListAsync(ct);
+            .Select(g => new { g.Key.PlanCode, g.Key.PlanName, Count = g.Count() })
+            .ToListAsync(ct))
+        .Select(g => new PlanDistribution(g.PlanCode!, g.PlanName ?? g.PlanCode!, g.Count))
+        .OrderByDescending(p => p.Customers)
+        .ToList();
 
     public async Task<IReadOnlyList<ExpiringSubscription>> ExpiringAsync(int take, CancellationToken ct)
     {

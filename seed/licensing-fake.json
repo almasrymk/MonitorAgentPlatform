@@ -81,7 +81,7 @@
       "email": "billing@acme.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2024-01-06T00:00:00+00:00"
+      "createdAt": "2024-01-07T00:00:00+00:00"
     },
     {
       "id": "76617c9b-b44e-4133-80f1-9521a112d2a2",
@@ -89,7 +89,7 @@
       "email": "billing@nile.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2024-10-06T00:00:00+00:00"
+      "createdAt": "2024-10-07T00:00:00+00:00"
     },
     {
       "id": "f1849bc4-7b9f-4f22-9251-ca6b1c8810b9",
@@ -97,7 +97,7 @@
       "email": "billing@delta.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2025-04-06T00:00:00+00:00"
+      "createdAt": "2025-04-07T00:00:00+00:00"
     },
     {
       "id": "793be11c-a030-4f40-8dd7-d46099fd7b9f",
@@ -105,7 +105,7 @@
       "email": "billing@horizon.test",
       "country": "UAE",
       "status": "Active",
-      "createdAt": "2023-10-06T00:00:00+00:00"
+      "createdAt": "2023-10-07T00:00:00+00:00"
     },
     {
       "id": "20ed39b7-23cd-4feb-a99c-8ddf3d11a415",
@@ -113,7 +113,7 @@
       "email": "billing@sahara.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2025-08-06T00:00:00+00:00"
+      "createdAt": "2025-08-07T00:00:00+00:00"
     },
     {
       "id": "9a7cd663-ca0e-4f36-9d62-fe15c3e29491",
@@ -121,7 +121,7 @@
       "email": "billing@gulf.test",
       "country": "Saudi Arabia",
       "status": "Active",
-      "createdAt": "2022-10-06T00:00:00+00:00"
+      "createdAt": "2022-10-07T00:00:00+00:00"
     },
     {
       "id": "536a7d1e-14f1-41f3-bf6a-a8d404630616",
@@ -129,7 +129,7 @@
       "email": "billing@pyramid.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2025-10-06T00:00:00+00:00"
+      "createdAt": "2025-10-07T00:00:00+00:00"
     },
     {
       "id": "7b002851-662d-4f8e-87a2-62200bb01c71",
@@ -137,7 +137,7 @@
       "email": "billing@oasis.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2026-02-06T00:00:00+00:00"
+      "createdAt": "2026-02-07T00:00:00+00:00"
     },
     {
       "id": "e5f7d5a4-d635-43e2-94d3-e33a07c56fc0",
@@ -145,7 +145,7 @@
       "email": "billing@c09.test",
       "country": "Saudi Arabia",
       "status": "Active",
-      "createdAt": "2025-01-06T00:00:00+00:00"
+      "createdAt": "2025-01-07T00:00:00+00:00"
     },
     {
       "id": "860526a7-896f-4d8e-a0fb-7c24e0add90b",
@@ -153,7 +153,7 @@
       "email": "billing@c10.test",
       "country": "Kuwait",
       "status": "Active",
-      "createdAt": "2023-06-06T00:00:00+00:00"
+      "createdAt": "2023-06-07T00:00:00+00:00"
     },
     {
       "id": "24d3b1a9-bb0a-49dd-8a6f-4c9dd846baea",
@@ -161,7 +161,7 @@
       "email": "billing@c11.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2022-02-06T00:00:00+00:00"
+      "createdAt": "2022-02-07T00:00:00+00:00"
     },
     {
       "id": "e4788e56-fb1d-487d-b9d0-f1a631aa3dc4",
@@ -169,7 +169,7 @@
       "email": "billing@c12.test",
       "country": "Saudi Arabia",
       "status": "Active",
-      "createdAt": "2026-06-06T00:00:00+00:00"
+      "createdAt": "2026-06-07T00:00:00+00:00"
     },
     {
       "id": "a3c9ea35-52d5-4498-85c5-8511a4ae1dbe",
@@ -177,7 +177,7 @@
       "email": "billing@c13.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2023-08-06T00:00:00+00:00"
+      "createdAt": "2023-08-07T00:00:00+00:00"
     },
     {
       "id": "c86d47bc-a92d-4d7d-b2ed-f23d5d1fed03",
@@ -185,7 +185,7 @@
       "email": "billing@c14.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2025-04-06T00:00:00+00:00"
+      "createdAt": "2025-04-07T00:00:00+00:00"
     },
     {
       "id": "d5593b3e-1857-4a19-8642-aea6007ed618",
@@ -193,7 +193,7 @@
       "email": "billing@c15.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2022-09-06T00:00:00+00:00"
+      "createdAt": "2022-09-07T00:00:00+00:00"
     },
     {
       "id": "196c195b-f928-45e2-8842-fc073004ddb2",
@@ -201,7 +201,7 @@
       "email": "billing@c16.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2021-12-06T00:00:00+00:00"
+      "createdAt": "2021-12-07T00:00:00+00:00"
     },
     {
       "id": "be0a47e3-bd3c-4688-a173-5c5eb7c9f96b",
@@ -209,7 +209,7 @@
       "email": "billing@c17.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2023-10-06T00:00:00+00:00"
+      "createdAt": "2023-10-07T00:00:00+00:00"
     },
     {
       "id": "6c9081f2-4791-4a5f-8557-598359640451",
@@ -217,7 +217,7 @@
       "email": "billing@c18.test",
       "country": "Qatar",
       "status": "Active",
-      "createdAt": "2025-07-06T00:00:00+00:00"
+      "createdAt": "2025-07-07T00:00:00+00:00"
     },
     {
       "id": "a267e2e3-6590-4130-ba0a-3ff1a55300d2",
@@ -225,7 +225,7 @@
       "email": "billing@c19.test",
       "country": "UAE",
       "status": "Active",
-      "createdAt": "2026-01-06T00:00:00+00:00"
+      "createdAt": "2026-01-07T00:00:00+00:00"
     },
     {
       "id": "d6edd8bc-b7f1-4b93-96c5-5ca242ba7013",
@@ -233,7 +233,7 @@
       "email": "billing@c20.test",
       "country": "Kuwait",
       "status": "Active",
-      "createdAt": "2022-11-06T00:00:00+00:00"
+      "createdAt": "2022-11-07T00:00:00+00:00"
     },
     {
       "id": "d6722776-a619-4976-aef4-d2b245808e83",
@@ -241,7 +241,7 @@
       "email": "billing@c21.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2022-11-06T00:00:00+00:00"
+      "createdAt": "2022-11-07T00:00:00+00:00"
     },
     {
       "id": "5b551cc5-6df2-4524-b58c-e71ed672d07d",
@@ -249,7 +249,7 @@
       "email": "billing@c22.test",
       "country": "Saudi Arabia",
       "status": "Active",
-      "createdAt": "2025-02-06T00:00:00+00:00"
+      "createdAt": "2025-02-07T00:00:00+00:00"
     },
     {
       "id": "f5411a0f-86d4-42c6-bfdf-72b47fb99f76",
@@ -257,7 +257,7 @@
       "email": "billing@c23.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2022-04-06T00:00:00+00:00"
+      "createdAt": "2022-04-07T00:00:00+00:00"
     },
     {
       "id": "64581415-bd9d-4468-b865-e77a58090450",
@@ -265,7 +265,7 @@
       "email": "billing@c24.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2023-02-06T00:00:00+00:00"
+      "createdAt": "2023-02-07T00:00:00+00:00"
     },
     {
       "id": "e621d3db-6896-4b7d-aa6c-ddbb735eb6e6",
@@ -273,7 +273,7 @@
       "email": "billing@c25.test",
       "country": "Jordan",
       "status": "Active",
-      "createdAt": "2024-05-06T00:00:00+00:00"
+      "createdAt": "2024-05-07T00:00:00+00:00"
     },
     {
       "id": "ec9657a9-e23f-4077-91c9-7222f30dcc49",
@@ -281,7 +281,7 @@
       "email": "billing@c26.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2023-11-06T00:00:00+00:00"
+      "createdAt": "2023-11-07T00:00:00+00:00"
     },
     {
       "id": "b908c52b-2741-49fb-b27e-7b30d8cdba92",
@@ -289,7 +289,7 @@
       "email": "billing@c27.test",
       "country": "Saudi Arabia",
       "status": "Active",
-      "createdAt": "2023-10-06T00:00:00+00:00"
+      "createdAt": "2023-10-07T00:00:00+00:00"
     },
     {
       "id": "de33ede8-b402-46b1-9973-124aeb506ab4",
@@ -297,7 +297,7 @@
       "email": "billing@c28.test",
       "country": "Kuwait",
       "status": "Active",
-      "createdAt": "2022-05-06T00:00:00+00:00"
+      "createdAt": "2022-05-07T00:00:00+00:00"
     },
     {
       "id": "5b2b5694-0d87-4190-8dda-4f00a7c9df80",
@@ -305,7 +305,7 @@
       "email": "billing@c29.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2024-05-06T00:00:00+00:00"
+      "createdAt": "2024-05-07T00:00:00+00:00"
     },
     {
       "id": "efad9555-5f91-4628-af74-ebf475193629",
@@ -313,7 +313,7 @@
       "email": "billing@c30.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2022-08-06T00:00:00+00:00"
+      "createdAt": "2022-08-07T00:00:00+00:00"
     },
     {
       "id": "e3f39539-6274-453e-b4f2-647f10c00611",
@@ -321,7 +321,7 @@
       "email": "billing@c31.test",
       "country": "Saudi Arabia",
       "status": "Active",
-      "createdAt": "2022-10-06T00:00:00+00:00"
+      "createdAt": "2022-10-07T00:00:00+00:00"
     },
     {
       "id": "b5e894e7-20c8-409a-8742-dfadd36d430b",
@@ -329,7 +329,7 @@
       "email": "billing@c32.test",
       "country": "Kuwait",
       "status": "Active",
-      "createdAt": "2025-11-06T00:00:00+00:00"
+      "createdAt": "2025-11-07T00:00:00+00:00"
     },
     {
       "id": "edea30ac-3430-4310-9eec-1f16c418b215",
@@ -337,7 +337,7 @@
       "email": "billing@c33.test",
       "country": "Kuwait",
       "status": "Active",
-      "createdAt": "2022-08-06T00:00:00+00:00"
+      "createdAt": "2022-08-07T00:00:00+00:00"
     },
     {
       "id": "94b498ab-8537-4d38-82e3-34871cbbcc64",
@@ -345,7 +345,7 @@
       "email": "billing@c34.test",
       "country": "Qatar",
       "status": "Active",
-      "createdAt": "2026-06-06T00:00:00+00:00"
+      "createdAt": "2026-06-07T00:00:00+00:00"
     },
     {
       "id": "d664df0f-2e90-4dfa-b209-128f66eadab4",
@@ -353,7 +353,7 @@
       "email": "billing@c35.test",
       "country": "Qatar",
       "status": "Active",
-      "createdAt": "2022-12-06T00:00:00+00:00"
+      "createdAt": "2022-12-07T00:00:00+00:00"
     },
     {
       "id": "60614520-5050-446a-a760-8f80771ad2cc",
@@ -361,7 +361,7 @@
       "email": "billing@c36.test",
       "country": "UAE",
       "status": "Active",
-      "createdAt": "2025-05-06T00:00:00+00:00"
+      "createdAt": "2025-05-07T00:00:00+00:00"
     },
     {
       "id": "199d871c-75bf-48d4-af8c-dff9a31740d1",
@@ -369,7 +369,7 @@
       "email": "billing@c37.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2022-11-06T00:00:00+00:00"
+      "createdAt": "2022-11-07T00:00:00+00:00"
     },
     {
       "id": "bff33538-3c3c-4e6e-a632-62c965ca0db0",
@@ -377,7 +377,7 @@
       "email": "billing@c38.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2022-02-06T00:00:00+00:00"
+      "createdAt": "2022-02-07T00:00:00+00:00"
     },
     {
       "id": "ed46bde4-7805-4076-8dc1-233fa6974bce",
@@ -385,7 +385,7 @@
       "email": "billing@c39.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2026-08-06T00:00:00+00:00"
+      "createdAt": "2026-08-07T00:00:00+00:00"
     },
     {
       "id": "1b66916e-0f67-4068-9f33-8dbd0f0ad282",
@@ -393,7 +393,7 @@
       "email": "billing@c40.test",
       "country": "Kuwait",
       "status": "Active",
-      "createdAt": "2025-11-06T00:00:00+00:00"
+      "createdAt": "2025-11-07T00:00:00+00:00"
     },
     {
       "id": "d325f5f3-7868-4c12-98c0-a0f57aada294",
@@ -401,7 +401,7 @@
       "email": "billing@c41.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2022-10-06T00:00:00+00:00"
+      "createdAt": "2022-10-07T00:00:00+00:00"
     },
     {
       "id": "6d7d736d-0c9d-4561-bd0b-a61b6b76f25e",
@@ -409,7 +409,7 @@
       "email": "billing@c42.test",
       "country": "Oman",
       "status": "Active",
-      "createdAt": "2023-05-06T00:00:00+00:00"
+      "createdAt": "2023-05-07T00:00:00+00:00"
     },
     {
       "id": "98de61e9-a659-4463-8092-d437eb9d209f",
@@ -417,7 +417,7 @@
       "email": "billing@c43.test",
       "country": "Oman",
       "status": "Active",
-      "createdAt": "2026-08-06T00:00:00+00:00"
+      "createdAt": "2026-08-07T00:00:00+00:00"
     },
     {
       "id": "9165ede5-e369-4ba0-b838-0739e05c7f4e",
@@ -425,7 +425,7 @@
       "email": "billing@c44.test",
       "country": "Qatar",
       "status": "Active",
-      "createdAt": "2022-05-06T00:00:00+00:00"
+      "createdAt": "2022-05-07T00:00:00+00:00"
     },
     {
       "id": "b5969ceb-0cb9-48bb-bfd6-d257bad141d7",
@@ -433,7 +433,7 @@
       "email": "billing@c45.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2025-08-06T00:00:00+00:00"
+      "createdAt": "2025-08-07T00:00:00+00:00"
     },
     {
       "id": "971d6a98-e882-460e-81d4-d82e573e8bed",
@@ -441,7 +441,7 @@
       "email": "billing@c46.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2026-04-06T00:00:00+00:00"
+      "createdAt": "2026-04-07T00:00:00+00:00"
     },
     {
       "id": "7ebc9dbb-0f92-4583-9ba5-bb83419158d6",
@@ -449,7 +449,7 @@
       "email": "billing@c47.test",
       "country": "Saudi Arabia",
       "status": "Active",
-      "createdAt": "2022-12-06T00:00:00+00:00"
+      "createdAt": "2022-12-07T00:00:00+00:00"
     },
     {
       "id": "eb2c41c3-9277-46a7-9e86-c5d01558680d",
@@ -457,7 +457,7 @@
       "email": "billing@c48.test",
       "country": "Egypt",
       "status": "Active",
-      "createdAt": "2024-05-06T00:00:00+00:00"
+      "createdAt": "2024-05-07T00:00:00+00:00"
     }
   ],
   "subscriptions": [
@@ -466,384 +466,384 @@
       "customerId": "42adb032-40fd-4721-ad4d-da1da854d5ad",
       "planCode": "ENTERPRISE",
       "status": "Active",
-      "startDate": "2024-01-06T00:00:00+00:00",
-      "endDate": "2027-01-15T14:25:09.4037791+00:00"
+      "startDate": "2024-01-07T00:00:00+00:00",
+      "endDate": "2027-01-16T04:15:57.2459919+00:00"
     },
     {
       "id": "8911209d-57c9-4f7d-855e-2f2bd9f885e1",
       "customerId": "76617c9b-b44e-4133-80f1-9521a112d2a2",
       "planCode": "BUSINESS",
       "status": "Active",
-      "startDate": "2024-10-06T00:00:00+00:00",
-      "endDate": "2026-11-22T14:25:09.4037791+00:00"
+      "startDate": "2024-10-07T00:00:00+00:00",
+      "endDate": "2026-11-23T04:15:57.2459919+00:00"
     },
     {
       "id": "66e9b4d8-0752-469f-99d5-277a5e1bf97b",
       "customerId": "f1849bc4-7b9f-4f22-9251-ca6b1c8810b9",
       "planCode": "PROFESSIONAL",
       "status": "Active",
-      "startDate": "2025-04-06T00:00:00+00:00",
-      "endDate": "2026-12-10T14:25:09.4037791+00:00"
+      "startDate": "2025-04-07T00:00:00+00:00",
+      "endDate": "2026-12-11T04:15:57.2459919+00:00"
     },
     {
       "id": "aa6a3d78-aa60-4ee8-83ce-7096ce9002d5",
       "customerId": "793be11c-a030-4f40-8dd7-d46099fd7b9f",
       "planCode": "ENTERPRISE",
       "status": "Active",
-      "startDate": "2023-10-06T00:00:00+00:00",
-      "endDate": "2026-10-28T14:25:09.4037791+00:00"
+      "startDate": "2023-10-07T00:00:00+00:00",
+      "endDate": "2026-10-29T04:15:57.2459919+00:00"
     },
     {
       "id": "43670d7f-0763-4b00-a383-9a077b71c69e",
       "customerId": "20ed39b7-23cd-4feb-a99c-8ddf3d11a415",
       "planCode": "BUSINESS",
       "status": "Active",
-      "startDate": "2025-08-06T00:00:00+00:00",
-      "endDate": "2027-02-14T14:25:09.4037791+00:00"
+      "startDate": "2025-08-07T00:00:00+00:00",
+      "endDate": "2027-02-15T04:15:57.2459919+00:00"
     },
     {
       "id": "1ed16e64-0996-4336-b350-10ccb507f4fc",
       "customerId": "9a7cd663-ca0e-4f36-9d62-fe15c3e29491",
       "planCode": "ENTERPRISE",
       "status": "Active",
-      "startDate": "2022-10-06T00:00:00+00:00",
-      "endDate": "2026-11-03T14:25:09.4037791+00:00"
+      "startDate": "2022-10-07T00:00:00+00:00",
+      "endDate": "2026-11-04T04:15:57.2459919+00:00"
     },
     {
       "id": "bacb96c0-f3c6-471e-89eb-db9de925765c",
       "customerId": "536a7d1e-14f1-41f3-bf6a-a8d404630616",
       "planCode": "PROFESSIONAL",
       "status": "Active",
-      "startDate": "2025-10-06T00:00:00+00:00",
-      "endDate": "2027-01-10T14:25:09.4037791+00:00"
+      "startDate": "2025-10-07T00:00:00+00:00",
+      "endDate": "2027-01-11T04:15:57.2459919+00:00"
     },
     {
       "id": "2873ccdc-29b9-442c-88d3-c03c671ee571",
       "customerId": "7b002851-662d-4f8e-87a2-62200bb01c71",
       "planCode": "STARTER",
       "status": "Suspended",
-      "startDate": "2026-02-06T00:00:00+00:00",
-      "endDate": "2026-12-05T14:25:09.4037791+00:00"
+      "startDate": "2026-02-07T00:00:00+00:00",
+      "endDate": "2026-12-06T04:15:57.2459919+00:00"
     },
     {
       "id": "7abbface-ef8a-4315-b664-438fa8b78625",
       "customerId": "e5f7d5a4-d635-43e2-94d3-e33a07c56fc0",
       "planCode": "ENTERPRISE",
       "status": "Active",
-      "startDate": "2025-01-06T00:00:00+00:00",
-      "endDate": "2027-07-16T14:25:09.4037791+00:00"
+      "startDate": "2025-01-07T00:00:00+00:00",
+      "endDate": "2027-07-17T04:15:57.2459919+00:00"
     },
     {
       "id": "4ae4393b-ed3b-4607-ba09-804835331bdc",
       "customerId": "860526a7-896f-4d8e-a0fb-7c24e0add90b",
       "planCode": "ENTERPRISE",
       "status": "Active",
-      "startDate": "2023-06-06T00:00:00+00:00",
-      "endDate": "2027-06-03T14:25:09.4037791+00:00"
+      "startDate": "2023-06-07T00:00:00+00:00",
+      "endDate": "2027-06-04T04:15:57.2459919+00:00"
     },
     {
       "id": "1739c105-bdd9-474a-9253-d3de1426f932",
       "customerId": "24d3b1a9-bb0a-49dd-8a6f-4c9dd846baea",
       "planCode": "PROFESSIONAL",
       "status": "Active",
-      "startDate": "2022-02-06T00:00:00+00:00",
-      "endDate": "2027-01-20T14:25:09.4037791+00:00"
+      "startDate": "2022-02-07T00:00:00+00:00",
+      "endDate": "2027-01-21T04:15:57.2459919+00:00"
     },
     {
       "id": "069eb3ab-ba94-44bb-b706-9e9f33a3c530",
       "customerId": "e4788e56-fb1d-487d-b9d0-f1a631aa3dc4",
       "planCode": "PROFESSIONAL",
       "status": "Active",
-      "startDate": "2026-06-06T00:00:00+00:00",
-      "endDate": "2027-08-12T14:25:09.4037791+00:00"
+      "startDate": "2026-06-07T00:00:00+00:00",
+      "endDate": "2027-08-13T04:15:57.2459919+00:00"
     },
     {
       "id": "b0adf2b0-4011-426a-91f3-8573750ca9d1",
       "customerId": "a3c9ea35-52d5-4498-85c5-8511a4ae1dbe",
       "planCode": "BUSINESS",
       "status": "Active",
-      "startDate": "2023-08-06T00:00:00+00:00",
-      "endDate": "2027-04-07T14:25:09.4037791+00:00"
+      "startDate": "2023-08-07T00:00:00+00:00",
+      "endDate": "2027-04-08T04:15:57.2459919+00:00"
     },
     {
       "id": "aa67912c-d9fb-4c71-83df-0e605a7f3e98",
       "customerId": "c86d47bc-a92d-4d7d-b2ed-f23d5d1fed03",
       "planCode": "PROFESSIONAL",
       "status": "Active",
-      "startDate": "2025-04-06T00:00:00+00:00",
-      "endDate": "2027-05-17T14:25:09.4037791+00:00"
+      "startDate": "2025-04-07T00:00:00+00:00",
+      "endDate": "2027-05-18T04:15:57.2459919+00:00"
     },
     {
       "id": "5d30f690-7271-4dd8-b8c1-5f8a7460f244",
       "customerId": "d5593b3e-1857-4a19-8642-aea6007ed618",
       "planCode": "ENTERPRISE",
       "status": "Suspended",
-      "startDate": "2022-09-06T00:00:00+00:00",
-      "endDate": "2026-12-05T14:25:09.4037791+00:00"
+      "startDate": "2022-09-07T00:00:00+00:00",
+      "endDate": "2026-12-06T04:15:57.2459919+00:00"
     },
     {
       "id": "506783ba-936b-47d6-8574-9dc729538342",
       "customerId": "196c195b-f928-45e2-8842-fc073004ddb2",
       "planCode": "PROFESSIONAL",
       "status": "Active",
-      "startDate": "2021-12-06T00:00:00+00:00",
-      "endDate": "2027-01-29T14:25:09.4037791+00:00"
+      "startDate": "2021-12-07T00:00:00+00:00",
+      "endDate": "2027-01-30T04:15:57.2459919+00:00"
     },
     {
       "id": "c06e1417-6a20-4e8c-9b28-bfa8c9d0fd9a",
       "customerId": "be0a47e3-bd3c-4688-a173-5c5eb7c9f96b",
       "planCode": "PROFESSIONAL",
       "status": "Active",
-      "startDate": "2023-10-06T00:00:00+00:00",
-      "endDate": "2026-12-06T14:25:09.4037791+00:00"
+      "startDate": "2023-10-07T00:00:00+00:00",
+      "endDate": "2026-12-07T04:15:57.2459919+00:00"
     },
     {
       "id": "1fe1356b-db6a-4244-8264-19cede5d5485",
       "customerId": "6c9081f2-4791-4a5f-8557-598359640451",
       "planCode": "ENTERPRISE",
       "status": "Active",
-      "startDate": "2025-07-06T00:00:00+00:00",
-      "endDate": "2027-09-22T14:25:09.4037791+00:00"
+      "startDate": "2025-07-07T00:00:00+00:00",
+      "endDate": "2027-09-23T04:15:57.2459919+00:00"
     },
     {
       "id": "b89e2d4f-6142-40f3-ba72-39a1c070d098",
       "customerId": "a267e2e3-6590-4130-ba0a-3ff1a55300d2",
       "planCode": "ENTERPRISE",
       "status": "Active",
-      "startDate": "2026-01-06T00:00:00+00:00",
-      "endDate": "2027-06-15T14:25:09.4037791+00:00"
+      "startDate": "2026-01-07T00:00:00+00:00",
+      "endDate": "2027-06-16T04:15:57.2459919+00:00"
     },
     {
       "id": "a1fe9b71-4fd8-4e56-81d9-c303d7c84633",
       "customerId": "d6edd8bc-b7f1-4b93-96c5-5ca242ba7013",
       "planCode": "PROFESSIONAL",
       "status": "Active",
-      "startDate": "2022-11-06T00:00:00+00:00",
-      "endDate": "2027-06-15T14:25:09.4037791+00:00"
+      "startDate": "2022-11-07T00:00:00+00:00",
+      "endDate": "2027-06-16T04:15:57.2459919+00:00"
     },
     {
       "id": "30c68079-6054-4442-8f17-9e4167e42c70",
       "customerId": "d6722776-a619-4976-aef4-d2b245808e83",
       "planCode": "BUSINESS",
       "status": "Active",
-      "startDate": "2022-11-06T00:00:00+00:00",
-      "endDate": "2027-02-03T14:25:09.4037791+00:00"
+      "startDate": "2022-11-07T00:00:00+00:00",
+      "endDate": "2027-02-04T04:15:57.2459919+00:00"
     },
     {
       "id": "e79d0a26-6858-4aa2-a495-b35ef649c807",
       "customerId": "5b551cc5-6df2-4524-b58c-e71ed672d07d",
       "planCode": "ENTERPRISE",
       "status": "Active",
-      "startDate": "2025-02-06T00:00:00+00:00",
-      "endDate": "2026-11-25T14:25:09.4037791+00:00"
+      "startDate": "2025-02-07T00:00:00+00:00",
+      "endDate": "2026-11-26T04:15:57.2459919+00:00"
     },
     {
       "id": "fa8f48b2-27fc-4763-a385-4efc97b16929",
       "customerId": "f5411a0f-86d4-42c6-bfdf-72b47fb99f76",
       "planCode": "BUSINESS",
       "status": "Active",
-      "startDate": "2022-04-06T00:00:00+00:00",
-      "endDate": "2027-09-20T14:25:09.4037791+00:00"
+      "startDate": "2022-04-07T00:00:00+00:00",
+      "endDate": "2027-09-21T04:15:57.2459919+00:00"
     },
     {
       "id": "2adf10be-4a0e-42ce-814a-bb6e751c20aa",
       "customerId": "64581415-bd9d-4468-b865-e77a58090450",
       "planCode": "PROFESSIONAL",
       "status": "Active",
-      "startDate": "2023-02-06T00:00:00+00:00",
-      "endDate": "2027-04-26T14:25:09.4037791+00:00"
+      "startDate": "2023-02-07T00:00:00+00:00",
+      "endDate": "2027-04-27T04:15:57.2459919+00:00"
     },
     {
       "id": "ddc15046-2c42-4c17-b05e-580650b2ae7e",
       "customerId": "e621d3db-6896-4b7d-aa6c-ddbb735eb6e6",
       "planCode": "PROFESSIONAL",
       "status": "Active",
-      "startDate": "2024-05-06T00:00:00+00:00",
-      "endDate": "2027-01-02T14:25:09.4037791+00:00"
+      "startDate": "2024-05-07T00:00:00+00:00",
+      "endDate": "2027-01-03T04:15:57.2459919+00:00"
     },
     {
       "id": "a4a5a12d-9995-481a-9555-c1218ecd1a09",
       "customerId": "ec9657a9-e23f-4077-91c9-7222f30dcc49",
       "planCode": "BUSINESS",
       "status": "Active",
-      "startDate": "2023-11-06T00:00:00+00:00",
-      "endDate": "2026-10-19T14:25:09.4037791+00:00"
+      "startDate": "2023-11-07T00:00:00+00:00",
+      "endDate": "2026-10-20T04:15:57.2459919+00:00"
     },
     {
       "id": "ac6e451b-e016-457d-abce-0943086fbf40",
       "customerId": "b908c52b-2741-49fb-b27e-7b30d8cdba92",
       "planCode": "ENTERPRISE",
       "status": "Active",
-      "startDate": "2023-10-06T00:00:00+00:00",
-      "endDate": "2026-10-24T14:25:09.4037791+00:00"
+      "startDate": "2023-10-07T00:00:00+00:00",
+      "endDate": "2026-10-25T04:15:57.2459919+00:00"
     },
     {
       "id": "5b4154ca-39e4-4f0c-a38b-88a7e68701cb",
       "customerId": "de33ede8-b402-46b1-9973-124aeb506ab4",
       "planCode": "BUSINESS",
       "status": "Active",
-      "startDate": "2022-05-06T00:00:00+00:00",
-      "endDate": "2027-04-14T14:25:09.4037791+00:00"
+      "startDate": "2022-05-07T00:00:00+00:00",
+      "endDate": "2027-04-15T04:15:57.2459919+00:00"
     },
     {
       "id": "06297fce-2645-426c-9bd7-e0044108476f",
       "customerId": "5b2b5694-0d87-4190-8dda-4f00a7c9df80",
       "planCode": "BUSINESS",
       "status": "Active",
-      "startDate": "2024-05-06T00:00:00+00:00",
-      "endDate": "2026-11-20T14:25:09.4037791+00:00"
+      "startDate": "2024-05-07T00:00:00+00:00",
+      "endDate": "2026-11-21T04:15:57.2459919+00:00"
     },
     {
       "id": "0b573df3-ec4f-4d63-af1d-32820a924968",
       "customerId": "efad9555-5f91-4628-af74-ebf475193629",
       "planCode": "PROFESSIONAL",
       "status": "Active",
-      "startDate": "2022-08-06T00:00:00+00:00",
-      "endDate": "2027-06-23T14:25:09.4037791+00:00"
+      "startDate": "2022-08-07T00:00:00+00:00",
+      "endDate": "2027-06-24T04:15:57.2459919+00:00"
     },
     {
       "id": "9c48475b-404a-4fdd-9d7a-dd06f8a5a042",
       "customerId": "e3f39539-6274-453e-b4f2-647f10c00611",
       "planCode": "PROFESSIONAL",
       "status": "Active",
-      "startDate": "2022-10-06T00:00:00+00:00",
-      "endDate": "2026-11-30T14:25:09.4037791+00:00"
+      "startDate": "2022-10-07T00:00:00+00:00",
+      "endDate": "2026-12-01T04:15:57.2459919+00:00"
     },
     {
       "id": "177b5fd1-c17d-4fc3-a35a-a127398b66a6",
       "customerId": "b5e894e7-20c8-409a-8742-dfadd36d430b",
       "planCode": "BUSINESS",
       "status": "Active",
-      "startDate": "2025-11-06T00:00:00+00:00",
-      "endDate": "2026-10-25T14:25:09.4037791+00:00"
+      "startDate": "2025-11-07T00:00:00+00:00",
+      "endDate": "2026-10-26T04:15:57.2459919+00:00"
     },
     {
       "id": "55674d45-cd53-4916-9020-594c0dc3ae50",
       "customerId": "edea30ac-3430-4310-9eec-1f16c418b215",
       "planCode": "STARTER",
       "status": "Active",
-      "startDate": "2022-08-06T00:00:00+00:00",
-      "endDate": "2026-10-30T14:25:09.4037791+00:00"
+      "startDate": "2022-08-07T00:00:00+00:00",
+      "endDate": "2026-10-31T04:15:57.2459919+00:00"
     },
     {
       "id": "6630e705-50a8-4369-abbf-a7589e349272",
       "customerId": "94b498ab-8537-4d38-82e3-34871cbbcc64",
       "planCode": "BUSINESS",
       "status": "Active",
-      "startDate": "2026-06-06T00:00:00+00:00",
-      "endDate": "2027-07-28T14:25:09.4037791+00:00"
+      "startDate": "2026-06-07T00:00:00+00:00",
+      "endDate": "2027-07-29T04:15:57.2459919+00:00"
     },
     {
       "id": "6d24d301-06ca-4870-b4ae-dfff7d486b3a",
       "customerId": "d664df0f-2e90-4dfa-b209-128f66eadab4",
       "planCode": "BUSINESS",
       "status": "Active",
-      "startDate": "2022-12-06T00:00:00+00:00",
-      "endDate": "2027-04-12T14:25:09.4037791+00:00"
+      "startDate": "2022-12-07T00:00:00+00:00",
+      "endDate": "2027-04-13T04:15:57.2459919+00:00"
     },
     {
       "id": "9fae8cbd-eaaf-4119-a4ce-43cef18f784a",
       "customerId": "60614520-5050-446a-a760-8f80771ad2cc",
       "planCode": "ENTERPRISE",
       "status": "Active",
-      "startDate": "2025-05-06T00:00:00+00:00",
-      "endDate": "2027-03-24T14:25:09.4037791+00:00"
+      "startDate": "2025-05-07T00:00:00+00:00",
+      "endDate": "2027-03-25T04:15:57.2459919+00:00"
     },
     {
       "id": "0837e33c-ea42-4864-a432-10141f804731",
       "customerId": "199d871c-75bf-48d4-af8c-dff9a31740d1",
       "planCode": "ENTERPRISE",
       "status": "Active",
-      "startDate": "2022-11-06T00:00:00+00:00",
-      "endDate": "2027-08-03T14:25:09.4037791+00:00"
+      "startDate": "2022-11-07T00:00:00+00:00",
+      "endDate": "2027-08-04T04:15:57.2459919+00:00"
     },
     {
       "id": "3a85e924-a56c-4628-8de1-7efdd465608a",
       "customerId": "bff33538-3c3c-4e6e-a632-62c965ca0db0",
       "planCode": "BUSINESS",
       "status": "Active",
-      "startDate": "2022-02-06T00:00:00+00:00",
-      "endDate": "2027-06-26T14:25:09.4037791+00:00"
+      "startDate": "2022-02-07T00:00:00+00:00",
+      "endDate": "2027-06-27T04:15:57.2459919+00:00"
     },
     {
       "id": "80adec25-a2f5-494b-8214-f197499fdb63",
       "customerId": "ed46bde4-7805-4076-8dc1-233fa6974bce",
       "planCode": "ENTERPRISE",
       "status": "Active",
-      "startDate": "2026-08-06T00:00:00+00:00",
-      "endDate": "2027-04-03T14:25:09.4037791+00:00"
+      "startDate": "2026-08-07T00:00:00+00:00",
+      "endDate": "2027-04-04T04:15:57.2459919+00:00"
     },
     {
       "id": "fbcddf7c-ade5-443d-8a0e-dba66f3deddb",
       "customerId": "1b66916e-0f67-4068-9f33-8dbd0f0ad282",
       "planCode": "BUSINESS",
       "status": "Active",
-      "startDate": "2025-11-06T00:00:00+00:00",
-      "endDate": "2026-12-30T14:25:09.4037791+00:00"
+      "startDate": "2025-11-07T00:00:00+00:00",
+      "endDate": "2026-12-31T04:15:57.2459919+00:00"
     },
     {
       "id": "0da9f550-9a76-435c-9264-9dd17d62ec06",
       "customerId": "d325f5f3-7868-4c12-98c0-a0f57aada294",
       "planCode": "ENTERPRISE",
       "status": "Active",
-      "startDate": "2022-10-06T00:00:00+00:00",
-      "endDate": "2027-02-28T14:25:09.4037791+00:00"
+      "startDate": "2022-10-07T00:00:00+00:00",
+      "endDate": "2027-03-01T04:15:57.2459919+00:00"
     },
     {
       "id": "a2f4b193-687b-41e1-9821-65c8a9fa2703",
       "customerId": "6d7d736d-0c9d-4561-bd0b-a61b6b76f25e",
       "planCode": "ENTERPRISE",
       "status": "Active",
-      "startDate": "2023-05-06T00:00:00+00:00",
-      "endDate": "2027-04-02T14:25:09.4037791+00:00"
+      "startDate": "2023-05-07T00:00:00+00:00",
+      "endDate": "2027-04-03T04:15:57.2459919+00:00"
     },
     {
       "id": "19580eb6-8fdb-4d23-b54d-e8725cda6ded",
       "customerId": "98de61e9-a659-4463-8092-d437eb9d209f",
       "planCode": "STARTER",
       "status": "Active",
-      "startDate": "2026-08-06T00:00:00+00:00",
-      "endDate": "2027-09-10T14:25:09.4037791+00:00"
+      "startDate": "2026-08-07T00:00:00+00:00",
+      "endDate": "2027-09-11T04:15:57.2459919+00:00"
     },
     {
       "id": "d02902b4-9682-42ef-a6be-e4314132b167",
       "customerId": "9165ede5-e369-4ba0-b838-0739e05c7f4e",
       "planCode": "ENTERPRISE",
       "status": "Active",
-      "startDate": "2022-05-06T00:00:00+00:00",
-      "endDate": "2026-12-13T14:25:09.4037791+00:00"
+      "startDate": "2022-05-07T00:00:00+00:00",
+      "endDate": "2026-12-14T04:15:57.2459919+00:00"
     },
     {
       "id": "324a92ab-014d-4c11-882b-1ec44ab3d2e0",
       "customerId": "b5969ceb-0cb9-48bb-bfd6-d257bad141d7",
       "planCode": "BUSINESS",
       "status": "Active",
-      "startDate": "2025-08-06T00:00:00+00:00",
-      "endDate": "2027-09-16T14:25:09.4037791+00:00"
+      "startDate": "2025-08-07T00:00:00+00:00",
+      "endDate": "2027-09-17T04:15:57.2459919+00:00"
     },
     {
       "id": "eb5c8596-47e7-48a1-b2ca-2401dff539d9",
       "customerId": "971d6a98-e882-460e-81d4-d82e573e8bed",
       "planCode": "ENTERPRISE",
       "status": "Active",
-      "startDate": "2026-04-06T00:00:00+00:00",
-      "endDate": "2027-07-29T14:25:09.4037791+00:00"
+      "startDate": "2026-04-07T00:00:00+00:00",
+      "endDate": "2027-07-30T04:15:57.2459919+00:00"
     },
     {
       "id": "06a33d16-473d-4d3d-8cf2-ed141c6ad266",
       "customerId": "7ebc9dbb-0f92-4583-9ba5-bb83419158d6",
       "planCode": "STARTER",
       "status": "Active",
-      "startDate": "2022-12-06T00:00:00+00:00",
-      "endDate": "2027-05-15T14:25:09.4037791+00:00"
+      "startDate": "2022-12-07T00:00:00+00:00",
+      "endDate": "2027-05-16T04:15:57.2459919+00:00"
     },
     {
       "id": "f7d0fbc5-efa0-4516-ab24-fba53286dac5",
       "customerId": "eb2c41c3-9277-46a7-9e86-c5d01558680d",
       "planCode": "ENTERPRISE",
       "status": "Active",
-      "startDate": "2024-05-06T00:00:00+00:00",
-      "endDate": "2027-07-06T14:25:09.4037791+00:00"
+      "startDate": "2024-05-07T00:00:00+00:00",
+      "endDate": "2027-07-07T04:15:57.2459919+00:00"
     }
   ],
   "licenses": [
@@ -854,7 +854,7 @@
       "licenseNumber": "LIC-ACME-0001",
       "productKey": "NXDWCP-SW4UAB-NBWYAF-SE2VH7-K9V5X3",
       "status": "Active",
-      "expiresAt": "2027-01-15T14:25:09.4037791+00:00",
+      "expiresAt": "2027-01-16T04:15:57.2459919+00:00",
       "maxActivations": 500,
       "devices": [
         "acme-dev-0001",
@@ -1156,7 +1156,7 @@
       "licenseNumber": "LIC-NILE-0001",
       "productKey": "BATAM4-W2ZSV8-QJ6MTY-QD2V56-J2UMJ5",
       "status": "Active",
-      "expiresAt": "2026-11-22T14:25:09.4037791+00:00",
+      "expiresAt": "2026-11-23T04:15:57.2459919+00:00",
       "maxActivations": 250,
       "devices": [
         "nile-dev-0001",
@@ -1356,7 +1356,7 @@
       "licenseNumber": "LIC-DELTA-0001",
       "productKey": "86QTQ7-JH798X-E6AX5C-UWYFZW-6KS5XU",
       "status": "Active",
-      "expiresAt": "2026-12-10T14:25:09.4037791+00:00",
+      "expiresAt": "2026-12-11T04:15:57.2459919+00:00",
       "maxActivations": 200,
       "devices": [
         "delta-dev-0001",
@@ -1503,7 +1503,7 @@
       "licenseNumber": "LIC-HORIZON-0001",
       "productKey": "7Q5UE7-E9B588-YLBXFG-NRK8CS-3TGKNE",
       "status": "Active",
-      "expiresAt": "2026-10-28T14:25:09.4037791+00:00",
+      "expiresAt": "2026-10-29T04:15:57.2459919+00:00",
       "maxActivations": 500,
       "devices": [
         "horizon-dev-0001",
@@ -1633,7 +1633,7 @@
       "licenseNumber": "LIC-SAHARA-0001",
       "productKey": "SUC9F5-LVDWH6-57BW8N-34DRY3-3KFR5W",
       "status": "Active",
-      "expiresAt": "2027-02-14T14:25:09.4037791+00:00",
+      "expiresAt": "2027-02-15T04:15:57.2459919+00:00",
       "maxActivations": 250,
       "devices": [
         "sahara-dev-0001",
@@ -1736,7 +1736,7 @@
       "licenseNumber": "LIC-GULF-0001",
       "productKey": "NKLYFT-5W4PL4-LJT2BZ-A72CN6-NRGTFA",
       "status": "Active",
-      "expiresAt": "2026-11-03T14:25:09.4037791+00:00",
+      "expiresAt": "2026-11-04T04:15:57.2459919+00:00",
       "maxActivations": 500,
       "devices": [
         "gulf-dev-0001",
@@ -2155,7 +2155,7 @@
       "licenseNumber": "LIC-PYRAMID-0001",
       "productKey": "ED8M5G-8V4Z9T-AEX97K-AYPTMJ-QB39QS",
       "status": "Active",
-      "expiresAt": "2027-01-10T14:25:09.4037791+00:00",
+      "expiresAt": "2027-01-11T04:15:57.2459919+00:00",
       "maxActivations": 200,
       "devices": [
         "pyramid-dev-0001",
@@ -2250,7 +2250,7 @@
       "licenseNumber": "LIC-OASIS-0001",
       "productKey": "9VNZWM-X5P87X-QCBW56-TCLAD5-G567FU",
       "status": "Active",
-      "expiresAt": "2026-12-05T14:25:09.4037791+00:00",
+      "expiresAt": "2026-12-06T04:15:57.2459919+00:00",
       "maxActivations": 50,
       "devices": [
         "oasis-dev-0001",
@@ -2285,7 +2285,7 @@
       "licenseNumber": "LIC-C09-0001",
       "productKey": "9A5JW8-KCANTB-ETSCX8-57BV7Z-C6WMWV",
       "status": "Active",
-      "expiresAt": "2027-07-16T14:25:09.4037791+00:00",
+      "expiresAt": "2027-07-17T04:15:57.2459919+00:00",
       "maxActivations": 500,
       "devices": [
         "c09-dev-0001",
@@ -2319,7 +2319,7 @@
       "licenseNumber": "LIC-C10-0001",
       "productKey": "HALHK5-JX4PN9-YM62F9-JX9N68-QR8GXU",
       "status": "Active",
-      "expiresAt": "2027-06-03T14:25:09.4037791+00:00",
+      "expiresAt": "2027-06-04T04:15:57.2459919+00:00",
       "maxActivations": 500,
       "devices": [
         "c10-dev-0001",
@@ -2369,7 +2369,7 @@
       "licenseNumber": "LIC-C11-0001",
       "productKey": "NRNHK9-TSBYEJ-NKAB5F-DRQAVF-LKMKQP",
       "status": "Active",
-      "expiresAt": "2027-01-20T14:25:09.4037791+00:00",
+      "expiresAt": "2027-01-21T04:15:57.2459919+00:00",
       "maxActivations": 200,
       "devices": [
         "c11-dev-0001",
@@ -2404,7 +2404,7 @@
       "licenseNumber": "LIC-C12-0001",
       "productKey": "Y298FA-CLJATR-6AWN7Q-K5YRZY-EFWV7T",
       "status": "Active",
-      "expiresAt": "2027-08-12T14:25:09.4037791+00:00",
+      "expiresAt": "2027-08-13T04:15:57.2459919+00:00",
       "maxActivations": 200,
       "devices": [
         "c12-dev-0001",
@@ -2438,7 +2438,7 @@
       "licenseNumber": "LIC-C13-0001",
       "productKey": "8QNR97-JWVB49-KQRBNE-H662QQ-L2RXS7",
       "status": "Active",
-      "expiresAt": "2027-04-07T14:25:09.4037791+00:00",
+      "expiresAt": "2027-04-08T04:15:57.2459919+00:00",
       "maxActivations": 250,
       "devices": [
         "c13-dev-0001",
@@ -2479,7 +2479,7 @@
       "licenseNumber": "LIC-C14-0001",
       "productKey": "J7YHQB-S3H45E-3RGLHE-GJZ2EP-KADB33",
       "status": "Active",
-      "expiresAt": "2027-05-17T14:25:09.4037791+00:00",
+      "expiresAt": "2027-05-18T04:15:57.2459919+00:00",
       "maxActivations": 200,
       "devices": [
         "c14-dev-0001",
@@ -2525,7 +2525,7 @@
       "licenseNumber": "LIC-C15-0001",
       "productKey": "MFWERT-ZFRQYV-73SYWC-DDC4PY-G842DM",
       "status": "Active",
-      "expiresAt": "2026-12-05T14:25:09.4037791+00:00",
+      "expiresAt": "2026-12-06T04:15:57.2459919+00:00",
       "maxActivations": 500,
       "devices": [
         "c15-dev-0001",
@@ -2565,7 +2565,7 @@
       "licenseNumber": "LIC-C16-0001",
       "productKey": "SYRZ6A-58CT94-5QJ5SG-3T38QS-RXDKM5",
       "status": "Active",
-      "expiresAt": "2027-01-29T14:25:09.4037791+00:00",
+      "expiresAt": "2027-01-30T04:15:57.2459919+00:00",
       "maxActivations": 200,
       "devices": [
         "c16-dev-0001",
@@ -2612,7 +2612,7 @@
       "licenseNumber": "LIC-C17-0001",
       "productKey": "2QP943-4DBQZT-DBL8RF-VERWHU-B5K9E3",
       "status": "Active",
-      "expiresAt": "2026-12-06T14:25:09.4037791+00:00",
+      "expiresAt": "2026-12-07T04:15:57.2459919+00:00",
       "maxActivations": 200,
       "devices": [
         "c17-dev-0001",
@@ -2637,7 +2637,7 @@
       "licenseNumber": "LIC-C18-0001",
       "productKey": "3MZCTT-JU5MJK-YPH8S8-T3P2LN-HPX3H8",
       "status": "Active",
-      "expiresAt": "2027-09-22T14:25:09.4037791+00:00",
+      "expiresAt": "2027-09-23T04:15:57.2459919+00:00",
       "maxActivations": 500,
       "devices": [
         "c18-dev-0001",
@@ -2652,7 +2652,7 @@
       "licenseNumber": "LIC-C19-0001",
       "productKey": "KLD4SF-KW5FC2-AUBAQS-ULBDDU-U3HC6G",
       "status": "Active",
-      "expiresAt": "2027-06-15T14:25:09.4037791+00:00",
+      "expiresAt": "2027-06-16T04:15:57.2459919+00:00",
       "maxActivations": 500,
       "devices": [
         "c19-dev-0001",
@@ -2697,7 +2697,7 @@
       "licenseNumber": "LIC-C20-0001",
       "productKey": "ESSVB4-PCQXM3-KXTZCS-S5429D-VHYRCP",
       "status": "Active",
-      "expiresAt": "2027-06-15T14:25:09.4037791+00:00",
+      "expiresAt": "2027-06-16T04:15:57.2459919+00:00",
       "maxActivations": 200,
       "devices": [
         "c20-dev-0001",
@@ -2725,7 +2725,7 @@
       "licenseNumber": "LIC-C21-0001",
       "productKey": "UH9PJ4-TLBG6L-D2T2GN-W5CCMM-WGRZSA",
       "status": "Active",
-      "expiresAt": "2027-02-03T14:25:09.4037791+00:00",
+      "expiresAt": "2027-02-04T04:15:57.2459919+00:00",
       "maxActivations": 250,
       "devices": [
         "c21-dev-0001",
@@ -2754,7 +2754,7 @@
       "licenseNumber": "LIC-C22-0001",
       "productKey": "LLRETB-MHVZAL-2YH6WS-Y92AVV-U4MHAA",
       "status": "Active",
-      "expiresAt": "2026-11-25T14:25:09.4037791+00:00",
+      "expiresAt": "2026-11-26T04:15:57.2459919+00:00",
       "maxActivations": 500,
       "devices": [
         "c22-dev-0001",
@@ -2780,7 +2780,7 @@
       "licenseNumber": "LIC-C23-0001",
       "productKey": "8QP297-XPYPJQ-D2Q2QV-CAY98T-WCAGAC",
       "status": "Active",
-      "expiresAt": "2027-09-20T14:25:09.4037791+00:00",
+      "expiresAt": "2027-09-21T04:15:57.2459919+00:00",
       "maxActivations": 250,
       "devices": [
         "c23-dev-0001",
@@ -2811,7 +2811,7 @@
       "licenseNumber": "LIC-C24-0001",
       "productKey": "H2CYQK-H4D325-MY7R9U-VXSGJ7-JWGR8C",
       "status": "Active",
-      "expiresAt": "2027-04-26T14:25:09.4037791+00:00",
+      "expiresAt": "2027-04-27T04:15:57.2459919+00:00",
       "maxActivations": 200,
       "devices": [
         "c24-dev-0001",
@@ -2836,7 +2836,7 @@
       "licenseNumber": "LIC-C25-0001",
       "productKey": "A6FPZ6-JNTWWG-HLSK6S-TZW5JS-PC44JK",
       "status": "Active",
-      "expiresAt": "2027-01-02T14:25:09.4037791+00:00",
+      "expiresAt": "2027-01-03T04:15:57.2459919+00:00",
       "maxActivations": 200,
       "devices": [
         "c25-dev-0001",
@@ -2878,7 +2878,7 @@
       "licenseNumber": "LIC-C26-0001",
       "productKey": "B2M8QE-76BXU6-QVZ9C8-C7MGVF-VN92Q6",
       "status": "Active",
-      "expiresAt": "2026-10-19T14:25:09.4037791+00:00",
+      "expiresAt": "2026-10-20T04:15:57.2459919+00:00",
       "maxActivations": 250,
       "devices": [
         "c26-dev-0001",
@@ -2913,7 +2913,7 @@
       "licenseNumber": "LIC-C27-0001",
       "productKey": "PMZER5-63L2E5-329DGX-X5GAVU-NRS74Q",
       "status": "Active",
-      "expiresAt": "2026-10-24T14:25:09.4037791+00:00",
+      "expiresAt": "2026-10-25T04:15:57.2459919+00:00",
       "maxActivations": 500,
       "devices": [
         "c27-dev-0001",
@@ -2959,7 +2959,7 @@
       "licenseNumber": "LIC-C28-0001",
       "productKey": "MEAJ8Z-JFAJAJ-TX8A42-8U77KZ-6UZZYG",
       "status": "Active",
-      "expiresAt": "2027-04-14T14:25:09.4037791+00:00",
+      "expiresAt": "2027-04-15T04:15:57.2459919+00:00",
       "maxActivations": 250,
       "devices": [
         "c28-dev-0001",
@@ -3006,7 +3006,7 @@
       "licenseNumber": "LIC-C29-0001",
       "productKey": "GMK4XM-BJ8GNV-KST7RN-UUBGKY-3P39TQ",
       "status": "Active",
-      "expiresAt": "2026-11-20T14:25:09.4037791+00:00",
+      "expiresAt": "2026-11-21T04:15:57.2459919+00:00",
       "maxActivations": 250,
       "devices": [
         "c29-dev-0001",
@@ -3045,7 +3045,7 @@
       "licenseNumber": "LIC-C30-0001",
       "productKey": "UREM8M-SZRFUV-V5LRMY-LMVQA7-RYBF9R",
       "status": "Active",
-      "expiresAt": "2027-06-23T14:25:09.4037791+00:00",
+      "expiresAt": "2027-06-24T04:15:57.2459919+00:00",
       "maxActivations": 200,
       "devices": [
         "c30-dev-0001",
@@ -3086,7 +3086,7 @@
       "licenseNumber": "LIC-C31-0001",
       "productKey": "RV4Q62-QKATVY-QL6DM5-9MZKHD-8UE9BH",
       "status": "Active",
-      "expiresAt": "2026-11-30T14:25:09.4037791+00:00",
+      "expiresAt": "2026-12-01T04:15:57.2459919+00:00",
       "maxActivations": 200,
       "devices": [
         "c31-dev-0001",
@@ -3112,7 +3112,7 @@
       "licenseNumber": "LIC-C32-0001",
       "productKey": "AMYHE6-ZN6TK2-443C4E-YV4WHC-HB8JP8",
       "status": "Active",
-      "expiresAt": "2026-10-25T14:25:09.4037791+00:00",
+      "expiresAt": "2026-10-26T04:15:57.2459919+00:00",
       "maxActivations": 250,
       "devices": [
         "c32-dev-0001",
@@ -3133,7 +3133,7 @@
       "licenseNumber": "LIC-C33-0001",
       "productKey": "3BRXDS-7PE7EF-ARD5XE-JPM4MJ-QC2HTD",
       "status": "Active",
-      "expiresAt": "2026-10-30T14:25:09.4037791+00:00",
+      "expiresAt": "2026-10-31T04:15:57.2459919+00:00",
       "maxActivations": 50,
       "devices": [
         "c33-dev-0001",
@@ -3168,7 +3168,7 @@
       "licenseNumber": "LIC-C34-0001",
       "productKey": "KZZCWL-8ZVKH2-C3S7GH-SEPM4K-UCF85Z",
       "status": "Active",
-      "expiresAt": "2027-07-28T14:25:09.4037791+00:00",
+      "expiresAt": "2027-07-29T04:15:57.2459919+00:00",
       "maxActivations": 250,
       "devices": [
         "c34-dev-0001",
@@ -3184,7 +3184,7 @@
       "licenseNumber": "LIC-C35-0001",
       "productKey": "3WQ7XE-ZV82DR-J6VKC8-BYWDP9-8WRQ6R",
       "status": "Active",
-      "expiresAt": "2027-04-12T14:25:09.4037791+00:00",
+      "expiresAt": "2027-04-13T04:15:57.2459919+00:00",
       "maxActivations": 250,
       "devices": [
         "c35-dev-0001",
@@ -3209,7 +3209,7 @@
       "licenseNumber": "LIC-C36-0001",
       "productKey": "QSKKC3-BSFCKC-AFAJE2-8KE74C-4J5UQB",
       "status": "Active",
-      "expiresAt": "2027-03-24T14:25:09.4037791+00:00",
+      "expiresAt": "2027-03-25T04:15:57.2459919+00:00",
       "maxActivations": 500,
       "devices": [
         "c36-dev-0001",
@@ -3227,7 +3227,7 @@
       "licenseNumber": "LIC-C37-0001",
       "productKey": "GJJUNY-9WFBQZ-8UVU39-3WQT9Q-V8Z3BA",
       "status": "Active",
-      "expiresAt": "2027-08-03T14:25:09.4037791+00:00",
+      "expiresAt": "2027-08-04T04:15:57.2459919+00:00",
       "maxActivations": 500,
       "devices": [
         "c37-dev-0001",
@@ -3263,7 +3263,7 @@
       "licenseNumber": "LIC-C38-0001",
       "productKey": "F8BPS5-9LS8NQ-TJU98F-G62D34-KGTZF4",
       "status": "Active",
-      "expiresAt": "2027-06-26T14:25:09.4037791+00:00",
+      "expiresAt": "2027-06-27T04:15:57.2459919+00:00",
       "maxActivations": 250,
       "devices": [
         "c38-dev-0001",
@@ -3306,7 +3306,7 @@
       "licenseNumber": "LIC-C39-0001",
       "productKey": "PTCY6N-WUUG48-BKGKLR-RAFDAB-XERT39",
       "status": "Active",
-      "expiresAt": "2027-04-03T14:25:09.4037791+00:00",
+      "expiresAt": "2027-04-04T04:15:57.2459919+00:00",
       "maxActivations": 500,
       "devices": [
         "c39-dev-0001",
@@ -3345,7 +3345,7 @@
       "licenseNumber": "LIC-C40-0001",
       "productKey": "NHBZ9X-BWRUHF-PCJ3MR-XJ5P5A-9D29FF",
       "status": "Active",
-      "expiresAt": "2026-12-30T14:25:09.4037791+00:00",
+      "expiresAt": "2026-12-31T04:15:57.2459919+00:00",
       "maxActivations": 250,
       "devices": [
         "c40-dev-0001",
@@ -3370,7 +3370,7 @@
       "licenseNumber": "LIC-C41-0001",
       "productKey": "XF75R3-YXLMK9-KZSM8T-UJQK5R-TNWLGR",
       "status": "Active",
-      "expiresAt": "2027-02-28T14:25:09.4037791+00:00",
+      "expiresAt": "2027-03-01T04:15:57.2459919+00:00",
       "maxActivations": 500,
       "devices": [
         "c41-dev-0001",
@@ -3413,7 +3413,7 @@
       "licenseNumber": "LIC-C42-0001",
       "productKey": "PQUZAP-5ZE4QY-HZK6LA-RLANX9-HDJLS7",
       "status": "Active",
-      "expiresAt": "2027-04-02T14:25:09.4037791+00:00",
+      "expiresAt": "2027-04-03T04:15:57.2459919+00:00",
       "maxActivations": 500,
       "devices": [
         "c42-dev-0001",
@@ -3464,7 +3464,7 @@
       "licenseNumber": "LIC-C43-0001",
       "productKey": "8JSNUS-3Q3W5H-H6MT3G-3WDQ7F-AZGBU3",
       "status": "Active",
-      "expiresAt": "2027-09-10T14:25:09.4037791+00:00",
+      "expiresAt": "2027-09-11T04:15:57.2459919+00:00",
       "maxActivations": 50,
       "devices": [
         "c43-dev-0001",
@@ -3499,7 +3499,7 @@
       "licenseNumber": "LIC-C44-0001",
       "productKey": "N7Q5VL-X5GQSY-P3CDE7-6ZS6MD-GFF2HQ",
       "status": "Active",
-      "expiresAt": "2026-12-13T14:25:09.4037791+00:00",
+      "expiresAt": "2026-12-14T04:15:57.2459919+00:00",
       "maxActivations": 500,
       "devices": [
         "c44-dev-0001",
@@ -3536,7 +3536,7 @@
       "licenseNumber": "LIC-C45-0001",
       "productKey": "WPPTQL-HHU948-L8CP4R-9KBMQW-55D9KU",
       "status": "Active",
-      "expiresAt": "2027-09-16T14:25:09.4037791+00:00",
+      "expiresAt": "2027-09-17T04:15:57.2459919+00:00",
       "maxActivations": 250,
       "devices": [
         "c45-dev-0001",
@@ -3584,7 +3584,7 @@
       "licenseNumber": "LIC-C46-0001",
       "productKey": "CUPLMU-2N7S2Z-NYAFUV-DXEZNG-ARAE85",
       "status": "Active",
-      "expiresAt": "2027-07-29T14:25:09.4037791+00:00",
+      "expiresAt": "2027-07-30T04:15:57.2459919+00:00",
       "maxActivations": 500,
       "devices": [
         "c46-dev-0001",
@@ -3624,7 +3624,7 @@
       "licenseNumber": "LIC-C47-0001",
       "productKey": "DSMJ7Q-356GPV-K2B37C-YWNYLN-M9ES4A",
       "status": "Active",
-      "expiresAt": "2027-05-15T14:25:09.4037791+00:00",
+      "expiresAt": "2027-05-16T04:15:57.2459919+00:00",
       "maxActivations": 50,
       "devices": [
         "c47-dev-0001",
@@ -3642,7 +3642,7 @@
       "licenseNumber": "LIC-C48-0001",
       "productKey": "M7BLEG-PXBN5K-HHF767-R9Y4GR-9DV4R9",
       "status": "Active",
-      "expiresAt": "2027-07-06T14:25:09.4037791+00:00",
+      "expiresAt": "2027-07-07T04:15:57.2459919+00:00",
       "maxActivations": 500,
       "devices": [
         "c48-dev-0001",

@@ -59,13 +59,20 @@ internal sealed class DeviceLicenseStats(IReadDbContext db) : IDeviceLicenseStat
     }
 }
 
-/// <summary>Keeps <c>DeviceStates.LicenseState</c> in line with the Licensing module.</summary>
-internal sealed class ApplyDeviceLicenseChange(IAppDbContext db, ILicensingPolicy policy, TimeProvider clock) : IIntegrationEventHandler<DeviceLicenseChangedV1>
+/// <summary>
+/// Keeps <c>DeviceStates.LicenseState</c> in line with the Licensing module. The seat row is read again instead of
+/// trusting the event payload, so an older event handled late cannot undo a newer change.
+/// </summary>
+internal sealed class ApplyDeviceLicenseChange(IAppDbContext db, IDeviceSeats seats, ILicensingPolicy policy, TimeProvider clock) : IIntegrationEventHandler<DeviceLicenseChangedV1>
 {
     public async Task HandleAsync(DeviceLicenseChangedV1 integrationEvent, CancellationToken cancellationToken)
     {
         var state = await db.Set<DeviceState>().SingleOrDefaultAsync(s => s.DeviceId == integrationEvent.DeviceId, cancellationToken);
-        state?.SetLicense(integrationEvent.Licensed ? LicenseStateValue.Licensed : LicenseStateValue.Unlicensed, clock.GetUtcNow(), policy.UnlicensedGrace);
+        var seat = await seats.FindAsync(integrationEvent.DeviceId, cancellationToken);
+        if (state is null || seat is null)
+            return;
+        var licensed = seat.State == "Licensed";
+        state.SetLicense(licensed ? LicenseStateValue.Licensed : LicenseStateValue.Unlicensed, clock.GetUtcNow(), policy.UnlicensedGrace);
     }
 }
 
