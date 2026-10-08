@@ -387,3 +387,46 @@ alert resolve when the simulator clears it. The development sender wrote one e-m
   health, the platform feed holds platform notifications only, and a possible clone is a Warning alert on the
   device plus a platform notification.
 - The simulator can raise an issue: `simulator run --devices 1 --issue cpu --issue-after 5 --clear-after 40`.
+
+## M7 - Real agent end to end (in progress 2026-10-08)
+
+Agent work happens in `almasrymk/UBGMonitor` on the branch `cloud/m7-connector`. The branch is **local only**
+until the product owner allows the push (see Open questions). It never commits to `master`. That repository has
+its own security plan (`docs/security/SECURITY_PLAN.md`) run by another agent. Its `AGENTS.md` says to stop and
+report when work overlaps. The AG items that touch its runs are therefore deferred until the owner decides (ADR 0007).
+
+### Tasks
+
+| Id | Status | Notes |
+|---|---|---|
+| AG-0 | Done | All projects on `net10.0`; Microsoft packages 10.0.12; Serilog.Sinks.File 7.0.0; CI SDK 10.0.x; 0 warnings |
+| AG-1 | Done before M7 | The licensing credentials were already removed from `appsettings.json` by the agent's security cleanup. Rotating the exposed secret stays an owner step (agent PROGRESS, F-01) |
+| AG-2 | Done | `fingerprint` = the existing `DeviceFingerprint` (machine id hash, same as the Licensing device id) |
+| AG-3 | Done | New project `MonitorAgent.Cloud`. It contains `CloudOptions`, the enrollment and token client (`CloudHttpClient`), `DeviceTokenProvider` (renews 5 min early), `GatewaySession` (gRPC), `CloudAgentService` (the message pump), `Outbox`, `MinuteAggregator`, `IssueChangeTracker`, `InventoryPublisher`, live mode and `CloudStatus`. `ConfigUpdate` is acknowledged; it is applied in M8. The service feeds it from its existing collectors (`ServiceCloudSource`) |
+| AG-4 | Done | `proto/` copy, `proto/VERSION` (sha256 of the LF form), `scripts/sync-proto.ps1`, and a hash test |
+| AG-5 | Done | Outbox table in `cloud.db` (ADR 0007): the row number is the protocol sequence. Size cap 200 MB; the oldest metric rows are dropped first, never issues, config or commands |
+| AG-6 | Done | Samples every 5 s, then per minute: avg, max, P95 (nearest rank), averaged rates, highest disk use and temperature. The local reports are unchanged |
+| AG-7 | Deferred | Agent security Run 5 (Licensing), which waits for owner decisions D1-D3. Cloud licence tokens arrive through `ICloudLicenseSink`, so `LicenseService` can take them over in that run |
+| AG-8 | Deferred to M8 | One threshold evaluator fed by the cloud document needs the central configuration (M8). Seen in the CPU test: without hysteresis an alert flaps once around the threshold |
+| AG-9 | Deferred | Agent security Run 2 (Local API) |
+| AG-10 | Done | Back-off 1 s -> 5 min with +/-20 % jitter, `retry_after_seconds` honoured, system proxy used |
+| AG-11 | Partly | `MONITORAGENT_CLOUDURL` / `PRODUCTKEY` / `LOCATION` are read and enroll on first start. MSI / deb / pkg properties wait for agent security Run 3 (Installation) |
+| AG-12 | Done | 14 connector tests plus an end-to-end test against a running Monitor Cloud (`MONITORCLOUD_E2E_*`). Agent suite: 101 passed, 2 skipped (Unix-only, and e2e without its variables) |
+| MC-701 | Done (waits for the push) | The cloud CI `e2e` job checks out the agent (`vars.AGENT_REF`, default `master`) and runs its end-to-end test against the CI cloud. It skips while that ref has no connector |
+| MC-702 | Done | `docs/agent-integration.md`: configuration, enrollment, stored files, offline behaviour, every error code, logs |
+
+### Acceptance (2026-10-08, Windows 11, this development machine)
+
+| Check | Result |
+|---|---|
+| A real agent enrolls with a demo product key and a location code | Passed: `Enrolled as device ... (Acme Corporation / Cairo HQ)` |
+| Appears in the right location; shows live data on its device screen | Passed: Cairo HQ, Online, Licensed. A snapshot every minute with the top-5 lists. Minutes and inventory (hardware, OS, network, programs, services) arrive |
+| Raises and clears a CPU alert | Passed: CPU burned for 50 s, so `cpu` Critical opened, then resolved. Real alerts arrived as well (`disk-C` Critical at 91.9 %) |
+| Survives a 10-minute network cut with no gaps in the minute history | Passed: cloud stopped 18:05-18:15; 18 consecutive minutes 18:03-18:20, 0 gaps; Online again |
+| Keeps working locally while offline | Passed: the local checks and reports went on during the cut |
+| The same on Linux | **Not verified**: there is no Linux machine here. The agent's CI builds and tests on ubuntu and macOS once the branch is pushed |
+
+### Open questions for the product owner
+
+1. May AG-1/7/9/11 stay with the agent's security runs (proposed), or should they be done in this branch?
+2. May `cloud/m7-connector` be pushed to `almasrymk/UBGMonitor`? MC-701 and the Linux run need it.

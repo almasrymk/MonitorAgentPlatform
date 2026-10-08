@@ -156,6 +156,19 @@ jobs:
       - name: Playwright
         working-directory: portal
         run: npx playwright test
+      # MC-701: the real agent's connector test runs against this cloud (after Playwright: it enrolls a device).
+      - uses: actions/checkout@v5
+        with:
+          repository: almasrymk/UBGMonitor
+          ref: ${{ vars.AGENT_REF || 'master' }}
+          path: agent
+      - name: Agent compatibility (MC-701)
+        run: |
+          if [ ! -d agent/src/MonitorAgent.Cloud ]; then echo "This agent ref has no MonitorAgent.Cloud yet; skipped."; exit 0; fi
+          export MONITORCLOUD_E2E_URL=http://localhost:5300
+          export MONITORCLOUD_E2E_GATEWAY=http://localhost:5301
+          export MONITORCLOUD_E2E_PRODUCTKEY="$(jq -r '.licenses[] | select(.licenseNumber=="LIC-ACME-0001") | .productKey' seed/licensing-fake.json)"
+          dotnet test agent/tests/MonitorAgent.Tests -c Release --filter "FullyQualifiedName~CloudEndToEnd" --logger "console;verbosity=normal"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
