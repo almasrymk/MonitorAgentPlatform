@@ -14,13 +14,14 @@ import { EmptyState } from '../../shared/ui/states';
 import { StatusPill } from '../../shared/ui/status-pill';
 import { tileViews } from '../dashboard/tiles';
 import { LocationContext } from './location-context';
+import { IncidentTrend, RecentAlerts } from '../alerts/alert-widgets';
 
 const OS_COLORS: Record<string, string> = { Windows: 'mc-series-windows', Linux: 'mc-series-linux', MacOS: 'mc-series-macos', Other: 'mc-series-other' };
 
-/** Location Overview (07 section 5.5). Incident and alert blocks stay empty until M6. */
+/** Location Overview (07 section 5.5). */
 @Component({
   selector: 'mc-location-overview-page',
-  imports: [DatePipe, KpiTile, Card, DonutChart, RingGauge, DataTable, CellDef, StatusPill, Skeleton, EmptyState],
+  imports: [DatePipe, KpiTile, Card, DonutChart, RingGauge, DataTable, CellDef, StatusPill, Skeleton, EmptyState, IncidentTrend, RecentAlerts],
   template: `
     @if (context.dashboard(); as d) {
       <section class="tiles tiles-6" data-testid="location-tiles">
@@ -31,7 +32,8 @@ const OS_COLORS: Record<string, string> = { Windows: 'mc-series-windows', Linux:
 
       <section class="row">
         <mc-card [title]="i18n.t('dashboard.incidentTrend')">
-          <mc-empty-state icon="reports" [title]="i18n.t('dashboard.noIncidents')" [message]="i18n.t('dashboard.alertsSoon')" />
+          <span cardActions class="muted">{{ i18n.t('dashboard.lastDays', { n: 7 }) }}</span>
+          <mc-incident-trend [trend]="d.incidentTrend" />
         </mc-card>
         <mc-card [title]="i18n.t('dashboard.devicesByOs')">
           <mc-donut-chart [segments]="os()" [centerLabel]="i18n.t('dashboard.devicesCaption')" data-testid="devices-by-os" />
@@ -63,8 +65,8 @@ const OS_COLORS: Record<string, string> = { Windows: 'mc-series-windows', Linux:
       </section>
 
       <section class="row">
-        <mc-card [title]="i18n.t('dashboard.recentAlerts')" class="span-2">
-          <mc-empty-state icon="bell" [title]="i18n.t('dashboard.noAlerts')" [message]="i18n.t('dashboard.alertsSoon')" />
+        <mc-card [title]="i18n.t('dashboard.recentAlerts')" class="span-2" [flush]="true">
+          <mc-recent-alerts [alerts]="d.recentAlerts" mode="location" />
         </mc-card>
         <mc-card [title]="i18n.t('dashboard.locationSummary')" data-testid="location-summary">
           <dl class="summary">

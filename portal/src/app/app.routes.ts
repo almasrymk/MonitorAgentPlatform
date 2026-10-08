@@ -48,6 +48,12 @@ const customerRoutes: Routes = [
             data: { breadcrumb: 'locations.tabDevices', permission: 'devices.read' },
             canActivate: [permissionGuard],
           },
+          {
+            path: 'notifications',
+            loadComponent: () => import('./features/notifications/notifications.page').then((m) => m.NotificationsPage),
+            data: { breadcrumb: 'nav.notifications', permission: 'notifications.read' },
+            canActivate: [permissionGuard],
+          },
         ],
       },
     ],
@@ -93,8 +99,18 @@ const customerRoutes: Routes = [
     canActivate: [permissionGuard],
   },
   { path: 'archive', ...soon('nav.archive', 'M9', 'archive.read') },
-  { path: 'settings', ...soon('nav.settings', 'M6', 'settings.manage') },
-  { path: 'notifications', ...soon('nav.notifications', 'M6', 'notifications.read') },
+  {
+    path: 'settings',
+    loadComponent: () => import('./features/settings/settings.page').then((m) => m.SettingsPage),
+    data: { breadcrumb: 'nav.settings', permission: 'settings.manage' },
+    canActivate: [permissionGuard],
+  },
+  {
+    path: 'notifications',
+    loadComponent: () => import('./features/notifications/notifications.page').then((m) => m.NotificationsPage),
+    data: { breadcrumb: 'nav.notifications', permission: 'notifications.read' },
+    canActivate: [permissionGuard],
+  },
 ];
 
 export const routes: Routes = [
@@ -107,7 +123,12 @@ export const routes: Routes = [
     data: { breadcrumb: 'nav.platform' },
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
-      { path: 'dashboard', ...soon('nav.dashboard', 'M3', 'platform.dashboard.read') },
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./features/platform/platform-dashboard.page').then((m) => m.PlatformDashboardPage),
+        data: { breadcrumb: 'nav.dashboard', permission: 'platform.dashboard.read' },
+        canActivate: [permissionGuard],
+      },
       {
         path: 'customers',
         data: { breadcrumb: 'nav.customers' },
@@ -127,7 +148,12 @@ export const routes: Routes = [
         data: { breadcrumb: 'nav.plans', permission: 'platform.plans.read' },
         canActivate: [permissionGuard],
       },
-      { path: 'notifications', ...soon('nav.notifications', 'M6', 'platform.dashboard.read') },
+      {
+        path: 'notifications',
+        loadComponent: () => import('./features/notifications/notifications.page').then((m) => m.NotificationsPage),
+        data: { breadcrumb: 'nav.notifications', permission: 'platform.dashboard.read' },
+        canActivate: [permissionGuard],
+      },
       { path: 'archive', ...soon('nav.archive', 'M9', 'platform.tenants.read') },
       { path: 'reports', ...soon('nav.reports', 'M9', 'platform.dashboard.read') },
       {

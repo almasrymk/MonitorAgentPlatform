@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
-import { firstValueFrom } from 'rxjs';
+import { debounceTime, firstValueFrom } from 'rxjs';
 
 import { DashboardsApi } from '../../core/api/api.services';
 import { LocationStatusRow, ProblemDevice, TenantDashboard } from '../../core/api/models';
@@ -23,11 +23,12 @@ import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { StatusPill } from '../../shared/ui/status-pill';
 import { UsageBar } from '../../shared/ui/usage-bar';
 import { tileViews } from './tiles';
+import { DaysSelect, IncidentTrend, RecentAlerts } from '../alerts/alert-widgets';
 
-/** Customer Dashboard / Customer Workspace overview (07 section 5.3). Alert-based blocks stay empty until M6. */
+/** Customer Dashboard / Customer Workspace overview (07 section 5.3). */
 @Component({
   selector: 'mc-customer-dashboard-page',
-  imports: [DatePipe, EntityHeader, KpiTile, Card, LocationCard, DonutChart, DataTable, CellDef, HealthBar, StatusPill, UsageBar, Button, Skeleton, EmptyState, ErrorState],
+  imports: [DatePipe, EntityHeader, KpiTile, Card, LocationCard, DonutChart, DataTable, CellDef, HealthBar, StatusPill, UsageBar, Button, Skeleton, EmptyState, ErrorState, IncidentTrend, DaysSelect, RecentAlerts],
   templateUrl: './customer-dashboard.page.html',
   styleUrl: './dashboard.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,6 +41,7 @@ export class CustomerDashboardPage {
   protected readonly data = signal<TenantDashboard | null>(null);
   protected readonly loading = signal(true);
   protected readonly failed = signal(false);
+  protected readonly trendDays = signal('7');
   protected readonly root = computed(() => areaRoot(this.router.url));
   protected readonly locale = computed(() => (this.i18n.language() === 'ar' ? 'ar-EG' : 'en-GB'));
 
@@ -107,13 +109,14 @@ export class CustomerDashboardPage {
         void this.load(true);
       }
     });
+    live.alert$.pipe(debounceTime(1500), takeUntilDestroyed()).subscribe(() => void this.load(true));
   }
 
   /** quiet: a live refresh keeps the current content instead of showing skeletons. */
   async load(quiet = false): Promise<void> {
     if (quiet && this.data()) {
       try {
-        this.data.set(await firstValueFrom(this.api.tenant()));
+        this.data.set(await firstValueFrom(this.api.tenant(Number(this.trendDays()))));
       } catch {
         // Keep the current numbers.
       }
@@ -122,7 +125,7 @@ export class CustomerDashboardPage {
     this.loading.set(true);
     this.failed.set(false);
     try {
-      this.data.set(await firstValueFrom(this.api.tenant()));
+      this.data.set(await firstValueFrom(this.api.tenant(Number(this.trendDays()))));
     } catch {
       this.failed.set(true);
     } finally {
@@ -136,6 +139,15 @@ export class CustomerDashboardPage {
 
   protected locationRow(row: unknown): LocationStatusRow {
     return row as LocationStatusRow;
+  }
+
+  protected setTrendDays(days: string): void {
+    this.trendDays.set(days);
+    void this.load(true);
+  }
+
+  protected openNotifications(): void {
+    void this.router.navigate([this.root(), 'notifications']);
   }
 
   protected openLocations(): void {

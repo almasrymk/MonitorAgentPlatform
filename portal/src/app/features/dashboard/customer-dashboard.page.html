@@ -35,7 +35,8 @@
       <mc-donut-chart [segments]="health()" [centerLabel]="i18n.t('dashboard.devicesCaption')" data-testid="locations-health" />
     </mc-card>
     <mc-card [title]="i18n.t('dashboard.incidentTrend')">
-      <mc-empty-state icon="reports" [title]="i18n.t('dashboard.noIncidents')" [message]="i18n.t('dashboard.alertsSoon')" />
+      <mc-days-select cardActions [value]="trendDays()" (valueChange)="setTrendDays($event)" />
+      <mc-incident-trend [trend]="d.incidentTrend" />
     </mc-card>
     <mc-card [title]="i18n.t('dashboard.topProblematic')" [flush]="true">
       <mc-data-table [columns]="problemColumns()" [rows]="d.topProblematicDevices" [emptyText]="i18n.t('dashboard.noProblems')">
@@ -56,8 +57,9 @@
         <ng-template mcCell="healthPercent" let-row><mc-health-bar [value]="locationRow(row).healthPercent" [label]="i18n.t('dashboard.healthPercent')" /></ng-template>
       </mc-data-table>
     </mc-card>
-    <mc-card [title]="i18n.t('dashboard.recentAlerts')">
-      <mc-empty-state icon="bell" [title]="i18n.t('dashboard.noAlerts')" [message]="i18n.t('dashboard.alertsSoon')" />
+    <mc-card [title]="i18n.t('dashboard.recentAlerts')" [flush]="true">
+      <button cardActions type="button" mcButton="ghost" size="sm" (click)="openNotifications()">{{ i18n.t('common.viewAll') }}</button>
+      <mc-recent-alerts [alerts]="d.recentAlerts" mode="tenant" />
     </mc-card>
     <mc-card [title]="i18n.t('dashboard.licenseSummary')" data-testid="license-summary">
       <mc-donut-chart [segments]="license()" [size]="140" [centerLabel]="i18n.t('dashboard.devicesCaption')" />

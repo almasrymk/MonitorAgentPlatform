@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { debounceTime, filter, firstValueFrom } from 'rxjs';
 
 import { DevicesApi } from '../../../core/api/api.services';
 import { DeviceDisk, DeviceMetrics, InventoryDoc } from '../../../core/api/models';
@@ -16,6 +17,9 @@ import { EmptyState } from '../../../shared/ui/states';
 import { StatusPill } from '../../../shared/ui/status-pill';
 import { TrendChart, TrendSeries } from '../../../shared/ui/trend-chart';
 import { DeviceContext } from './device-context';
+import { MessagesBoard, MonitorPoints } from './device-monitoring';
+import { Alert, AlertsApi, MonitorPoint } from '../../../core/api/monitoring.api';
+import { LiveService } from '../../../core/live/live.service';
 
 const RANGE_HOURS: Record<string, number> = { '24h': 24, '7d': 168, '30d': 720, '90d': 2160 };
 
@@ -28,10 +32,10 @@ interface MetricCard {
   top: { name: string; pid: number; value: number }[];
 }
 
-/** Device overview (07 section 5.7). Monitor points and messages arrive with the Monitoring module (M6). */
+/** Device overview (07 section 5.7). */
 @Component({
   selector: 'mc-device-overview-page',
-  imports: [Card, RingGauge, SpeedGauge, TrendChart, ProgressBar, DataTable, CellDef, StatusPill, EmptyState, AccordionItem],
+  imports: [Card, RingGauge, SpeedGauge, TrendChart, ProgressBar, DataTable, CellDef, StatusPill, EmptyState, AccordionItem, MonitorPoints, MessagesBoard],
   templateUrl: './device-overview.page.html',
   styleUrl: './device-overview.page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,6 +48,9 @@ export class DeviceOverviewPage {
 
   protected readonly metrics = signal<DeviceMetrics | null>(null);
   protected readonly inventory = signal<Record<string, InventoryDoc | null>>({});
+  protected readonly alerts = signal<Alert[]>([]);
+  protected readonly points = signal<MonitorPoint[]>([]);
+  private readonly alertsApi = inject(AlertsApi);
 
   protected readonly diskColumns = computed<Column[]>(() => [
     { key: 'drive', label: this.i18n.t('device.drive') },
@@ -146,8 +153,10 @@ export class DeviceOverviewPage {
       const id = this.context.id();
       if (id) {
         void this.loadInventory(id);
+        void this.loadMonitoring(id);
       }
     });
+    inject(LiveService).alert$.pipe(filter((e) => e.deviceId === this.context.id()), debounceTime(500), takeUntilDestroyed()).subscribe(() => void this.loadMonitoring(this.context.id()));
   }
 
   private async loadMetrics(id: string, hours: number): Promise<void> {
@@ -158,6 +167,15 @@ export class DeviceOverviewPage {
     } catch {
       this.metrics.set(null);
     }
+  }
+
+  private async loadMonitoring(id: string): Promise<void> {
+    const [alerts, points] = await Promise.all([
+      firstValueFrom(this.alertsApi.device(id, 'all', 10)).then((p) => p.items).catch(() => [] as Alert[]),
+      firstValueFrom(this.alertsApi.monitorPoints(id)).catch(() => [] as MonitorPoint[]),
+    ]);
+    this.alerts.set(alerts);
+    this.points.set(points);
   }
 
   private async loadInventory(id: string): Promise<void> {

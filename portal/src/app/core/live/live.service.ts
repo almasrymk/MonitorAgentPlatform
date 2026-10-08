@@ -42,6 +42,24 @@ export interface SnapshotEvent {
   capturedAt: string;
 }
 
+/** `alertRaised` / `alertUpdated` / `alertResolved`: a hint to refetch alert lists. */
+export interface AlertEvent {
+  kind: 'alertRaised' | 'alertUpdated' | 'alertResolved';
+  alertId: string;
+  deviceId: string;
+  locationId: string;
+  severity: string;
+  title: string | null;
+}
+
+/** `notificationCreated`: the bell count and the feed refetch. */
+export interface NotificationEvent {
+  notificationId: string;
+  severity: string;
+  title: string;
+  locationId: string | null;
+}
+
 export type LiveTarget = { kind: 'platform' } | { kind: 'tenant'; id?: string | null } | { kind: 'location'; id: string } | { kind: 'device'; id: string };
 
 const METHODS = {
@@ -66,6 +84,8 @@ export class LiveService {
   readonly summary$ = new Subject<SummaryEvent>();
   readonly liveSample$ = new Subject<LiveSampleEvent>();
   readonly snapshot$ = new Subject<SnapshotEvent>();
+  readonly alert$ = new Subject<AlertEvent>();
+  readonly notification$ = new Subject<NotificationEvent>();
   readonly connected = signal(false);
 
   constructor() {
@@ -160,6 +180,10 @@ export class LiveService {
       connection.on('summaryChanged', (event: SummaryEvent) => this.summary$.next(event));
       connection.on('liveSample', (event: LiveSampleEvent) => this.liveSample$.next(event));
       connection.on('snapshotUpdated', (event: SnapshotEvent) => this.snapshot$.next(event));
+      for (const kind of ['alertRaised', 'alertUpdated', 'alertResolved'] as const) {
+        connection.on(kind, (event: Omit<AlertEvent, 'kind'>) => this.alert$.next({ ...event, kind }));
+      }
+      connection.on('notificationCreated', (event: NotificationEvent) => this.notification$.next(event));
       connection.onreconnected(() => {
         this.connected.set(true);
         for (const { target } of this.counts.values()) {

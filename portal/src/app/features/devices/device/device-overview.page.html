@@ -8,10 +8,10 @@
     }
   </mc-card>
   <mc-card [title]="i18n.t('device.monitorPoints')">
-    <mc-empty-state icon="dashboard" [title]="i18n.t('device.noMonitorPoints')" [message]="i18n.t('device.monitoringSoon')" />
+    <mc-monitor-points [points]="points()" />
   </mc-card>
   <mc-card [title]="i18n.t('device.messages')">
-    <mc-empty-state icon="bell" [title]="i18n.t('dashboard.noAlerts')" [message]="i18n.t('dashboard.alertsSoon')" />
+    <mc-messages-board [alerts]="alerts()" />
   </mc-card>
 </section>
 

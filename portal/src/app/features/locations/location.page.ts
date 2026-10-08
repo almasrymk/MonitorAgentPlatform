@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, input, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { debounceTime } from 'rxjs';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { I18nService } from '../../core/i18n/i18n.service';
@@ -10,7 +11,7 @@ import { Skeleton } from '../../shared/ui/skeleton';
 import { ErrorState } from '../../shared/ui/states';
 import { LocationContext } from './location-context';
 
-/** A location: entity header and the Overview / Devices tabs (07 sections 5.5 and 5.6). */
+/** A location: entity header and the Overview / Devices / Notifications tabs (07 sections 5.5, 5.6 and 5.8). */
 @Component({
   selector: 'mc-location-page',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, EntityHeader, Skeleton, ErrorState],
@@ -26,6 +27,7 @@ import { LocationContext } from './location-context';
     <nav class="tabs" [attr.aria-label]="i18n.t('locations.tabs')">
       <a routerLink="overview" routerLinkActive="active" ariaCurrentWhenActive="page" data-testid="tab-overview">{{ i18n.t('locations.tabOverview') }}</a>
       <a routerLink="devices" routerLinkActive="active" ariaCurrentWhenActive="page" data-testid="tab-devices">{{ i18n.t('locations.tabDevices') }}</a>
+      <a routerLink="notifications" routerLinkActive="active" ariaCurrentWhenActive="page" data-testid="tab-notifications">{{ i18n.t('nav.notifications') }}</a>
     </nav>
     <router-outlet />
   `,
@@ -69,6 +71,11 @@ export class LocationPage {
     });
     live.summary$.pipe(takeUntilDestroyed()).subscribe((event) => {
       if (event.scope === 'location' && event.id === this.id()) {
+        void this.context.load(this.id(), true);
+      }
+    });
+    live.alert$.pipe(debounceTime(1500), takeUntilDestroyed()).subscribe((event) => {
+      if (event.locationId === this.id()) {
         void this.context.load(this.id(), true);
       }
     });
