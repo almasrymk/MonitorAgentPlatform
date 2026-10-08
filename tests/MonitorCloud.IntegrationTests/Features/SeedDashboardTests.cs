@@ -96,7 +96,49 @@ public sealed class SeedDashboardTests(SeededDemoFixture fixture) : IClassFixtur
         dashboard.TopCustomers[0].Name.ShouldBe("Gulf Engineering");
         dashboard.TopCustomers[0].Devices.ShouldBe(428);
         dashboard.ExpiringSubscriptions.Select(e => e.Name).ShouldContain("Horizon Retail");
-        dashboard.IncidentTrend.ShouldAllBe(s => s.Points.Count == 0);
+        dashboard.IncidentTrend.ShouldAllBe(s => s.Points.Count == 7);
+        var today = DateOnly.FromDateTime(App.Clock.GetUtcNow().UtcDateTime);
+        var days = $"FROM monitoring.AlertDailyStats WHERE Day >= '{today.AddDays(-6):yyyy-MM-dd}' AND Day <= '{today:yyyy-MM-dd}'";
+        dashboard.IncidentTrend.Single(s => s.Name == "Critical").Points.Sum(p => p.Value).ShouldBe(await CountAsync($"SELECT ISNULL(SUM(Critical), 0) AS Value {days}"));
+        dashboard.IncidentTrend.Single(s => s.Name == "Warning").Points.Sum(p => p.Value).ShouldBe(await CountAsync($"SELECT ISNULL(SUM(Warning), 0) AS Value {days}"));
+        var since = $"FROM monitoring.Alerts WHERE FirstSeenAt >= DATEADD(day, -30, CAST('{App.Clock.GetUtcNow():O}' AS datetimeoffset))";
+        dashboard.IncidentsBySeverity.Single(s => s.Name == "Critical").Count.ShouldBe(await CountAsync($"SELECT COUNT(*) AS Value {since} AND Severity = 'Critical'"));
+        dashboard.ResolvedIncidents.ShouldBe(await CountAsync($"SELECT COUNT(*) AS Value {since} AND Status = 'Resolved'"));
+        dashboard.RecentAlerts.Count.ShouldBe(6);
+        dashboard.RecentAlerts.ShouldAllBe(a => a.CustomerName != null && a.DeviceName != null);
+    }
+
+    [Fact]
+    public async Task Alerts_notifications_and_activity_match_the_seed_specification()
+    {
+        // Open alerts equal the open counts of every device (health consistency).
+        (await CountAsync("SELECT COUNT(*) AS Value FROM monitoring.Alerts WHERE Status = 'Open' AND Severity = 'Critical'"))
+            .ShouldBe(await CountAsync("SELECT SUM(OpenCritical) AS Value FROM devices.DeviceStates"));
+        (await CountAsync("SELECT COUNT(*) AS Value FROM monitoring.Alerts WHERE Status = 'Open' AND Severity = 'Warning'"))
+            .ShouldBe(await CountAsync("SELECT SUM(OpenWarning) AS Value FROM devices.DeviceStates"));
+
+        // The 30-day trend of Acme peaks three days ago.
+        var acme = await TenantIdAsync("ACME");
+        using var client = await ClientAsync("admin@acme.test");
+        var dashboard = await (await client.GetAsync(new Uri("/api/v1/dashboard?trendDays=30", UriKind.Relative))).ShouldBeOkAsync<TenantDashboardDto>();
+        var totals = dashboard.IncidentTrend.SelectMany(s => s.Points).GroupBy(p => p.Day).Select(g => (Day: g.Key, Total: g.Sum(p => p.Value))).OrderBy(d => d.Day).ToList();
+        totals.Count.ShouldBe(30);
+        var peak = totals.MaxBy(d => d.Total).Day;
+        var localToday = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(App.Clock.GetUtcNow(), TimeZoneInfo.FindSystemTimeZoneById("Africa/Cairo")).DateTime);
+        (localToday.DayNumber - peak.DayNumber).ShouldBeInRange(2, 4);
+        dashboard.RecentAlerts.ShouldNotBeEmpty();
+
+        // 25 notifications per feed, 3 unread.
+        (await CountAsync($"SELECT COUNT(*) AS Value FROM notifications.Notifications WHERE TenantId = '{acme}'")).ShouldBe(25);
+        (await CountAsync("SELECT COUNT(*) AS Value FROM notifications.Notifications WHERE TenantId IS NULL")).ShouldBe(25);
+        var unread = await (await client.GetAsync(new Uri("/api/v1/notifications/unread-count", UriKind.Relative))).ShouldBeOkAsync<Application.Notifications.UnreadCountDto>();
+        unread.Unread.ShouldBe(3);
+        using var platform = await ClientAsync("admin@monitor.local");
+        (await (await platform.GetAsync(new Uri("/api/v1/platform/notifications/unread-count", UriKind.Relative))).ShouldBeOkAsync<Application.Notifications.UnreadCountDto>())
+            .Unread.ShouldBe(3);
+
+        (await CountAsync("SELECT COUNT(*) AS Value FROM audit.AuditRecords")).ShouldBeGreaterThanOrEqualTo(60);
+        (await CountAsync("SELECT COUNT(*) AS Value FROM monitoring.MonitorPoints")).ShouldBe(6);
     }
 
     [Fact]

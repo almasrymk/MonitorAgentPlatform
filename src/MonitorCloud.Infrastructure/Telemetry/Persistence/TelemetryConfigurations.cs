@@ -63,3 +63,16 @@ internal sealed class LiveSnapshotConfiguration : IEntityTypeConfiguration<LiveS
         builder.Property(x => x.Json).HasColumnType("varbinary(max)");
     }
 }
+
+internal sealed class MonitorPointSampleConfiguration : IEntityTypeConfiguration<MonitorPointSample>
+{
+    public void Configure(EntityTypeBuilder<MonitorPointSample> builder)
+    {
+        builder.ToTable("MonitorPointSamples", Schemas.Telemetry);
+        builder.HasKey(x => new { x.MonitorPointId, x.BucketUtc });
+        builder.Ignore(x => x.Id);
+        builder.Property(x => x.BucketUtc).HasColumnType("datetime2(0)");
+        builder.Property(x => x.ResponseMs).HasPrecision(9, 2);
+        builder.HasIndex(x => new { x.DeviceId, x.BucketUtc });
+    }
+}

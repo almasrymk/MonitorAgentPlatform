@@ -1,6 +1,6 @@
 namespace MonitorCloud.Application.Tenancy.Contracts;
 
-public sealed record TenantInfo(Guid Id, string Name, string Code, string Status)
+public sealed record TenantInfo(Guid Id, string Name, string Code, string Status, string TimeZone = "Africa/Cairo")
 {
     public bool IsActive => Status == "Active";
 }

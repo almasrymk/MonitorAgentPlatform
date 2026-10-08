@@ -8,8 +8,17 @@ public sealed class CapturingEmailSender : IEmailSender
 {
     public ConcurrentQueue<EmailMessage> Sent { get; } = new();
 
+    /// <summary>The next sends that throw (SMTP failure), for retry tests.</summary>
+    public int FailNext { get; set; }
+
     public Task SendAsync(EmailMessage message, CancellationToken cancellationToken)
     {
+        if (FailNext > 0)
+        {
+            FailNext--;
+            throw new InvalidOperationException("TEST-ONLY simulated SMTP failure");
+        }
+
         Sent.Enqueue(message);
         return Task.CompletedTask;
     }

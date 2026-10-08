@@ -7,12 +7,12 @@ public sealed record HealthBreakdownDto(int Total, int Healthy, int Warning, int
 
 public sealed record NamedCountDto(string Name, int Count, decimal Percent);
 
-/// <summary>One line of a trend chart. Incident series stay empty until alerts exist (M6).</summary>
+/// <summary>One line of a trend chart.</summary>
 public sealed record TrendSeriesDto(string Name, IReadOnlyList<TrendPointDto> Points);
 
 public sealed record TrendPointDto(DateOnly Day, int Value);
 
-/// <summary>Alert row placeholder for the dashboards (filled in M6).</summary>
+/// <summary>An open alert in the "Recent Alerts" blocks of the dashboards.</summary>
 public sealed record RecentAlertDto(Guid Id, DateTimeOffset At, string Severity, Guid? TenantId, string? CustomerName, Guid? DeviceId, string? DeviceName, string? LocationName, string Message);
 
 public sealed record ProblemDeviceDto(Guid Id, string Name, Guid LocationId, string? LocationName, string Issue, string Health, string Connection, int OpenAlerts, DateTimeOffset? LastSeenAt);

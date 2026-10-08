@@ -19,6 +19,7 @@ internal sealed class TenantConfiguration : IEntityTypeConfiguration<Tenant>
         builder.HasIndex(x => x.LicensingCustomerId).IsUnique().HasFilter("[LicensingCustomerId] IS NOT NULL");
         builder.Property(x => x.Country).HasMaxLength(100);
         builder.Property(x => x.City).HasMaxLength(100);
+        builder.Property(x => x.DefaultLanguage).HasMaxLength(2).HasDefaultValue("en");
         builder.Property(x => x.TimeZone).HasMaxLength(64);
         builder.Property(x => x.SuspensionReason).HasMaxLength(500);
         builder.Property(x => x.RowVersion).IsRowVersion();

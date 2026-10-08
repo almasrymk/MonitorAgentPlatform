@@ -82,3 +82,18 @@ public sealed class LiveSnapshot : Entity, ITenantOwned
     public byte[] Json { get; private set; }
     public DateTimeOffset CapturedAt { get; private set; }
 }
+
+/// <summary><c>telemetry.MonitorPointSamples</c>: the status of a monitor point once a minute (02 section 5).</summary>
+public sealed class MonitorPointSample : Entity, ITenantOwned
+{
+    private MonitorPointSample()
+    {
+    }
+
+    public Guid MonitorPointId { get; private set; }
+    public DateTime BucketUtc { get; private set; }
+    public Guid TenantId { get; private set; }
+    public Guid DeviceId { get; private set; }
+    public byte Status { get; private set; }
+    public decimal? ResponseMs { get; private set; }
+}

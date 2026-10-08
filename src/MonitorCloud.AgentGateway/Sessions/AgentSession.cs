@@ -29,12 +29,21 @@ public sealed class AgentSession(Guid deviceId, Guid tenantId, Guid locationId, 
     }
 
     /// <summary>Throttles live samples to the requested interval.</summary>
+    private int _clockSkew;
+
     public bool TryTakeLiveSlot(DateTimeOffset now, TimeSpan minInterval)
     {
         var last = Interlocked.Read(ref _lastLiveTicks);
         if (now.UtcTicks - last < minInterval.Ticks)
             return false;
         return Interlocked.CompareExchange(ref _lastLiveTicks, now.UtcTicks, last) == last;
+    }
+
+    /// <summary>Records whether the agent clock is off; true when this is the first reading of the session or it changed.</summary>
+    public bool TrySetClockSkew(bool skewed)
+    {
+        var value = skewed ? 2 : 1;
+        return Interlocked.Exchange(ref _clockSkew, value) != value;
     }
 
     public string SessionId { get; } = Guid.CreateVersion7().ToString("N");

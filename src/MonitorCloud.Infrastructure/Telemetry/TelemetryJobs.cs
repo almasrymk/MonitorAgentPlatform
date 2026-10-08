@@ -82,7 +82,7 @@ public sealed partial class TelemetryJobs(DatabaseOptionsAccessor database, IOpt
         var o = options.Value;
         var total = 0;
         await using var connection = new SqlConnection(database.ConnectionString);
-        foreach (var (table, days) in new[] { ("telemetry.MetricMinutes", o.RetentionMinuteDays), ("telemetry.MetricHours", o.RetentionHourDays), ("telemetry.DiskUsageHours", o.RetentionDiskDays) })
+        foreach (var (table, days) in new[] { ("telemetry.MetricMinutes", o.RetentionMinuteDays), ("telemetry.MetricHours", o.RetentionHourDays), ("telemetry.DiskUsageHours", o.RetentionDiskDays), ("telemetry.MonitorPointSamples", o.RetentionMinuteDays) })
         {
             int deleted;
             do

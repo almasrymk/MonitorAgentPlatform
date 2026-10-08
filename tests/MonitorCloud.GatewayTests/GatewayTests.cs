@@ -51,7 +51,7 @@ public sealed class GatewayTests(SqlServerFixture sql) : IAsyncLifetime
     private static AgentIdentity Identity(Device device) => new(device.Id, TestWorld.DeviceSecret, device.Fingerprint, device.Hostname, string.Empty);
 
     private async Task<SimulatedAgent.SimulatedAgent> AgentAsync(AgentIdentity identity) =>
-        await Task.FromResult(new SimulatedAgent.SimulatedAgent(identity, _channel));
+        await Task.FromResult(new SimulatedAgent.SimulatedAgent(identity, _channel) { Clock = _app.Clock });
 
     private Task<DeviceState> StateAsync(Guid deviceId) => _app.InDbAsync(db => db.Set<DeviceState>().AsNoTracking().SingleAsync(s => s.DeviceId == deviceId));
 

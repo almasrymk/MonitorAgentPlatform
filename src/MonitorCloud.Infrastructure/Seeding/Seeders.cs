@@ -127,6 +127,10 @@ public sealed partial class DemoSeeder(
         var telemetry = new DemoTelemetry(db.Database.GetConnectionString()!, now, new Random(DemoData.Seed + 3));
         await telemetry.RunAsync(cancellationToken);
 
+        // Part 4 (M6): alerts, daily statistics, notifications, audit activity, monitor points, recipients.
+        var monitoring = new DemoMonitoring(db, now, new Random(DemoData.Seed + 4));
+        await monitoring.RunAsync([.. DemoData.Detailed.Select(d => d.Code)], cancellationToken);
+
         // 08 section 4: one valid enrollment code for Acme / Cairo HQ, printed at seed time.
         var cairo = await db.Set<Location>().FirstAsync(l => l.Code == "CAIRO-HQ", cancellationToken);
         var code = Application.Tenancy.EnrollmentCodes.New();

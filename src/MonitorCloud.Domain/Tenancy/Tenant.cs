@@ -33,6 +33,9 @@ public sealed class Tenant : AggregateRoot
     public string Country { get; private set; }
     public string City { get; private set; }
     public string TimeZone { get; private set; }
+
+    /// <summary>Language of new users and of e-mails (Settings > General): <c>en</c> or <c>ar</c>.</summary>
+    public string DefaultLanguage { get; private set; } = "en";
     public DateOnly CustomerSince { get; private set; }
     public Guid? LogoMediaId { get; private set; }
     public DateTimeOffset? SuspendedAt { get; private set; }
@@ -96,6 +99,15 @@ public sealed class Tenant : AggregateRoot
         Country = Guard.NotEmpty(country, nameof(Country), 100);
         City = Guard.NotEmpty(city, nameof(City), 100);
         TimeZone = Guard.NotEmpty(timeZone, nameof(TimeZone), 64);
+    }
+
+    /// <summary>Settings > General.</summary>
+    public void SetPreferences(string timeZone, string defaultLanguage)
+    {
+        Guard.Against(Status == TenantStatus.Archived, TenancyErrors.InvalidTransition);
+        Guard.Against(defaultLanguage is not ("en" or "ar"), Error.Validation(Guard.ValidationCode, "Language must be 'en' or 'ar'."));
+        TimeZone = Guard.NotEmpty(timeZone, nameof(TimeZone), 64);
+        DefaultLanguage = defaultLanguage;
     }
 
     public void LinkLicensingCustomer(Guid licensingCustomerId) =>

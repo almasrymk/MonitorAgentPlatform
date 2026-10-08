@@ -59,10 +59,12 @@ public sealed class DeviceLicense : AggregateRoot, ITenantOwned
         return license;
     }
 
-    /// <summary>A new or refreshed activation, possibly on another licence of the same customer (re-enrollment).</summary>
+    /// <summary>
+    /// A new or refreshed activation, possibly on another licence of the same customer (re-enrollment). Always raises the
+    /// event: a refreshed token is pushed to the connected agent as <c>LicenseUpdate</c> (05 section 6).
+    /// </summary>
     public void Renew(Guid licenseId, string licenseNumber, string token, string kid, DateTimeOffset checkAfter, DateTimeOffset offlineValidUntil, DateTimeOffset now)
     {
-        var wasUnlicensed = State == DeviceLicenseState.Unlicensed;
         LicenseId = licenseId;
         LicenseNumber = Guard.NotEmpty(licenseNumber, nameof(LicenseNumber), 64);
         Token = token;
@@ -73,8 +75,7 @@ public sealed class DeviceLicense : AggregateRoot, ITenantOwned
         State = DeviceLicenseState.Licensed;
         ReasonCode = null;
         UnlicensedSince = null;
-        if (wasUnlicensed)
-            Raise(new DeviceLicenseChangedV1(DeviceId, TenantId, true, null, now));
+        Raise(new DeviceLicenseChangedV1(DeviceId, TenantId, true, null, now));
     }
 
     /// <summary>Seat released, licence rejected or expired. Starts the grace period of D19 once.</summary>

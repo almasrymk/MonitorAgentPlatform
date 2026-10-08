@@ -19,3 +19,9 @@ public interface IDeviceDirectory
 {
     Task<DeviceRef?> FindAsync(Guid deviceId, CancellationToken cancellationToken);
 }
+
+/// <summary>Device names by id, for lists of other modules (alerts, notifications).</summary>
+public interface IDeviceNames
+{
+    Task<IReadOnlyDictionary<Guid, string>> GetAsync(IReadOnlyCollection<Guid> deviceIds, CancellationToken ct);
+}

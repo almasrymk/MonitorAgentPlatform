@@ -7,6 +7,7 @@ using MonitorCloud.Application.Abstractions.Persistence;
 using MonitorCloud.Application.Common;
 using MonitorCloud.Application.Devices.Contracts;
 using MonitorCloud.Application.Licensing.Contracts;
+using MonitorCloud.Application.Monitoring.Contracts;
 using MonitorCloud.Application.Tenancy.Contracts;
 using MonitorCloud.Domain.Audit;
 using MonitorCloud.Domain.Identity;
@@ -32,8 +33,32 @@ internal static class DashboardMath
         counts.Aggregate(DeviceCounts.Empty, (a, b) => new DeviceCounts(
             a.Devices + b.Devices, a.Online + b.Online, a.Offline + b.Offline, a.Healthy + b.Healthy, a.Warning + b.Warning, a.Critical + b.Critical, a.Licensed + b.Licensed, a.Unlicensed + b.Unlicensed));
 
-    public static IReadOnlyList<TrendSeriesDto> EmptyIncidentTrend() =>
-        [new("Critical", []), new("Warning", []), new("Info", [])];
+    public const int RecentAlerts = 6;
+
+    /// <summary>Alerts opened per day over the last <paramref name="days"/> days (tenant-local dates).</summary>
+    public static async Task<IReadOnlyList<TrendSeriesDto>> IncidentTrendAsync(IAlertDashboardReader alerts, Guid? locationId, int days, string? timeZone, DateTimeOffset now, CancellationToken ct)
+    {
+        var zone = timeZone is not null && TimeZoneInfo.TryFindSystemTimeZoneById(timeZone, out var z) ? z : TimeZoneInfo.Utc;
+        var today = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(now, zone).DateTime);
+        var rows = await alerts.TrendAsync(locationId, today.AddDays(1 - days), today, ct);
+        return
+        [
+            new("Critical", rows.Select(r => new TrendPointDto(r.Day, r.Critical)).ToList()),
+            new("Warning", rows.Select(r => new TrendPointDto(r.Day, r.Warning)).ToList()),
+            new("Info", rows.Select(r => new TrendPointDto(r.Day, r.Info)).ToList()),
+        ];
+    }
+
+    public static async Task<IReadOnlyList<RecentAlertDto>> RecentAlertsAsync(
+        IAlertDashboardReader alerts, IDeviceNames devices, ILocationLookup locations, ITenantNames? tenants, Guid? locationId, CancellationToken ct)
+    {
+        var rows = await alerts.RecentAsync(locationId, RecentAlerts, ct);
+        var deviceNames = await devices.GetAsync([.. rows.Select(r => r.DeviceId).Distinct()], ct);
+        var locationNames = await locations.GetAsync([.. rows.Select(r => r.LocationId).Distinct()], ct);
+        var tenantNames = tenants is null ? new Dictionary<Guid, string>() : await tenants.GetAsync([.. rows.Select(r => r.TenantId).Distinct()], ct);
+        return rows.Select(r => new RecentAlertDto(r.Id, r.At, r.Severity, r.TenantId, tenantNames.GetValueOrDefault(r.TenantId), r.DeviceId, deviceNames.GetValueOrDefault(r.DeviceId),
+            locationNames.GetValueOrDefault(r.LocationId)?.Name, r.Title)).ToList();
+    }
 
     public static IReadOnlyList<NamedCountDto> WithPercent(IEnumerable<(string Name, int Count)> items)
     {
@@ -62,7 +87,8 @@ internal sealed class GetTenantDashboardQueryValidator : AbstractValidator<GetTe
 
 /// <summary>Customer Dashboard / Customer Workspace (07 section 5.3). Needs a tenant scope.</summary>
 internal sealed class GetTenantDashboardQueryHandler(
-    IReadDbContext db, ITenantContext scope, IDeviceStatsDirectory stats, IDeviceDashboardReader devices, ILocationLookup locations, IEntitlementDirectory entitlements, TimeProvider clock)
+    IReadDbContext db, ITenantContext scope, IDeviceStatsDirectory stats, IDeviceDashboardReader devices, ILocationLookup locations, IEntitlementDirectory entitlements,
+    IAlertDashboardReader alerts, IDeviceNames deviceNames, TimeProvider clock)
     : IQueryHandler<GetTenantDashboardQuery, TenantDashboardDto>
 {
     public async Task<Result<TenantDashboardDto>> Handle(GetTenantDashboardQuery request, CancellationToken cancellationToken)
@@ -112,10 +138,10 @@ internal sealed class GetTenantDashboardQueryHandler(
             tiles,
             cards.Where(c => !c.IsDefault || c.Devices > 0).ToList(),
             DashboardMath.Health(total),
-            DashboardMath.EmptyIncidentTrend(),
+            await DashboardMath.IncidentTrendAsync(alerts, null, request.TrendDays ?? 7, tenant.TimeZone, now, cancellationToken),
             await DashboardMath.ProblemsAsync(devices, locations, null, cancellationToken),
             byLocation,
-            [],
+            await DashboardMath.RecentAlertsAsync(alerts, deviceNames, locations, null, null, cancellationToken),
             new LicenseSummaryDto(total.Licensed, total.Unlicensed, entitlement?.PlanName, entitlement?.ActiveSeats ?? total.Licensed, entitlement?.MaxDevices, entitlement?.RenewsAt));
     }
 }
@@ -136,7 +162,8 @@ internal sealed class GetLocationDashboardQueryValidator : AbstractValidator<Get
 
 /// <summary>Location Overview (07 section 5.5).</summary>
 internal sealed class GetLocationDashboardQueryHandler(
-    IReadDbContext db, IDeviceStatsDirectory stats, IDeviceDashboardReader devices, ILocationLookup locations, IEntitlementDirectory entitlements)
+    IReadDbContext db, IDeviceStatsDirectory stats, IDeviceDashboardReader devices, ILocationLookup locations, IEntitlementDirectory entitlements,
+    IAlertDashboardReader alerts, IDeviceNames deviceNames, TimeProvider clock)
     : IQueryHandler<GetLocationDashboardQuery, LocationDashboardDto>
 {
     public async Task<Result<LocationDashboardDto>> Handle(GetLocationDashboardQuery request, CancellationToken cancellationToken)
@@ -144,7 +171,7 @@ internal sealed class GetLocationDashboardQueryHandler(
         var location = await db.Query<Location>().SingleOrDefaultAsync(l => l.Id == request.LocationId, cancellationToken);
         if (location is null)
             return TenancyErrors.LocationNotFound;
-        var tenant = await db.Query<Tenant>().Where(t => t.Id == location.TenantId).Select(t => new { t.Name, t.CustomerSince }).SingleAsync(cancellationToken);
+        var tenant = await db.Query<Tenant>().Where(t => t.Id == location.TenantId).Select(t => new { t.Name, t.CustomerSince, t.TimeZone }).SingleAsync(cancellationToken);
         var entitlement = (await entitlements.GetAsync([location.TenantId], cancellationToken)).GetValueOrDefault(location.TenantId);
         var c = (await stats.ByLocationAsync([location.Id], cancellationToken)).GetValueOrDefault(location.Id) ?? DeviceCounts.Empty;
         var resources = await devices.ResourceAveragesAsync(location.Id, cancellationToken);
@@ -166,12 +193,12 @@ internal sealed class GetLocationDashboardQueryHandler(
         return new LocationDashboardDto(
             summary,
             tiles,
-            DashboardMath.EmptyIncidentTrend(),
+            await DashboardMath.IncidentTrendAsync(alerts, location.Id, request.TrendDays ?? 7, tenant.TimeZone, clock.GetUtcNow(), cancellationToken),
             DashboardMath.WithPercent(os.Select(o => (o.OsFamily, o.Devices))),
             DashboardMath.Health(c),
             new ResourceAveragesDto(resources.OnlineDevices, resources.Cpu, resources.Ram, resources.Disk, c.HealthScore),
             await DashboardMath.ProblemsAsync(devices, locations, location.Id, cancellationToken),
-            []);
+            await DashboardMath.RecentAlertsAsync(alerts, deviceNames, locations, null, location.Id, cancellationToken));
     }
 }
 
@@ -190,9 +217,10 @@ internal sealed class GetPlatformDashboardQueryValidator : AbstractValidator<Get
     }
 }
 
-/// <summary>Platform Admin Dashboard (07 section 5.1). Incident charts and recent alerts stay empty until M6.</summary>
+/// <summary>Platform Admin Dashboard (07 section 5.1).</summary>
 internal sealed class GetPlatformDashboardQueryHandler(
-    IReadDbContext db, IDeviceStatsDirectory stats, IDeviceDashboardReader devices, IEntitlementStatistics plans, ITenantNames names, TimeProvider clock)
+    IReadDbContext db, IDeviceStatsDirectory stats, IDeviceDashboardReader devices, IEntitlementStatistics plans, ITenantNames names, IAlertDashboardReader alerts,
+    IDeviceNames deviceNames, ILocationLookup locations, TimeProvider clock)
     : IQueryHandler<GetPlatformDashboardQuery, PlatformDashboardDto>
 {
     public const int TopCustomers = 5;
@@ -242,17 +270,18 @@ internal sealed class GetPlatformDashboardQueryHandler(
 
         var os = await devices.ByOsAsync(null, cancellationToken);
         var distribution = await plans.DistributionAsync(cancellationToken);
+        var severity = await alerts.BySeverityAsync(now.AddDays(-(request.SeverityDays ?? 30)), cancellationToken);
 
         return new PlatformDashboardDto(
             tiles,
-            DashboardMath.EmptyIncidentTrend(),
-            DashboardMath.WithPercent([("Critical", 0), ("Warning", 0), ("Info", 0)]),
-            0,
+            await DashboardMath.IncidentTrendAsync(alerts, null, request.TrendDays ?? 7, null, now, cancellationToken),
+            DashboardMath.WithPercent([("Critical", severity.Critical), ("Warning", severity.Warning), ("Info", severity.Info)]),
+            severity.Resolved,
             DashboardMath.WithPercent(distribution.Select(d => (d.PlanName, d.Customers))),
             top.Select(t => new TopCustomerDto(t.Key, tenantNames.GetValueOrDefault(t.Key) ?? string.Empty, t.Value.Devices, t.Value.Online, t.Value.HealthScore)).ToList(),
             expiring.Select(e => new ExpiringSubscriptionDto(e.TenantId, tenantNames.GetValueOrDefault(e.TenantId) ?? string.Empty, e.PlanName, e.RenewsAt, e.DaysLeft,
                 e.DaysLeft <= 7 ? "Expiring" : e.DaysLeft <= 14 ? "Warning" : "Active")).ToList(),
-            [],
+            await DashboardMath.RecentAlertsAsync(alerts, deviceNames, locations, names, null, cancellationToken),
             DashboardMath.Health(total),
             DashboardMath.WithPercent(os.Select(o => (o.OsFamily, o.Devices))),
             activity.Select(a => new ActivityDto(a.At, a.Action, a.ActorName, a.EntityType, a.Details, a.TenantId is { } id ? activityNames.GetValueOrDefault(id) : null)).ToList());

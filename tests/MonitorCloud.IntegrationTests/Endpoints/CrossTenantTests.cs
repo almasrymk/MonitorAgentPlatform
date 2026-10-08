@@ -28,6 +28,12 @@ public sealed class CrossTenantTests(SqlServerFixture sql) : EndpointSuiteBase(s
         ["/api/v1/devices/{id:guid}/inventory/{kind}"] = t => t.Device1.Id,
         ["/api/v1/devices/{id:guid}/live-sessions"] = t => t.Device1.Id,
         ["/api/v1/locations/{id:guid}/dashboard"] = t => t.Location1.Id,
+        ["/api/v1/alerts/{id:guid}"] = t => t.Alert1.Id,
+        ["/api/v1/alerts/{id:guid}/acknowledge"] = t => t.Alert1.Id,
+        ["/api/v1/alerts/{id:guid}/resolve"] = t => t.Alert1.Id,
+        ["/api/v1/devices/{id:guid}/alerts"] = t => t.Device1.Id,
+        ["/api/v1/devices/{id:guid}/monitor-points"] = t => t.Device1.Id,
+        ["/api/v1/settings/alerts/recipients/{id:guid}"] = t => t.Recipient1.Id,
         ["/api/v1/locations/{id:guid}/enrollment-codes"] = t => t.Location1.Id,
         ["/api/v1/locations/{id:guid}/enrollment-codes/{codeId:guid}"] = t => t.Location1.Id,
     };

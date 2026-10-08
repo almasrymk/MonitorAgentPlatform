@@ -3,6 +3,8 @@ using MonitorCloud.Application.Identity;
 using MonitorCloud.Application.Devices;
 using MonitorCloud.Domain.Devices;
 using MonitorCloud.Domain.Identity;
+using MonitorCloud.Domain.Monitoring;
+using MonitorCloud.Domain.Notifications;
 using MonitorCloud.Domain.Tenancy;
 using MonitorCloud.Application.Licensing;
 using MonitorCloud.Application.Tenancy;
@@ -12,10 +14,13 @@ using MonitorCloud.Infrastructure.Persistence;
 namespace MonitorCloud.TestShared.Builders;
 
 /// <summary>One customer of the test world: its locations and one user per role.</summary>
-/// <summary>Device1 is in Location1, Device2 in Location2 (both online, healthy, licensed); EnrollmentCodeId belongs to Location1.</summary>
+/// <summary>
+/// Device1 is in Location1, Device2 in Location2 (both online, healthy, licensed); EnrollmentCodeId belongs to Location1.
+/// Alert1 is an open Info alert of Device1 (Info does not change the health); Recipient1 receives every alert e-mail.
+/// </summary>
 public sealed record TestTenant(
     Tenant Tenant, Location DefaultLocation, Location Location1, Location Location2, IReadOnlyDictionary<string, User> Users, User RestrictedManager,
-    Device Device1, Device Device2, Guid EnrollmentCodeId)
+    Device Device1, Device Device2, Guid EnrollmentCodeId, Alert Alert1, AlertRecipient Recipient1)
 {
     public Guid Id => Tenant.Id;
     public User Administrator => Users[Roles.Administrator];
@@ -93,7 +98,11 @@ public sealed record TestWorld(User PlatformAdmin, User PlatformSupport, TestTen
         var device2 = AddDevice(db, secrets, tenant.Id, location2.Id, $"{code}-PC-02", now);
         var enrollmentCode = LocationEnrollmentCode.Create(tenant.Id, location1.Id, EnrollmentCodes.Hash($"LOC-{code}-TEST"), EnrollmentCodes.Prefix($"LOC-{code}-TEST"), TimeSpan.FromDays(7), null, null, now);
         db.Add(enrollmentCode);
-        return new TestTenant(tenant, defaultLocation, location1, location2, users, restricted, device1, device2, enrollmentCode.Id);
+        var alert = Alert.Raise(tenant.Id, location1.Id, device1.Id, "disk-D", AlertCategories.Storage, AlertSeverity.Info, "Disk D: is 80% full", "Free space 20%", AlertSource.Agent, now, notify: false);
+        alert.ClearDomainEvents();
+        var recipient = AlertRecipient.Create(tenant.Id, "Operations", $"ops@{domain}", RecipientEvents.All, null);
+        db.AddRange(alert, recipient);
+        return new TestTenant(tenant, defaultLocation, location1, location2, users, restricted, device1, device2, enrollmentCode.Id, alert, recipient);
     }
 
     private static Device AddDevice(AppDbContext db, IDeviceSecretService secrets, Guid tenantId, Guid locationId, string name, DateTimeOffset now)

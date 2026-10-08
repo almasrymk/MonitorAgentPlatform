@@ -63,6 +63,8 @@ public static class DependencyInjection
         services.AddHostedService(sp => sp.GetRequiredService<Telemetry.TelemetryJobs>());
         services.AddSingleton<Application.Telemetry.Contracts.ILiveSnapshotStore, Telemetry.LiveSnapshotStore>();
         services.AddSingleton<Application.Abstractions.Serialization.IInventoryCodec, Telemetry.InventoryCodecAdapter>();
+        services.AddSingleton<Monitoring.MonitoringJobs>();
+        services.AddHostedService(sp => sp.GetRequiredService<Monitoring.MonitoringJobs>());
         services.AddScoped<Seeding.BootstrapSeeder>();
         services.AddScoped<Seeding.DemoSeeder>();
 

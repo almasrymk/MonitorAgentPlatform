@@ -60,7 +60,7 @@ public sealed class TelemetryGatewayTests(SqlServerFixture sql) : IAsyncLifetime
     private async Task<SimulatedAgent.SimulatedAgent> ConnectedAsync(Device device)
     {
         var identity = new AgentIdentity(device.Id, TestWorld.DeviceSecret, device.Fingerprint, device.Hostname, string.Empty);
-        var agent = new SimulatedAgent.SimulatedAgent(identity, _channel);
+        var agent = new SimulatedAgent.SimulatedAgent(identity, _channel) { Clock = _app.Clock };
         var token = await new AgentCloudClient(_app.CreateClient()).TokenAsync(identity);
         (await agent.ConnectAsync(token)).ShouldNotBeNull();
         return agent;

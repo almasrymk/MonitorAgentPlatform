@@ -10,7 +10,7 @@ internal sealed class TenantDirectory(IReadDbContext db) : ITenantDirectory, ILo
     public async Task<TenantInfo?> FindAsync(Guid tenantId, CancellationToken cancellationToken) =>
         await db.Query<Tenant>()
             .Where(t => t.Id == tenantId)
-            .Select(t => new TenantInfo(t.Id, t.Name, t.Code, t.Status.ToString()))
+            .Select(t => new TenantInfo(t.Id, t.Name, t.Code, t.Status.ToString(), t.TimeZone))
             .SingleOrDefaultAsync(cancellationToken);
 
     public async Task<IReadOnlyCollection<Guid>> ExistingAsync(Guid tenantId, IReadOnlyCollection<Guid> locationIds, CancellationToken cancellationToken) =>

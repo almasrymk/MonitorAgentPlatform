@@ -58,6 +58,11 @@ public static class ErrorCodes
     public const string TenantArchived = "TENANT_ARCHIVED";
     public const string ProtocolUnsupported = "PROTOCOL_UNSUPPORTED";
     public const string InventoryNotFound = "INVENTORY_NOT_FOUND";
+    public const string AlertNotFound = "ALERT_NOT_FOUND";
+    public const string AlertSelfResolving = "ALERT_SELF_RESOLVING";
+    public const string AlertResolved = "ALERT_RESOLVED";
+    public const string RecipientNotFound = "RECIPIENT_NOT_FOUND";
+    public const string RecipientEmailTaken = "RECIPIENT_EMAIL_TAKEN";
 
     public static IReadOnlyList<string> All { get; } = typeof(ErrorCodes)
         .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)

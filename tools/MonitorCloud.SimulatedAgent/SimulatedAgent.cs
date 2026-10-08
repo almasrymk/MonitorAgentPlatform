@@ -73,6 +73,36 @@ public sealed class SimulatedAgent(AgentIdentity identity, GrpcChannel channel) 
     public Task SnapshotAsync(CancellationToken cancellationToken = default) =>
         SendAsync(new AgentMessage { Snapshot = new Snapshot { JsonBrotli = Google.Protobuf.ByteString.CopyFrom(Metrics.Snapshot(DateTimeOffset.UtcNow, Identity.Hostname)) } }, cancellationToken);
 
+    /// <summary>The clock of <c>sent_at</c> (tests pass the server's test clock so no clock skew is reported).</summary>
+    public TimeProvider Clock { get; init; } = TimeProvider.System;
+
+    /// <summary>An <c>IssueEvent</c> (guaranteed). Returns its sequence.</summary>
+    public async Task<ulong> IssueAsync(
+        string issueKey, IssueAction action, Severity severity = Severity.Warning, string category = "Performance", string? title = null, DateTimeOffset? occurredAt = null,
+        CancellationToken cancellationToken = default)
+    {
+        var message = new AgentMessage
+        {
+            Issue = new IssueEvent
+            {
+                IssueKey = issueKey, Action = action, Severity = severity, Category = category, Title = title ?? issueKey, Message = $"{issueKey} reported by the simulator",
+                OccurredAt = Timestamp.FromDateTimeOffset(occurredAt ?? Clock.GetUtcNow()),
+            },
+        };
+        await SendGuaranteedAsync(message, cancellationToken);
+        return message.Sequence;
+    }
+
+    /// <summary>A <c>MonitorPointReport</c> (guaranteed). Returns its sequence.</summary>
+    public async Task<ulong> MonitorPointsAsync(IEnumerable<MonitorPointStatus> points, bool full = true, CancellationToken cancellationToken = default)
+    {
+        var report = new MonitorPointReport { Full = full };
+        report.Points.AddRange(points);
+        var message = new AgentMessage { MonitorPoints = report };
+        await SendGuaranteedAsync(message, cancellationToken);
+        return message.Sequence;
+    }
+
     public async Task<ulong> InventoryAsync(InventoryKind kind, CancellationToken cancellationToken = default)
     {
         var (bytes, hash) = Metrics.Inventory(kind, Identity.Hostname);
@@ -173,7 +203,7 @@ public sealed class SimulatedAgent(AgentIdentity identity, GrpcChannel channel) 
         var call = _call ?? throw new InvalidOperationException("Open the stream first.");
         if (string.IsNullOrEmpty(message.MessageId))
             message.MessageId = Guid.NewGuid().ToString("N");
-        message.SentAt ??= Timestamp.FromDateTimeOffset(DateTimeOffset.UtcNow);
+        message.SentAt ??= Timestamp.FromDateTimeOffset(Clock.GetUtcNow());
         await _writeLock.WaitAsync(cancellationToken);
         try
         {

@@ -26,6 +26,9 @@ public static class AgentGatewayRegistration
         services.AddSingleton<IAgentMessageHandler, Handlers.SnapshotHandler>();
         services.AddSingleton<IAgentMessageHandler, Handlers.InventoryHandler>();
         services.AddSingleton<IAgentMessageHandler, Handlers.LiveSampleHandler>();
+        services.AddSingleton<IAgentMessageHandler, Handlers.IssueHandler>();
+        services.AddSingleton<IAgentMessageHandler, Handlers.MonitorPointReportHandler>();
+        services.AddSingleton<Handlers.ClockSkewMonitor>();
         services.AddSingleton<Application.Devices.Contracts.ILiveModeControl, LiveModeController>();
         services.AddSingleton<AgentMessageRouter>();
         services.AddSingleton<AgentSessionHandler>();
@@ -33,6 +36,7 @@ public static class AgentGatewayRegistration
         services.AddHostedService(sp => sp.GetRequiredService<PresenceMonitor>());
         services.AddHostedService<GatewayShutdown>();
         services.AddScoped<Application.Abstractions.Messaging.IIntegrationEventHandler<Domain.Devices.DeviceRetiredV1>, CloseRetiredSessions>();
+        services.AddScoped<Application.Abstractions.Messaging.IIntegrationEventHandler<Domain.Licensing.DeviceLicenseChangedV1>, Handlers.PushLicenseUpdates>();
         services.AddHealthChecks().AddCheck<GatewayHealthCheck>("gateway", tags: ["ready"]);
         return services;
     }

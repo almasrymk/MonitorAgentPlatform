@@ -15,20 +15,24 @@ public interface IAgentMessageHandler
 /// Sends each agent message to the handler of its kind. Heartbeats only refresh presence (done by the session).
 /// Guaranteed messages without a handler are not acknowledged, so the agent keeps them until a handler exists.
 /// </summary>
-public sealed partial class AgentMessageRouter(IEnumerable<IAgentMessageHandler> handlers, ILogger<AgentMessageRouter> logger)
+public sealed partial class AgentMessageRouter(IEnumerable<IAgentMessageHandler> handlers, Handlers.ClockSkewMonitor clockSkew, ILogger<AgentMessageRouter> logger)
 {
     private readonly Dictionary<AgentMessage.BodyOneofCase, IAgentMessageHandler> _handlers = handlers.ToDictionary(h => h.Kind);
 
-    public Task RouteAsync(AgentSession session, AgentMessage message, CancellationToken cancellationToken)
+    public async Task RouteAsync(AgentSession session, AgentMessage message, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(session);
         ArgumentNullException.ThrowIfNull(message);
+        await clockSkew.CheckAsync(session, message, cancellationToken);
         if (message.BodyCase is AgentMessage.BodyOneofCase.Heartbeat or AgentMessage.BodyOneofCase.Hello)
-            return Task.CompletedTask;
+            return;
         if (_handlers.TryGetValue(message.BodyCase, out var handler))
-            return handler.HandleAsync(session, message, cancellationToken);
+        {
+            await handler.HandleAsync(session, message, cancellationToken);
+            return;
+        }
+
         LogUnhandled(logger, message.BodyCase.ToString(), session.DeviceId);
-        return Task.CompletedTask;
     }
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "No handler for {Kind} from device {DeviceId}; not acknowledged")]

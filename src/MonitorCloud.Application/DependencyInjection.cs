@@ -59,6 +59,17 @@ public static class DependencyInjection
         services.TryAddSingleton<Devices.Contracts.ILiveModeControl, Devices.Contracts.NoLiveModeControl>();
         services.AddScoped<Devices.Contracts.IDeviceDirectory, Devices.DeviceDirectory>();
         services.AddScoped<Devices.Contracts.IDeviceDashboardReader, Devices.DeviceDashboardReader>();
+        services.AddScoped<Devices.Contracts.IDeviceNames, Devices.DeviceNames>();
+
+        services.AddScoped<Monitoring.AlertBook>();
+        services.AddScoped<Monitoring.Contracts.IOpenAlertCounter, Monitoring.OpenAlertCounter>();
+        services.AddScoped<Monitoring.Contracts.IAlertDashboardReader, Monitoring.AlertDashboardReader>();
+        services.AddScoped<Monitoring.Contracts.IMonitoringSettingsStore, Monitoring.MonitoringSettingsStore>();
+        services.AddScoped<Monitoring.OfflineAlertService>();
+
+        services.AddScoped<Notifications.NotificationFanOut>();
+        services.AddScoped<Notifications.Contracts.INotificationPublisher, Notifications.NotificationPublisher>();
+        services.AddScoped<Notifications.NotificationDeliveryService>();
 
         // Integration event handlers: every IIntegrationEventHandler<T> implementation in this assembly.
         foreach (var type in assembly.GetTypes().Where(t => t is { IsAbstract: false, IsInterface: false }))

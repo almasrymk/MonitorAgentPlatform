@@ -3,6 +3,7 @@
 //   simulator enroll --count 20 [--tenant acme] [--location CAIRO-HQ]
 //   simulator run --devices 20 [--tenant acme] [--location CAIRO-HQ] [--seconds 60]  (stop with Goodbye after 60 s)
 //   simulator load --devices 1500 --duration 10m --report docs/perf/load.json [--server-process MonitorCloud.Api]
+//   simulator run --devices 1 --issue cpu [--issue-after 5] [--clear-after 40]   (raises a Critical issue, clears it later)
 //
 // Options: --api http://localhost:5300, --store seed/simulator.local.json (git-ignored: it holds device secrets),
 // --licensing seed/licensing-fake.json (demo product keys, Fake mode), --admin-email / --admin-password (to create
@@ -116,9 +117,11 @@ async Task RunDeviceAsync(StoredDevice device, GrpcChannel grpc, CancellationTok
                 await agent.InventoryAsync(InventoryKind.Os, cancellationToken);
                 using var telemetry = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                 var pump = PumpTelemetryAsync(agent, telemetry.Token);
+                var issue = options.Issue is null ? Task.CompletedTask : IssueScenarioAsync(agent, device.Hostname, telemetry.Token);
                 await agent.RunHeartbeatsAsync(cancellationToken);
                 await telemetry.CancelAsync();
                 await pump;
+                await issue;
                 if (cancellationToken.IsCancellationRequested)
                 {
                     await agent.GoodbyeAsync(GoodbyeReason.ServiceStopping, CancellationToken.None);
@@ -152,6 +155,26 @@ async Task RunDeviceAsync(StoredDevice device, GrpcChannel grpc, CancellationTok
     }
 }
 
+// --issue: one Critical IssueEvent after --issue-after seconds, cleared after --clear-after seconds (M6 e2e flow).
+async Task IssueScenarioAsync(SimulatedAgent agent, string hostname, CancellationToken cancellationToken)
+{
+    try
+    {
+        await Task.Delay(TimeSpan.FromSeconds(options.IssueAfter), cancellationToken);
+        await agent.IssueAsync(options.Issue!, IssueAction.Raised, Severity.Critical, "Performance", $"Simulated {options.Issue} issue", cancellationToken: cancellationToken);
+        Console.WriteLine($"{hostname}: raised {options.Issue}");
+        if (options.ClearAfter <= 0)
+            return;
+        await Task.Delay(TimeSpan.FromSeconds(options.ClearAfter), cancellationToken);
+        await agent.IssueAsync(options.Issue!, IssueAction.Cleared, cancellationToken: cancellationToken);
+        Console.WriteLine($"{hostname}: cleared {options.Issue}");
+    }
+    catch (Exception ex) when (ex is OperationCanceledException or Grpc.Core.RpcException or InvalidOperationException)
+    {
+        // The run ended first.
+    }
+}
+
 // One completed minute and a snapshot every minute (05 section 2, steady state); live samples follow SetTelemetryMode.
 async Task PumpTelemetryAsync(SimulatedAgent agent, CancellationToken cancellationToken)
 {
@@ -172,7 +195,7 @@ async Task PumpTelemetryAsync(SimulatedAgent agent, CancellationToken cancellati
     }
 }
 
-internal sealed record Options(string Command, int Count, int Devices, int Seconds, string Tenant, string Location, string Api, string? Gateway, string StorePath, string LicensingPath, string? AdminEmail, string AdminPassword, string? RunId, TimeSpan Duration, string Report, string? ServerProcess)
+internal sealed record Options(string Command, int Count, int Devices, int Seconds, string Tenant, string Location, string Api, string? Gateway, string StorePath, string LicensingPath, string? AdminEmail, string AdminPassword, string? RunId, TimeSpan Duration, string Report, string? ServerProcess, string? Issue, int IssueAfter, int ClearAfter)
 {
     public static Options Parse(string[] args)
     {
@@ -188,7 +211,8 @@ internal sealed record Options(string Command, int Count, int Devices, int Secon
             args.Length > 0 ? args[0] : string.Empty, Number("--count", 1), Number("--devices", 1), Number("--seconds", 0), tenant, (Value("--location") ?? "CAIRO-HQ").ToUpperInvariant(),
             Value("--api") ?? "http://localhost:5300", Value("--gateway"), Value("--store") ?? Path.Combine("seed", "simulator.local.json"),
             Value("--licensing") ?? Path.Combine("seed", "licensing-fake.json"), Value("--admin-email"), Value("--admin-password") ?? "Demo@12345", Value("--run-id"),
-            ParseDuration(Value("--duration")), Value("--report") ?? Path.Combine("docs", "perf", "load.json"), Value("--server-process"));
+            ParseDuration(Value("--duration")), Value("--report") ?? Path.Combine("docs", "perf", "load.json"), Value("--server-process"), Value("--issue"), Number("--issue-after", 5),
+            int.TryParse(Value("--clear-after"), out var clear) ? clear : 0);
     }
 
     private static TimeSpan ParseDuration(string? value)
