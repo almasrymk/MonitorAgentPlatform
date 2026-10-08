@@ -341,3 +341,49 @@ the load, gateway memory 300-337 MB.
 - ADR 0005 records five telemetry details. Among them: a `DiskPercentMax` column, and a separate HTTP/2 port for
   the gateway in Development.
 - The device screen needs no extra configuration. Live mode stops by itself 60 s after the screen closes.
+## M6 - Alerts and notifications (done 2026-10-08)
+
+### Tasks
+
+| Id | Status | Notes |
+|---|---|---|
+| MC-601 | Done | Module `monitoring`: `Alert` (Raise / Touch / Acknowledge / Resolve; one open alert per device and issue key, filtered unique index), `AlertDailyStat` (tenant-local day), `MonitorPoint` + `MonitorPointState` imported from `MonitorPointReport` (a full report removes points the agent no longer has). `ApplyIssueEventCommand`: raised, severity changed, cleared, duplicates touch the open alert, backlog older than 15 minutes keeps its time and does not notify. The Devices module recomputes `DeviceStates` open counts and health from the alert events and pushes `deviceStateChanged`. `MonitorPointSampler` writes `telemetry.MonitorPointSamples` once a minute (from M5, ADR 0005) |
+| MC-602 | Done | `device-offline`: a pending row when the device goes offline, raised by the monitoring job after the tenant's delay (default 2 min, severity from Settings > General). `HostShuttingDown` and `Updating` use Info. Coming back online cancels or resolves it. When every device of a location goes offline within 60 s, one location notification replaces the per-device notifications. `license` (follows the seat, without changing the health during the grace period), `clock-skew` (gateway, first message of a session and every change), `clone-suspected` (rule 3) with a platform notification. Retired devices resolve their alerts; moved devices take them along |
+| MC-603 | Done | Module `notifications`: in-app feed (tenant, user, location scope), unread count, read state per user, `AlertChannelSettings` (e-mail and in-app on by default, SMS "Not available yet", webhook needs `notifications.webhook`), recipients (All / WarningsAndCritical / CriticalOnly, optional location), e-mail deliveries for plans with `notifications.email`, sent by the job with 5 attempts (1, 2, 4, 8 min) and a delivery log. Webhook sending is stored but not sent yet (ADR 0006, point 10) |
+| MC-604 | Done | `/alerts` (filters, sort, paging), `/alerts/{id}`, acknowledge, resolve (`ALERT_SELF_RESOLVING` for `device-offline` and `license`), `/devices/{id}/alerts`, `/devices/{id}/monitor-points`, `/notifications`, unread-count, read; `/platform/alerts`, `/platform/notifications` (+ unread-count and read, ADR 0006); `/settings/general`, `/settings/alerts`, recipients CRUD. SignalR `alertRaised` / `alertUpdated` / `alertResolved` / `notificationCreated`. Gateway: `IssueEvent`, `MonitorPointReport`, clock skew, `LicenseUpdate` push after a licence change |
+| MC-605 | Done | Incident trend (7 / 30 days, from `AlertDailyStats`), incidents by severity with the resolved count, recent alerts on the three dashboards. Top problematic devices and recent activity were done in M3 |
+| MC-606 | Done | `DemoSeeder` part 4: open alerts equal to the seeded health counts (the fixed Cairo HQ devices get the alerts of 08 section 3), resolved alerts over 30 days peaking three days ago, `AlertDailyStats` from both, 25 notifications per detailed customer and for the platform with 3 unread, 60 platform audit records over 7 days, six monitor points on WEB-SRV-01 (one Critical), alert recipients |
+| MC-607 | Done | Notifications screen (platform, customer, location tab): severity and period filters, mark one / all as read. Bell with unread count (live). Recent Alerts and Incident Trend on every dashboard. Device screen: Monitor Points carousel (read-only, detail on selection), Messages & Issues board. Settings: General and Alert Settings tabs (Monitoring, Locations, Integrations in M8 / M9) |
+| MC-608 | Done | Platform Admin Dashboard (07 section 5.1) with all blocks; Customer workspace and Location overview now show their alert blocks |
+
+### Test results (2026-10-08)
+
+| Suite | Count | Result |
+|---|---|---|
+| Backend unit (24 new: alert, statistics, monitor points, settings, recipients, deliveries) | 331 | passed |
+| Architecture | 253 | passed |
+| Integration (13 new: alerts, notifications, settings, recipients, retries, seed part 4) | 183 | passed |
+| Gateway (13 new: test 6, storm of 500 raises, severity change, backlog, reserved keys, isolation, test 7 offline alerts, delay setting, location outage, clock skew, monitor points and sampler, test 10) | 47 | passed |
+| Contract, fake | 16 | passed |
+| Portal unit (8 new) | 143 | passed |
+| Portal e2e (4 new: simulator issue -> alert, bell, feed, resolve; mark all read; Platform Admin Dashboard; recipients) | 24 | passed |
+
+Coverage: Domain 98.7% line, Application 93.6% line / 80.5% branch, backend 96.0% line; portal 87.6% statements.
+
+Storm test: 500 repeated raises of one issue give one alert with `Occurrences = 500` and one notification. The
+e2e flow sees the simulator's issue on the device screen, the health turn Critical, the bell go up by one, and the
+alert resolve when the simulator clears it. The development sender wrote one e-mail per matching recipient.
+
+### Stubbed or deferred, with reason
+
+- **The design images are still missing** (`docs/design/01`, `03`, `04`). The three dashboards follow the block
+  lists of 07 sections 5.1, 5.3 and 5.5; there is no screenshot comparison.
+- Webhook delivery: the switch and URL are saved; sending arrives with the integrations of M9.
+- Monitor points are read-only (add / edit by type is M8, as planned).
+
+### Notes for the product owner
+
+- ADR 0006 lists eleven details for review. The visible ones: the `license` alert does not change the device
+  health, the platform feed holds platform notifications only, and a possible clone is a Warning alert on the
+  device plus a platform notification.
+- The simulator can raise an issue: `simulator run --devices 1 --issue cpu --issue-after 5 --clear-after 40`.
