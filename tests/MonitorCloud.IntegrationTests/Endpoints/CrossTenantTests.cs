@@ -33,6 +33,8 @@ public sealed class CrossTenantTests(SqlServerFixture sql) : EndpointSuiteBase(s
         ["/api/v1/alerts/{id:guid}/resolve"] = t => t.Alert1.Id,
         ["/api/v1/devices/{id:guid}/alerts"] = t => t.Device1.Id,
         ["/api/v1/devices/{id:guid}/monitor-points"] = t => t.Device1.Id,
+        ["/api/v1/devices/{id:guid}/monitor-points/{pointId:guid}"] = t => t.Device1.Id,
+        ["/api/v1/devices/{id:guid}/configuration"] = t => t.Device1.Id,
         ["/api/v1/settings/alerts/recipients/{id:guid}"] = t => t.Recipient1.Id,
         ["/api/v1/locations/{id:guid}/enrollment-codes"] = t => t.Location1.Id,
         ["/api/v1/locations/{id:guid}/enrollment-codes/{codeId:guid}"] = t => t.Location1.Id,
@@ -60,8 +62,10 @@ public sealed class CrossTenantTests(SqlServerFixture sql) : EndpointSuiteBase(s
             using var request = Request(endpoint, id);
             using var response = await client.SendAsync(request);
             var body = await response.Content.ReadAsStringAsync();
-            // Validation may answer first for an empty body; what must never happen is 403, 2xx or A's data.
-            if (response.StatusCode is not (HttpStatusCode.NotFound or HttpStatusCode.BadRequest) || body.Contains(World.A.Tenant.Name, StringComparison.Ordinal))
+            // Validation may answer first for an empty body, and B's plan may lack the feature (Starter: no monitor points);
+            // what must never happen is another 403, a 2xx or A's data.
+            var planRefusal = response.StatusCode == HttpStatusCode.Forbidden && body.Contains("FEATURE_NOT_ENTITLED", StringComparison.Ordinal);
+            if ((response.StatusCode is not (HttpStatusCode.NotFound or HttpStatusCode.BadRequest) && !planRefusal) || body.Contains(World.A.Tenant.Name, StringComparison.Ordinal))
                 failures.Add($"{endpoint} -> {(int)response.StatusCode} {body}");
         }
 

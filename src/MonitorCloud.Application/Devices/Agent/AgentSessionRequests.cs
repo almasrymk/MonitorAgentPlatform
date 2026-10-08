@@ -50,7 +50,8 @@ internal sealed class OpenAgentSessionCommandValidator : AbstractValidator<OpenA
 
 internal sealed class OpenAgentSessionCommandHandler(
     IAppDbContext db, IUnitOfWork unitOfWork, ITenantScopeSetter scope, ITenantDirectory tenants, IDeviceSeats seats, ILicensingPolicy policy,
-    IOptions<AgentSettings> agent, ILiveNotifier live, TimeProvider clock) : ICommandHandler<OpenAgentSessionCommand, AgentSessionStart>
+    IOptions<AgentSettings> agent, ILiveNotifier live, Configuration.Contracts.IConfigurationVersioning configurations, TimeProvider clock)
+    : ICommandHandler<OpenAgentSessionCommand, AgentSessionStart>
 {
     public async Task<Result<AgentSessionStart>> Handle(OpenAgentSessionCommand request, CancellationToken cancellationToken)
     {
@@ -84,7 +85,8 @@ internal sealed class OpenAgentSessionCommandHandler(
 
         var seat = await seats.FindAsync(device.Id, cancellationToken);
         var restricted = state.LicenseState == LicenseStateValue.Unlicensed && state.UnlicensedSince is { } since && now >= since.Add(policy.UnlicensedGrace);
-        return new AgentSessionStart(state.LocationId, (ulong)Math.Max(0, state.LastEventSequence), 0, (seat?.State ?? "Licensed") == "Licensed", restricted);
+        var configVersion = await configurations.VersionAsync(device.Id, cancellationToken);
+        return new AgentSessionStart(state.LocationId, (ulong)Math.Max(0, state.LastEventSequence), configVersion, (seat?.State ?? "Licensed") == "Licensed", restricted);
     }
 }
 

@@ -16,11 +16,12 @@ namespace MonitorCloud.TestShared.Builders;
 /// <summary>One customer of the test world: its locations and one user per role.</summary>
 /// <summary>
 /// Device1 is in Location1, Device2 in Location2 (both online, healthy, licensed); EnrollmentCodeId belongs to Location1.
-/// Alert1 is an open Info alert of Device1 (Info does not change the health); Recipient1 receives every alert e-mail.
+/// Alert1 is an open Info alert of Device1 (Info does not change the health); Recipient1 receives every alert e-mail;
+/// Point1 is a Website monitor point reported by Device1's agent.
 /// </summary>
 public sealed record TestTenant(
     Tenant Tenant, Location DefaultLocation, Location Location1, Location Location2, IReadOnlyDictionary<string, User> Users, User RestrictedManager,
-    Device Device1, Device Device2, Guid EnrollmentCodeId, Alert Alert1, AlertRecipient Recipient1)
+    Device Device1, Device Device2, Guid EnrollmentCodeId, Alert Alert1, AlertRecipient Recipient1, MonitorPoint Point1)
 {
     public Guid Id => Tenant.Id;
     public User Administrator => Users[Roles.Administrator];
@@ -101,8 +102,9 @@ public sealed record TestWorld(User PlatformAdmin, User PlatformSupport, TestTen
         var alert = Alert.Raise(tenant.Id, location1.Id, device1.Id, "disk-D", AlertCategories.Storage, AlertSeverity.Info, "Disk D: is 80% full", "Free space 20%", AlertSource.Agent, now, notify: false);
         alert.ClearDomainEvents();
         var recipient = AlertRecipient.Create(tenant.Id, "Operations", $"ops@{domain}", RecipientEvents.All, null);
-        db.AddRange(alert, recipient);
-        return new TestTenant(tenant, defaultLocation, location1, location2, users, restricted, device1, device2, enrollmentCode.Id, alert, recipient);
+        var point = MonitorPoint.FromAgent(tenant.Id, device1.Id, "web", "Web shop", "Website", $"https://shop.{domain}", true, 60, 0);
+        db.AddRange(alert, recipient, point);
+        return new TestTenant(tenant, defaultLocation, location1, location2, users, restricted, device1, device2, enrollmentCode.Id, alert, recipient, point);
     }
 
     private static Device AddDevice(AppDbContext db, IDeviceSecretService secrets, Guid tenantId, Guid locationId, string name, DateTimeOffset now)

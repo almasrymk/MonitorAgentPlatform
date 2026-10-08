@@ -69,7 +69,53 @@ public sealed class MonitorPoint : AggregateRoot, ITenantOwned
     public bool ShowInShortcut { get; private set; }
     public string Origin { get; private set; }
     public int SortOrder { get; private set; }
+
+    /// <summary>Type-specific settings for the agent (no secrets; 02 section 6).</summary>
+    public string? SettingsJson { get; private set; }
+
     public byte[] RowVersion { get; private set; } = [];
+
+    public const string AgentOrigin = "Agent";
+    public const string CloudOrigin = "Cloud";
+
+    public static readonly IReadOnlyList<string> Types = ["Website", "Database", "Ping", "Application", "Service", "Disk", "Network", "Custom"];
+    public static readonly IReadOnlyList<string> AlertLevels = ["Problem", "Warning", "Unknown"];
+
+    /// <summary>A point created in the portal (M8): the cloud owns it.</summary>
+    public static MonitorPoint FromCloud(
+        Guid tenantId, Guid deviceId, string key, string displayName, string type, string target, int intervalSeconds, string alertLevel, bool enabled, bool showInShortcut,
+        string? settingsJson, int sortOrder)
+    {
+        var point = new MonitorPoint
+        {
+            TenantId = Guard.NotEmpty(tenantId, nameof(TenantId)),
+            DeviceId = Guard.NotEmpty(deviceId, nameof(DeviceId)),
+            Key = Guard.NotEmpty(key, nameof(Key), 64),
+            Origin = CloudOrigin,
+            SortOrder = sortOrder,
+        };
+        point.Edit(displayName, type, target, intervalSeconds, alertLevel, enabled, showInShortcut, settingsJson);
+        return point;
+    }
+
+    /// <summary>Edited in the portal: the definition is validated per type and the cloud owns the point from now on.</summary>
+    public void Edit(string displayName, string type, string target, int intervalSeconds, string alertLevel, bool enabled, bool showInShortcut, string? settingsJson)
+    {
+        Guard.Against(!Types.Contains(type), Error.Validation(Guard.ValidationCode, $"type must be one of {string.Join(", ", Types)}."));
+        Guard.Against(!AlertLevels.Contains(alertLevel), Error.Validation(Guard.ValidationCode, "alertLevel must be Problem, Warning or Unknown."));
+        DisplayName = Guard.NotEmpty(displayName, nameof(DisplayName), 200);
+        Type = type;
+        Target = MonitorPointRules.Target(type, target);
+        IntervalSeconds = Guard.InRange(intervalSeconds, nameof(IntervalSeconds), 5, 86_400);
+        AlertLevel = alertLevel;
+        Enabled = enabled;
+        ShowInShortcut = showInShortcut;
+        SettingsJson = Guard.MaxLength(settingsJson, nameof(SettingsJson), 8_000);
+        Origin = CloudOrigin;
+    }
+
+    /// <summary>The cloud takes over a point the agent reported (the device is managed from the portal).</summary>
+    public void Manage() => Origin = CloudOrigin;
 
     public static MonitorPoint FromAgent(Guid tenantId, Guid deviceId, string key, string displayName, string type, string target, bool enabled, int intervalSeconds, int sortOrder) =>
         new()
@@ -94,6 +140,32 @@ public sealed class MonitorPoint : AggregateRoot, ITenantOwned
         Target = Guard.MaxLength(target ?? string.Empty, nameof(Target), 500)!;
         Enabled = enabled;
         IntervalSeconds = Math.Max(0, intervalSeconds);
+    }
+}
+
+/// <summary>Validation of a monitor point target per type (09 section 2).</summary>
+public static class MonitorPointRules
+{
+    public static string Target(string type, string? target)
+    {
+        var value = Guard.NotEmpty(target, "Target", 500);
+        switch (type)
+        {
+            case "Website":
+                Guard.Against(!Uri.TryCreate(value, UriKind.Absolute, out var uri) || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps),
+                    Error.Validation(Guard.ValidationCode, "A website target must be an absolute http or https address."));
+                break;
+            case "Ping":
+            case "Network":
+                Guard.Against(value.Contains(' ', StringComparison.Ordinal) || value.Contains('/', StringComparison.Ordinal),
+                    Error.Validation(Guard.ValidationCode, "A ping target must be a host name or an IP address."));
+                break;
+            case "Disk":
+                Guard.Against(value.Length > 64, Error.Validation(Guard.ValidationCode, "A disk target is a drive or a mount point."));
+                break;
+        }
+
+        return value;
     }
 }
 

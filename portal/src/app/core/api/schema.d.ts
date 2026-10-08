@@ -693,6 +693,376 @@ export interface paths {
             };
         };
         put?: never;
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["MonitorPointInput"];
+                    "text/json": components["schemas"]["MonitorPointInput"];
+                    "application/*+json": components["schemas"]["MonitorPointInput"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MonitorPointDto"];
+                        "application/json": components["schemas"]["MonitorPointDto"];
+                        "text/json": components["schemas"]["MonitorPointDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/devices/{id}/monitor-points/{pointId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    pointId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["MonitorPointInput"];
+                    "text/json": components["schemas"]["MonitorPointInput"];
+                    "application/*+json": components["schemas"]["MonitorPointInput"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["MonitorPointDto"];
+                        "application/json": components["schemas"]["MonitorPointDto"];
+                        "text/json": components["schemas"]["MonitorPointDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                    pointId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description No Content */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/devices/{id}/configuration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["DeviceConfigurationDto"];
+                        "application/json": components["schemas"]["DeviceConfigurationDto"];
+                        "text/json": components["schemas"]["DeviceConfigurationDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ConfigDocument"];
+                    "text/json": components["schemas"]["ConfigDocument"];
+                    "application/*+json": components["schemas"]["ConfigDocument"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["DeviceConfigurationDto"];
+                        "application/json": components["schemas"]["DeviceConfigurationDto"];
+                        "text/json": components["schemas"]["DeviceConfigurationDto"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Not Found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
         post?: never;
         delete?: never;
         options?: never;
@@ -1369,6 +1739,124 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content?: never;
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/settings/monitoring": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ConfigDocument"];
+                        "application/json": components["schemas"]["ConfigDocument"];
+                        "text/json": components["schemas"]["ConfigDocument"];
+                    };
+                };
+                /** @description Bad Request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Unauthorized */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/problem+json": components["schemas"]["ProblemDetails"];
+                    };
+                };
+            };
+        };
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ConfigDocument"];
+                    "text/json": components["schemas"]["ConfigDocument"];
+                    "application/*+json": components["schemas"]["ConfigDocument"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "text/plain": components["schemas"]["ConfigDocument"];
+                        "application/json": components["schemas"]["ConfigDocument"];
+                        "text/json": components["schemas"]["ConfigDocument"];
+                    };
                 };
                 /** @description Bad Request */
                 400: {
@@ -5725,6 +6213,11 @@ export interface components {
             currentPassword: null | string;
             newPassword: null | string;
         };
+        ConfigDocument: {
+            telemetry: components["schemas"]["TelemetrySettings"];
+            thresholds: components["schemas"]["Thresholds"];
+            features: components["schemas"]["FeatureSettings"];
+        };
         CreatePlatformUserRequest: {
             fullName: null | string;
             email: null | string;
@@ -5739,6 +6232,23 @@ export interface components {
             timeZone: null | string;
             /** Format: uuid */
             licensingCustomerId: null | string;
+        };
+        DeviceConfigurationDto: {
+            /** Format: uuid */
+            deviceId: string;
+            /** Format: int32 */
+            version: number;
+            document: components["schemas"]["ConfigDocument"];
+            /** Format: int32 */
+            appliedVersion: number;
+            /** Format: date-time */
+            appliedAt: null | string;
+            /** Format: int32 */
+            rejectedVersion: null | number;
+            error: null | string;
+            /** Format: date-time */
+            updatedAt: string;
+            eTag?: null | string;
         };
         DeviceDto: {
             /** Format: uuid */
@@ -5941,6 +6451,10 @@ export interface components {
             /** Format: int32 */
             daysLeft: number;
             status: string;
+        };
+        FeatureSettings: {
+            /** @default false */
+            remoteActions: boolean;
         };
         GeneralRequest: {
             timeZone: null | string;
@@ -6162,6 +6676,22 @@ export interface components {
             lastCheckedAt: null | string;
             /** Format: date-time */
             statusSince: null | string;
+            alertLevel: string;
+            origin: string;
+            settings: null | components["schemas"]["JsonElement"];
+            version: string;
+        };
+        MonitorPointInput: {
+            key: null | string;
+            displayName: string;
+            type: string;
+            target: string;
+            /** Format: int32 */
+            intervalSeconds: number;
+            alertLevel: string;
+            enabled: boolean;
+            showInShortcut: boolean;
+            settings: null | components["schemas"]["JsonElement"];
         };
         NamedCountDto: {
             name: string;
@@ -6444,6 +6974,19 @@ export interface components {
             tenantsChanged: number;
             error: null | string;
         };
+        TelemetrySettings: {
+            /**
+             * Format: int32
+             * @default 5
+             */
+            sampleSeconds: number;
+        };
+        TemperatureThreshold: {
+            /** Format: double */
+            critical: number;
+            /** Format: int32 */
+            forSeconds: number;
+        };
         TenantCardDto: {
             /** Format: uuid */
             id: string;
@@ -6521,6 +7064,12 @@ export interface components {
             /** Format: int32 */
             suspended: number;
         };
+        Thresholds: {
+            cpu: components["schemas"]["UsageThreshold"];
+            ram: components["schemas"]["UsageThreshold"];
+            disk: components["schemas"]["UsageThreshold"];
+            tempC: components["schemas"]["TemperatureThreshold"];
+        };
         TokenRequest: {
             /** Format: uuid */
             deviceId: null | string;
@@ -6565,6 +7114,16 @@ export interface components {
             fullName: null | string;
             role: null | string;
             locationIds: null | string[];
+        };
+        UsageThreshold: {
+            /** Format: double */
+            warningPercent: number;
+            /** Format: double */
+            criticalPercent: number;
+            /** Format: int32 */
+            forSeconds: number;
+            /** Format: double */
+            clearBelowPercent?: null | number;
         };
         UserListItemDto: {
             /** Format: uuid */

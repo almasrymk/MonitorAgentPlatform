@@ -28,7 +28,8 @@ const alert = (overrides: Partial<Alert> = {}): Alert => ({
 
 const point = (overrides: Partial<MonitorPoint> = {}): MonitorPoint => ({
   id: 'p1', key: 'iis', displayName: 'IIS', type: 'Website', target: 'http://localhost/health', enabled: true, showInShortcut: true, intervalSeconds: 60, status: 'Warning',
-  message: 'Slow response', responseMs: 2400, lastCheckedAt: new Date().toISOString(), statusSince: null, ...overrides,
+  message: 'Slow response', responseMs: 2400, lastCheckedAt: new Date().toISOString(), statusSince: null, alertLevel: 'Problem', origin: 'Agent', settings: null, version: 'AAAAAAAAB9E=',
+  ...overrides,
 });
 
 const notification = (overrides: Partial<NotificationItem> = {}): NotificationItem => ({

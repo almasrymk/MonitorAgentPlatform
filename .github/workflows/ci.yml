@@ -160,7 +160,8 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: almasrymk/UBGMonitor
-          ref: ${{ vars.AGENT_REF || 'master' }}
+          # The connector is on cloud/m7-connector until it is merged into the agent's master.
+          ref: ${{ vars.AGENT_REF || 'cloud/m7-connector' }}
           path: agent
       - name: Agent compatibility (MC-701)
         run: |

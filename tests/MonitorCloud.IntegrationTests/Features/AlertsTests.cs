@@ -107,7 +107,7 @@ public sealed class AlertsTests(SqlServerFixture sql) : FeatureTestBase(sql)
 
         await (await client.GetAsync(new Uri($"/api/v1/devices/{Guid.CreateVersion7()}/alerts", UriKind.Relative))).ShouldBeProblemAsync(HttpStatusCode.NotFound, "DEVICE_NOT_FOUND");
         await (await client.GetAsync(new Uri($"/api/v1/devices/{Guid.CreateVersion7()}/monitor-points", UriKind.Relative))).ShouldBeProblemAsync(HttpStatusCode.NotFound, "DEVICE_NOT_FOUND");
-        (await (await client.GetAsync(new Uri($"/api/v1/devices/{World.A.Device1.Id}/monitor-points", UriKind.Relative))).ShouldBeOkAsync<List<MonitorPointDto>>()).ShouldBeEmpty();
+        (await (await client.GetAsync(new Uri($"/api/v1/devices/{World.A.Device1.Id}/monitor-points", UriKind.Relative))).ShouldBeOkAsync<List<MonitorPointDto>>()).ShouldHaveSingleItem().Key.ShouldBe("web");
     }
 
     [Fact]

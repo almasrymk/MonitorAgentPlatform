@@ -135,18 +135,22 @@ internal sealed class ApplyMonitorPointReportCommandHandler(IAppDbContext db, IT
         var ids = points.Values.Select(p => p.Id).ToList();
         var states = await db.Set<MonitorPointState>().Where(s => ids.Contains(s.MonitorPointId)).ToDictionaryAsync(s => s.MonitorPointId, cancellationToken);
         var order = points.Count;
+        // Once the cloud manages the points (an edit in the portal, 05 section 8), the agent only reports their status.
+        var managed = points.Values.Any(p => p.Origin == MonitorPoint.CloudOrigin);
         var reported = new HashSet<string>(StringComparer.Ordinal);
         foreach (var item in request.Points.DistinctBy(p => p.Key, StringComparer.Ordinal))
         {
             reported.Add(item.Key);
             if (!points.TryGetValue(item.Key, out var point))
             {
+                if (managed)
+                    continue;
                 point = MonitorPoint.FromAgent(device.TenantId, device.Id, item.Key, item.DisplayName ?? item.Key, item.Type ?? "Custom", item.Target ?? string.Empty,
                     item.Enabled, item.IntervalSeconds, order++);
                 db.Set<MonitorPoint>().Add(point);
                 points[item.Key] = point;
             }
-            else
+            else if (point.Origin != MonitorPoint.CloudOrigin)
             {
                 point.UpdateFromAgent(item.DisplayName ?? point.DisplayName, item.Type ?? point.Type, item.Target ?? point.Target, item.Enabled, item.IntervalSeconds);
             }
@@ -161,7 +165,7 @@ internal sealed class ApplyMonitorPointReportCommandHandler(IAppDbContext db, IT
             state.Update(item.Status, item.Message, item.ResponseMs, item.LastChecked, item.StatusSince);
         }
 
-        if (request.Full)
+        if (request.Full && !managed)
         {
             foreach (var gone in points.Values.Where(p => p.Origin == "Agent" && !reported.Contains(p.Key)).ToList())
             {

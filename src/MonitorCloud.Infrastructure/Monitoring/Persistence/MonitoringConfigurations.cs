@@ -52,6 +52,7 @@ internal sealed class MonitorPointConfiguration : IEntityTypeConfiguration<Monit
         builder.Property(x => x.Target).HasMaxLength(500).IsRequired();
         builder.Property(x => x.AlertLevel).HasMaxLength(16).IsRequired();
         builder.Property(x => x.Origin).HasMaxLength(8).IsRequired();
+        builder.Property(x => x.SettingsJson).HasColumnType("nvarchar(max)");
         builder.Property(x => x.RowVersion).IsRowVersion();
         builder.HasIndex(x => new { x.DeviceId, x.Key }).IsUnique();
         builder.HasIndex(x => x.TenantId);

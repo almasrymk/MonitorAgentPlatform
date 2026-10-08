@@ -4,7 +4,8 @@ import { firstValueFrom } from 'rxjs';
 
 import { LocationsApi } from '../../core/api/api.services';
 import { LocationCard } from '../../core/api/models';
-import { AlertSettings, GeneralSettings, Recipient, SettingsApi } from '../../core/api/monitoring.api';
+import { AlertSettings, ConfigDocument, ConfigurationApi, GeneralSettings, Recipient, SettingsApi } from '../../core/api/monitoring.api';
+import { ThresholdsForm, editable, normalised } from '../configuration/thresholds-form';
 import { toProblem } from '../../core/api/problem';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { ToastService } from '../../core/ui/toast.service';
@@ -38,10 +39,10 @@ interface RecipientForm {
   isActive: boolean;
 }
 
-/** Settings (07 section 5.8): General and Alert Settings; Monitoring, Locations and Integrations follow in M8 and M9. */
+/** Settings (07 section 5.8): General, Alert Settings and Monitoring (default thresholds); Locations and Integrations follow in M9. */
 @Component({
   selector: 'mc-settings-page',
-  imports: [FormsModule, PageHeader, Tabs, Card, DataTable, CellDef, Drawer, Button, Icon, Skeleton, EmptyState, ErrorState, StatusPill],
+  imports: [FormsModule, PageHeader, Tabs, Card, DataTable, CellDef, Drawer, Button, Icon, Skeleton, EmptyState, ErrorState, StatusPill, ThresholdsForm],
   template: `
     <mc-page-header [title]="i18n.t('nav.settings')" [subtitle]="i18n.t('settings.subtitle')" />
     <mc-tabs [tabs]="tabs()" [(active)]="tab" />
@@ -126,8 +127,18 @@ interface RecipientForm {
       } @else {
         <mc-skeleton [height]="280" />
       }
+    } @else if (tab() === 'monitoring') {
+      <mc-card [title]="i18n.t('settings.monitoringDefaults')" class="block" data-testid="monitoring-defaults">
+        <p class="hint">{{ i18n.t('settings.monitoringHint') }}</p>
+        @if (defaults(); as d) {
+          <mc-thresholds-form [document]="d" />
+          <div class="actions"><button type="button" mcButton="primary-solid" [disabled]="busy()" (click)="saveDefaults()" data-testid="save-defaults">{{ i18n.t('common.save') }}</button></div>
+        } @else {
+          <mc-skeleton [height]="240" />
+        }
+      </mc-card>
     } @else {
-      <mc-empty-state icon="info" [title]="i18n.t('comingSoon.title')" [message]="i18n.t('comingSoon.message', { milestone: tab() === 'monitoring' ? 'M8' : 'M9' })" />
+      <mc-empty-state icon="info" [title]="i18n.t('comingSoon.title')" [message]="i18n.t('comingSoon.message', { milestone: 'M9' })" />
     }
 
     <mc-drawer [open]="form() !== null" (openChange)="!$event && form.set(null)" [title]="form()?.id ? i18n.t('settings.editRecipient') : i18n.t('settings.addRecipient')">
@@ -170,6 +181,7 @@ interface RecipientForm {
     .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: var(--mc-space-4); }
     @media (max-width: 1100px) { .grid { grid-template-columns: 1fr; } }
     .narrow { max-inline-size: 480px; }
+    .hint { color: var(--mc-text-muted); margin-block: 0 var(--mc-space-3); }
     .actions { margin-block-start: var(--mc-space-4); display: flex; justify-content: flex-end; }
     .channels { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
     .channels li { display: flex; align-items: center; justify-content: space-between; gap: var(--mc-space-4); padding-block: var(--mc-space-3); border-block-end: 1px solid var(--mc-border); }
@@ -183,6 +195,8 @@ interface RecipientForm {
 export class SettingsPage {
   protected readonly i18n = inject(I18nService);
   private readonly api = inject(SettingsApi);
+  private readonly configuration = inject(ConfigurationApi);
+  protected readonly defaults = signal<ConfigDocument | null>(null);
   private readonly locationsApi = inject(LocationsApi);
   private readonly toast = inject(ToastService);
 
@@ -228,8 +242,25 @@ export class SettingsPage {
       this.alerts.set(alerts);
       this.channels = { emailEnabled: alerts.emailEnabled, inAppEnabled: alerts.inAppEnabled, webhookEnabled: alerts.webhookEnabled, webhookUrl: alerts.webhookUrl ?? '' };
       this.recipients.set(recipients);
+      this.defaults.set(editable(await firstValueFrom(this.configuration.defaults())));
     } catch {
       this.failed.set(true);
+    }
+  }
+
+  protected async saveDefaults(): Promise<void> {
+    const d = this.defaults();
+    if (!d) {
+      return;
+    }
+    this.busy.set(true);
+    try {
+      this.defaults.set(editable(await firstValueFrom(this.configuration.updateDefaults(normalised(d)))));
+      this.toast.success(this.i18n.t('settings.saved'));
+    } catch {
+      // The error toast explains why.
+    } finally {
+      this.busy.set(false);
     }
   }
 

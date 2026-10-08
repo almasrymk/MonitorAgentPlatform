@@ -41,3 +41,16 @@ internal sealed class DeviceNames(IReadDbContext db) : Contracts.IDeviceNames
             ? new Dictionary<Guid, string>()
             : await db.Query<Device>().Where(d => deviceIds.Contains(d.Id)).ToDictionaryAsync(d => d.Id, d => d.Name, ct);
 }
+
+/// <summary>The applied configuration version shown on the device (MC-801).</summary>
+internal sealed class ApplyConfigurationAck(IAppDbContext db) : IIntegrationEventHandler<Domain.Configuration.DeviceConfigurationAppliedV1>
+{
+    public async Task HandleAsync(Domain.Configuration.DeviceConfigurationAppliedV1 integrationEvent, CancellationToken cancellationToken)
+    {
+        if (!integrationEvent.Success)
+            return;
+        var state = await db.Set<DeviceState>().SingleOrDefaultAsync(s => s.DeviceId == integrationEvent.DeviceId, cancellationToken);
+        if (state is not null && integrationEvent.Version > (state.AppliedConfigVersion ?? 0))
+            state.SetAppliedConfigVersion(integrationEvent.Version);
+    }
+}

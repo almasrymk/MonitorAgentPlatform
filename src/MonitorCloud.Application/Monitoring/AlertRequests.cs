@@ -248,12 +248,7 @@ internal sealed class GetDeviceMonitorPointsQueryHandler(IReadDbContext db, IDev
         var points = await db.Query<MonitorPoint>().Where(p => p.DeviceId == request.DeviceId).OrderBy(p => p.SortOrder).ThenBy(p => p.DisplayName).ToListAsync(cancellationToken);
         var ids = points.Select(p => p.Id).ToList();
         var states = await db.Query<MonitorPointState>().Where(s => ids.Contains(s.MonitorPointId)).ToDictionaryAsync(s => s.MonitorPointId, cancellationToken);
-        IReadOnlyList<MonitorPointDto> items = points.Select(p =>
-        {
-            var s = states.GetValueOrDefault(p.Id);
-            return new MonitorPointDto(p.Id, p.Key, p.DisplayName, p.Type, p.Target, p.Enabled, p.ShowInShortcut, p.IntervalSeconds, (s?.Status ?? PointStatus.Unknown).ToString(),
-                s?.Message ?? string.Empty, s?.ResponseMs, s?.LastCheckedAt, s?.StatusSince);
-        }).ToList();
+        IReadOnlyList<MonitorPointDto> items = points.Select(p => MonitorPointDtos.From(p, states.GetValueOrDefault(p.Id))).ToList();
         return Result.Success(items);
     }
 }

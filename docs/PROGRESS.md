@@ -430,3 +430,48 @@ report when work overlaps. The AG items that touch its runs are therefore deferr
 
 1. May AG-1/7/9/11 stay with the agent's security runs (proposed), or should they be done in this branch?
 2. May `cloud/m7-connector` be pushed to `almasrymk/UBGMonitor`? MC-701 and the Linux run need it.
+
+## M8 - Central configuration (done 2026-10-08)
+
+### Tasks
+
+| Id | Status | Notes |
+|---|---|---|
+| MC-801 | Done | Module `config`: `DeviceConfiguration` (version and JSON document), `DeviceConfigurationAck` (last applied version, last rejected version and its reason) and `TenantConfigurationDefaults`. Schema validation: levels 1-100, critical above warning, clear level below warning, durations 0-3600 s, sample 1-30 s. Every change raises `DeviceConfigurationChangedV1`. The gateway pushes `ConfigUpdate` at once to a connected device, and after `Welcome` when the agent's applied version differs. `ConfigApplied` is recorded (also for restricted devices, rule 9) and shown live (`configApplied`). Enrollment creates the configuration from the tenant defaults. Agent-reported points are imported until the first edit in the portal; from then on the cloud owns them (ADR 0008) |
+| MC-802 | Done | `GET/PUT /devices/{id}/configuration` (`ETag` / `If-Match` = version, 409 `CONCURRENCY_CONFLICT`). `POST/PUT/DELETE /devices/{id}/monitor-points` need `monitorpoints.manage` and the feature `monitorpoints` (403 `FEATURE_NOT_ENTITLED` for Starter). They validate per type (website URL, ping host, disk drive) and bump the version. `GET/PUT /settings/monitoring` holds the tenant default thresholds |
+| MC-803 | Done | Device Monitor Points tab: table, add / edit drawer with type-specific fields (expected HTTP status; database engine and port, the login stays on the device), delete. Device Settings tab: thresholds form (read-only without `devices.configure`), target vs applied version with status (applied / waiting / rejected with reason), licence state. Settings > Monitoring: default thresholds |
+| Agent | Done (branch) | `ICloudConfigApplier`: the document is validated, the critical levels go to the agent's monitors and the document is kept in `cloud-config.json`. An invalid document answers `success=false` with the reason. Warning levels, durations and clear levels wait for AG-8 |
+
+### Test results (2026-10-08)
+
+| Suite | Count | Result |
+|---|---|---|
+| Backend unit (12 new: configuration versions, ack, defaults, point validation per type, document rules) | 343 | passed |
+| Architecture | 253 | passed |
+| Gateway (5 new: test 9 and the M8 acceptance) | 52 | passed |
+| Integration (9 new: configuration, If-Match, version 0, validation, permissions, monitor point CRUD, Starter refused, tenant defaults) | 191 | passed |
+| Contract, fake | 16 | passed |
+| Portal unit (6 new) | 149 | passed |
+| Portal e2e (2 new: threshold saved with a new version, monitor point added and removed) | 26 | passed (the configuration flow after the fix below) |
+| Agent (`cloud/m7-connector`) | 105 | passed, 2 skipped |
+
+Coverage: Domain 98.4% line, Application 92.5% line / 77.6% branch, backend 95.8% line; portal 86.9% statements.
+
+The e2e run found one bug, now fixed. Saving the configuration of a device that had none (`If-Match: "0"`) answered
+409, because the default configuration was created before the version check.
+
+### Acceptance
+
+- Gateway test 9: an update reaches the agent and its `ConfigApplied` is recorded. The applied version is visible.
+  An offline device gets the version after its next `Welcome`.
+- Lowering the CPU threshold in the portal makes the simulated agent raise the `cpu` alert at 50 %. Below the
+  clear level it clears the alert.
+- A document the agent rejects keeps the previous version active, and the reason is shown on the device Settings
+  tab.
+- `If-Match` conflict: 409 `CONCURRENCY_CONFLICT`.
+- A Starter tenant cannot edit monitor points: 403 `FEATURE_NOT_ENTITLED`.
+
+### Notes for the product owner
+
+ADR 0008 lists seven configuration details. The visible one: after the first edit in the portal, the device's
+monitor points belong to the cloud, and renaming them on the device no longer changes the portal.

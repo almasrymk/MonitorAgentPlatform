@@ -10,7 +10,6 @@ import { DonutChart, DonutSegment } from '../../shared/ui/donut-chart';
 import { KpiTile } from '../../shared/ui/kpi-tile';
 import { RingGauge } from '../../shared/ui/ring-gauge';
 import { Skeleton } from '../../shared/ui/skeleton';
-import { EmptyState } from '../../shared/ui/states';
 import { StatusPill } from '../../shared/ui/status-pill';
 import { tileViews } from '../dashboard/tiles';
 import { LocationContext } from './location-context';
@@ -21,7 +20,7 @@ const OS_COLORS: Record<string, string> = { Windows: 'mc-series-windows', Linux:
 /** Location Overview (07 section 5.5). */
 @Component({
   selector: 'mc-location-overview-page',
-  imports: [DatePipe, KpiTile, Card, DonutChart, RingGauge, DataTable, CellDef, StatusPill, Skeleton, EmptyState, IncidentTrend, RecentAlerts],
+  imports: [DatePipe, KpiTile, Card, DonutChart, RingGauge, DataTable, CellDef, StatusPill, Skeleton, IncidentTrend, RecentAlerts],
   template: `
     @if (context.dashboard(); as d) {
       <section class="tiles tiles-6" data-testid="location-tiles">

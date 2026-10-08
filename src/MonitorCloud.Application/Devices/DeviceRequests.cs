@@ -146,7 +146,9 @@ internal sealed class GetDevicesSummaryQueryHandler(IReadDbContext db, TimeProvi
 [RequirePermission(Permissions.DevicesRead)]
 public sealed record GetDeviceQuery(Guid Id) : IQuery<DeviceDto>;
 
-internal sealed class GetDeviceQueryHandler(IReadDbContext db, ITenantNames tenants, ILocationLookup locations, IDeviceSeats seats) : IQueryHandler<GetDeviceQuery, DeviceDto>
+internal sealed class GetDeviceQueryHandler(
+    IReadDbContext db, ITenantNames tenants, ILocationLookup locations, IDeviceSeats seats, Configuration.Contracts.IConfigurationVersioning configurations)
+    : IQueryHandler<GetDeviceQuery, DeviceDto>
 {
     public async Task<Result<DeviceDto>> Handle(GetDeviceQuery request, CancellationToken cancellationToken)
     {
@@ -160,7 +162,7 @@ internal sealed class GetDeviceQueryHandler(IReadDbContext db, ITenantNames tena
         return new DeviceDto(d.Id, d.Name, d.Hostname, d.Fingerprint, d.TenantId, customer, s.LocationId, location?.Name ?? string.Empty, s.OsFamily.ToString(),
             d.OsName, d.OsVersion, d.Architecture, d.LocalIp, d.PublicIp, d.MacAddress, d.AgentVersion, d.ProtocolVersion, d.Status.ToString(), d.EnrolledAt,
             s.Connection.ToString(), s.Health.ToString(), s.LicenseState.ToString(), seat?.ReasonCode, DeviceQueries.Utc(s.LastSeenAt), s.UptimeSeconds,
-            s.AppliedConfigVersion, null, Versioning.Encode(d.RowVersion));
+            s.AppliedConfigVersion, await configurations.VersionAsync(d.Id, cancellationToken) is var target and > 0 ? target : null, Versioning.Encode(d.RowVersion));
     }
 }
 

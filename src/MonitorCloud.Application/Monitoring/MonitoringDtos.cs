@@ -11,4 +11,4 @@ public sealed record PlatformAlertDto(
 
 public sealed record MonitorPointDto(
     Guid Id, string Key, string DisplayName, string Type, string Target, bool Enabled, bool ShowInShortcut, int IntervalSeconds, string Status, string Message,
-    decimal? ResponseMs, DateTimeOffset? LastCheckedAt, DateTimeOffset? StatusSince);
+    decimal? ResponseMs, DateTimeOffset? LastCheckedAt, DateTimeOffset? StatusSince, string AlertLevel, string Origin, System.Text.Json.JsonElement? Settings, string Version);

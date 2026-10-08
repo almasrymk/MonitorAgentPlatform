@@ -1,6 +1,6 @@
-import { HttpClient, HttpContext } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 import type { components } from './schema';
 import { Paged, query } from './models';
@@ -16,6 +16,9 @@ export type UnreadCount = Schemas['UnreadCountDto'];
 export type AlertSettings = Schemas['AlertSettingsDto'];
 export type Recipient = Schemas['RecipientDto'];
 export type GeneralSettings = Schemas['GeneralSettingsDto'];
+export type DeviceConfiguration = Schemas['DeviceConfigurationDto'];
+export type ConfigDocument = Schemas['ConfigDocument'];
+export type MonitorPointInput = Schemas['MonitorPointInput'];
 
 const BASE = '/api/v1';
 
@@ -129,5 +132,42 @@ export class SettingsApi {
 
   deleteRecipient(id: string): Observable<void> {
     return this.http.delete<void>(`${BASE}/settings/alerts/recipients/${id}`);
+  }
+}
+
+/** Device configuration (thresholds) and monitor point definitions (M8); the configuration version is the ETag. */
+@Injectable({ providedIn: 'root' })
+export class ConfigurationApi {
+  private readonly http = inject(HttpClient);
+
+  get(deviceId: string): Observable<DeviceConfiguration> {
+    return this.http.get<DeviceConfiguration>(`${BASE}/devices/${deviceId}/configuration`);
+  }
+
+  /** Saves with `If-Match: "<version>"`; a newer version on the server answers 409 CONCURRENCY_CONFLICT. */
+  update(deviceId: string, document: ConfigDocument, version: number): Observable<DeviceConfiguration> {
+    return this.http
+      .put<DeviceConfiguration>(`${BASE}/devices/${deviceId}/configuration`, document, { headers: { 'If-Match': `"${version}"` }, observe: 'response' })
+      .pipe(map((r: HttpResponse<DeviceConfiguration>) => r.body as DeviceConfiguration));
+  }
+
+  addPoint(deviceId: string, point: MonitorPointInput): Observable<MonitorPoint> {
+    return this.http.post<MonitorPoint>(`${BASE}/devices/${deviceId}/monitor-points`, point);
+  }
+
+  updatePoint(deviceId: string, pointId: string, point: MonitorPointInput, version: string): Observable<MonitorPoint> {
+    return this.http.put<MonitorPoint>(`${BASE}/devices/${deviceId}/monitor-points/${pointId}`, point, { headers: { 'If-Match': `"${version}"` } });
+  }
+
+  deletePoint(deviceId: string, pointId: string): Observable<void> {
+    return this.http.delete<void>(`${BASE}/devices/${deviceId}/monitor-points/${pointId}`);
+  }
+
+  defaults(): Observable<ConfigDocument> {
+    return this.http.get<ConfigDocument>(`${BASE}/settings/monitoring`);
+  }
+
+  updateDefaults(document: ConfigDocument): Observable<ConfigDocument> {
+    return this.http.put<ConfigDocument>(`${BASE}/settings/monitoring`, document);
   }
 }

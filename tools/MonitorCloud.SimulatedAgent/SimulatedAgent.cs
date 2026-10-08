@@ -73,6 +73,76 @@ public sealed class SimulatedAgent(AgentIdentity identity, GrpcChannel channel) 
     public Task SnapshotAsync(CancellationToken cancellationToken = default) =>
         SendAsync(new AgentMessage { Snapshot = new Snapshot { JsonBrotli = Google.Protobuf.ByteString.CopyFrom(Metrics.Snapshot(DateTimeOffset.UtcNow, Identity.Hostname)) } }, cancellationToken);
 
+    /// <summary>The last configuration document applied (05 section 8), and its version.</summary>
+    public System.Text.Json.Nodes.JsonNode? Config { get; private set; }
+
+    /// <summary>Sent in <c>Hello.applied_config_version</c>; set it to resume as an agent that applied an earlier version.</summary>
+    public int ConfigVersion { get; set; }
+
+    /// <summary>Tests: answer the next configurations with <c>success=false</c> and this error, like an agent that cannot apply them.</summary>
+    public string? RejectConfigWith { get; set; }
+
+    private string? _cpuIssueSeverity;
+
+    /// <summary>Applies a <c>ConfigUpdate</c> (or rejects it) and answers <c>ConfigApplied</c>.</summary>
+    private async Task ApplyConfigAsync(ConfigUpdate update, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var json = Decompress(update.JsonBrotli.ToByteArray());
+            var document = System.Text.Json.Nodes.JsonNode.Parse(json);
+            var error = RejectConfigWith ?? (document?["thresholds"]?["cpu"] is null ? "thresholds.cpu is missing" : null);
+            if (error is null)
+            {
+                Config = document;
+                ConfigVersion = update.Version;
+            }
+
+            await SendGuaranteedAsync(new AgentMessage { ConfigApplied = new ConfigApplied { Version = update.Version, Success = error is null, Error = error ?? string.Empty } }, cancellationToken);
+        }
+        catch (Exception ex) when (ex is System.Text.Json.JsonException or RpcException or InvalidOperationException or OperationCanceledException)
+        {
+            // A broken document or a closed stream: the cloud sends it again on the next Welcome.
+        }
+    }
+
+    /// <summary>
+    /// The agent's threshold evaluator in its simplest form: CPU above the configured critical (or warning) level raises the
+    /// <c>cpu</c> issue, below the clear level clears it. Returns the sequence of the event sent, or 0.
+    /// </summary>
+    public async Task<ulong> EvaluateCpuAsync(double cpu, CancellationToken cancellationToken = default)
+    {
+        var thresholds = Config?["thresholds"]?["cpu"];
+        if (thresholds is null)
+            return 0;
+        var critical = (double?)thresholds["criticalPercent"] ?? 95;
+        var warning = (double?)thresholds["warningPercent"] ?? 80;
+        var clear = (double?)thresholds["clearBelowPercent"] ?? warning;
+        var severity = cpu >= critical ? "Critical" : cpu >= warning ? "Warning" : null;
+        if (severity is not null && severity != _cpuIssueSeverity)
+        {
+            var action = _cpuIssueSeverity is null ? IssueAction.Raised : IssueAction.SeverityChanged;
+            _cpuIssueSeverity = severity;
+            return await IssueAsync("cpu", action, severity == "Critical" ? Severity.Critical : Severity.Warning, "Performance", "High CPU usage", cancellationToken: cancellationToken);
+        }
+
+        if (severity is null && _cpuIssueSeverity is not null && cpu < clear)
+        {
+            _cpuIssueSeverity = null;
+            return await IssueAsync("cpu", IssueAction.Cleared, cancellationToken: cancellationToken);
+        }
+
+        return 0;
+    }
+
+    private static string Decompress(byte[] data)
+    {
+        using var input = new MemoryStream(data);
+        using var brotli = new System.IO.Compression.BrotliStream(input, System.IO.Compression.CompressionMode.Decompress);
+        using var reader = new StreamReader(brotli, System.Text.Encoding.UTF8);
+        return reader.ReadToEnd();
+    }
+
     /// <summary>The clock of <c>sent_at</c> (tests pass the server's test clock so no clock skew is reported).</summary>
     public TimeProvider Clock { get; init; } = TimeProvider.System;
 
@@ -175,6 +245,7 @@ public sealed class SimulatedAgent(AgentIdentity identity, GrpcChannel channel) 
             {
                 ProtocolVersion = protocolVersion, AgentVersion = AgentVersion, Hostname = Identity.Hostname, OsFamily = OsFamily.Windows,
                 OsName = "Windows Server 2022", OsVersion = "10.0.20348", Architecture = "x64", LocalIp = "10.20.0.10", MacAddress = "02-00-00-00-00-01",
+                AppliedConfigVersion = ConfigVersion,
                 BootTime = Timestamp.FromDateTimeOffset(DateTimeOffset.UtcNow.AddHours(-3)),
             },
         }, cancellationToken);
@@ -265,6 +336,9 @@ public sealed class SimulatedAgent(AgentIdentity identity, GrpcChannel channel) 
                         break;
                     case CloudMessage.BodyOneofCase.SetMode:
                         StartLiveMode(message.SetMode, cancellationToken);
+                        break;
+                    case CloudMessage.BodyOneofCase.ConfigUpdate:
+                        _ = ApplyConfigAsync(message.ConfigUpdate, cancellationToken);
                         break;
                 }
             }

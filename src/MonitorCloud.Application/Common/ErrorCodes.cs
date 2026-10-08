@@ -63,6 +63,8 @@ public static class ErrorCodes
     public const string AlertResolved = "ALERT_RESOLVED";
     public const string RecipientNotFound = "RECIPIENT_NOT_FOUND";
     public const string RecipientEmailTaken = "RECIPIENT_EMAIL_TAKEN";
+    public const string MonitorPointNotFound = "MONITOR_POINT_NOT_FOUND";
+    public const string MonitorPointKeyTaken = "MONITOR_POINT_KEY_TAKEN";
 
     public static IReadOnlyList<string> All { get; } = typeof(ErrorCodes)
         .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)

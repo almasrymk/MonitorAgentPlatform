@@ -67,6 +67,11 @@ public static class DependencyInjection
         services.AddScoped<Monitoring.Contracts.IMonitoringSettingsStore, Monitoring.MonitoringSettingsStore>();
         services.AddScoped<Monitoring.OfflineAlertService>();
 
+        services.AddScoped<Monitoring.Contracts.IMonitorPointCatalog, Monitoring.MonitorPointCatalog>();
+        services.AddScoped<Configuration.ConfigurationService>();
+        services.AddScoped<Configuration.Contracts.IConfigurationVersioning>(sp => sp.GetRequiredService<Configuration.ConfigurationService>());
+        services.AddScoped<Configuration.Contracts.IAgentConfigurationReader, Configuration.AgentConfigurationReader>();
+
         services.AddScoped<Notifications.NotificationFanOut>();
         services.AddScoped<Notifications.Contracts.INotificationPublisher, Notifications.NotificationPublisher>();
         services.AddScoped<Notifications.NotificationDeliveryService>();

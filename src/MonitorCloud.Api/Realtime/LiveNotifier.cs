@@ -59,6 +59,12 @@ public sealed class LiveNotifier(IHubContext<LiveHub> hub, TimeProvider clock) :
         return hub.Clients.Groups(groups).SendAsync("notificationCreated", new { change.NotificationId, change.Severity, change.Title, change.LocationId }, CancellationToken.None);
     }
 
+    public Task ConfigAppliedAsync(ConfigAppliedChange change, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(change);
+        return hub.Clients.Group(LiveGroups.Device(change.DeviceId)).SendAsync("configApplied", new { change.DeviceId, change.Version, change.Success, change.Error }, CancellationToken.None);
+    }
+
     private void ScheduleSummary(string group, string scope, Guid? id)
     {
         if (!_scheduled.TryAdd(group, 0))

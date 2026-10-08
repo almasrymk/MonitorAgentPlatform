@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using MonitorCloud.Application.Common;
+using MonitorCloud.Application.Configuration;
 using MonitorCloud.Application.Monitoring;
 using MonitorCloud.Application.Notifications;
 using MonitorCloud.Application.Tenancy;
@@ -51,6 +52,39 @@ public sealed class AlertsController(ISender sender) : ApiControllerBase(sender)
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
     public async Task<IActionResult> MonitorPoints(Guid id, CancellationToken cancellationToken) =>
         FromResult(await Sender.Send(new GetDeviceMonitorPointsQuery(id), cancellationToken));
+
+    [HttpPost("devices/{id:guid}/monitor-points")]
+    [ProducesResponseType<MonitorPointDto>(StatusCodes.Status201Created)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict, "application/problem+json")]
+    public async Task<IActionResult> AddMonitorPoint(Guid id, MonitorPointInput point, CancellationToken cancellationToken) =>
+        Created(await Sender.Send(new CreateMonitorPointCommand(id, point), cancellationToken));
+
+    [HttpPut("devices/{id:guid}/monitor-points/{pointId:guid}")]
+    [ProducesResponseType<MonitorPointDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict, "application/problem+json")]
+    public async Task<IActionResult> UpdateMonitorPoint(Guid id, Guid pointId, MonitorPointInput point, CancellationToken cancellationToken) =>
+        FromResult(await Sender.Send(new UpdateMonitorPointCommand(id, pointId, point, IfMatch), cancellationToken));
+
+    [HttpDelete("devices/{id:guid}/monitor-points/{pointId:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> DeleteMonitorPoint(Guid id, Guid pointId, CancellationToken cancellationToken) =>
+        FromResult(await Sender.Send(new DeleteMonitorPointCommand(id, pointId), cancellationToken));
+
+    [HttpGet("devices/{id:guid}/configuration")]
+    [ProducesResponseType<DeviceConfigurationDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> Configuration(Guid id, CancellationToken cancellationToken) =>
+        FromVersioned(await Sender.Send(new GetDeviceConfigurationQuery(id), cancellationToken), c => c.ETag);
+
+    [HttpPut("devices/{id:guid}/configuration")]
+    [ProducesResponseType<DeviceConfigurationDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict, "application/problem+json")]
+    public async Task<IActionResult> UpdateConfiguration(Guid id, ConfigDocument document, CancellationToken cancellationToken) =>
+        FromVersioned(await Sender.Send(new UpdateDeviceConfigurationCommand(id, document, IfMatch), cancellationToken), c => c.ETag);
 
     [HttpGet("notifications")]
     [ListEndpoint]
@@ -125,6 +159,16 @@ public sealed class SettingsController(ISender sender) : ApiControllerBase(sende
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> UpdateAlerts(AlertSettingsRequest r, CancellationToken cancellationToken) =>
         FromResult(await Sender.Send(new UpdateAlertSettingsCommand(r.EmailEnabled ?? true, r.InAppEnabled ?? true, r.WebhookEnabled ?? false, r.WebhookUrl), cancellationToken));
+
+    [HttpGet("monitoring")]
+    [ProducesResponseType<ConfigDocument>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> Monitoring(CancellationToken cancellationToken) =>
+        FromResult(await Sender.Send(new GetMonitoringDefaultsQuery(), cancellationToken));
+
+    [HttpPut("monitoring")]
+    [ProducesResponseType<ConfigDocument>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> UpdateMonitoring(ConfigDocument document, CancellationToken cancellationToken) =>
+        FromResult(await Sender.Send(new UpdateMonitoringDefaultsCommand(document), cancellationToken));
 
     [HttpGet("alerts/recipients")]
     [ProducesResponseType<IReadOnlyList<RecipientDto>>(StatusCodes.Status200OK)]

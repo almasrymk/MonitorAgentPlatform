@@ -60,6 +60,14 @@ export interface NotificationEvent {
   locationId: string | null;
 }
 
+/** `configApplied`: the agent answered a configuration (06 section 5). */
+export interface ConfigAppliedEvent {
+  deviceId: string;
+  version: number;
+  success: boolean;
+  error: string | null;
+}
+
 export type LiveTarget = { kind: 'platform' } | { kind: 'tenant'; id?: string | null } | { kind: 'location'; id: string } | { kind: 'device'; id: string };
 
 const METHODS = {
@@ -86,6 +94,7 @@ export class LiveService {
   readonly snapshot$ = new Subject<SnapshotEvent>();
   readonly alert$ = new Subject<AlertEvent>();
   readonly notification$ = new Subject<NotificationEvent>();
+  readonly configApplied$ = new Subject<ConfigAppliedEvent>();
   readonly connected = signal(false);
 
   constructor() {
@@ -184,6 +193,7 @@ export class LiveService {
         connection.on(kind, (event: Omit<AlertEvent, 'kind'>) => this.alert$.next({ ...event, kind }));
       }
       connection.on('notificationCreated', (event: NotificationEvent) => this.notification$.next(event));
+      connection.on('configApplied', (event: ConfigAppliedEvent) => this.configApplied$.next(event));
       connection.onreconnected(() => {
         this.connected.set(true);
         for (const { target } of this.counts.values()) {

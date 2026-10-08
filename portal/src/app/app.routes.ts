@@ -76,10 +76,10 @@ const customerRoutes: Routes = [
         children: [
           { path: '', pathMatch: 'full', redirectTo: 'overview' },
           { path: 'overview', loadComponent: () => import('./features/devices/device/device-overview.page').then((m) => m.DeviceOverviewPage), data: { breadcrumb: 'device.tab.overview' } },
-          { path: 'monitor-points', ...soon('device.tab.monitorPoints', 'M8', 'devices.read') },
+          { path: 'monitor-points', loadComponent: () => import('./features/devices/device/device-monitor-points.page').then((m) => m.DeviceMonitorPointsPage), data: { breadcrumb: 'device.tab.monitorPoints' } },
           { path: 'applications', loadComponent: () => import('./features/devices/device/device-applications.page').then((m) => m.DeviceApplicationsPage), data: { breadcrumb: 'device.tab.applications' } },
           { path: 'reports', ...soon('device.tab.reports', 'M9', 'reports.read') },
-          { path: 'settings', ...soon('device.tab.settings', 'M8', 'devices.read') },
+          { path: 'settings', loadComponent: () => import('./features/devices/device/device-settings.page').then((m) => m.DeviceSettingsPage), data: { breadcrumb: 'device.tab.settings' } },
           { path: 'about', loadComponent: () => import('./features/devices/device/device-about.page').then((m) => m.DeviceAboutPage), data: { breadcrumb: 'device.tab.about' } },
         ],
       },

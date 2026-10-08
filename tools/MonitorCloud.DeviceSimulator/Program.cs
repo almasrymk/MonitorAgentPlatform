@@ -185,7 +185,10 @@ async Task PumpTelemetryAsync(SimulatedAgent agent, CancellationToken cancellati
         {
             var now = DateTimeOffset.UtcNow;
             await Task.Delay(TimeSpan.FromSeconds(60 - now.Second), cancellationToken);
-            await agent.SendMetricsAsync(DateTimeOffset.UtcNow.AddMinutes(-1), cancellationToken: cancellationToken);
+            var minute = DateTimeOffset.UtcNow.AddMinutes(-1);
+            await agent.SendMetricsAsync(minute, cancellationToken: cancellationToken);
+            // With a configuration from the cloud, the simulated agent alerts on its own CPU like a real one (M8).
+            await agent.EvaluateCpuAsync(agent.Metrics.Minute(minute).CpuAvg, cancellationToken);
             await agent.SnapshotAsync(cancellationToken);
         }
     }

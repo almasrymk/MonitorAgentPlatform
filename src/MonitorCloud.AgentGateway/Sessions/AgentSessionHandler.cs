@@ -16,7 +16,7 @@ namespace MonitorCloud.AgentGateway.Sessions;
 /// then routes messages until the stream ends, the session is replaced or rotated, or the server stops.
 /// </summary>
 public sealed partial class AgentSessionHandler(
-    IServiceScopeFactory scopes, IAgentSessionRegistry registry, AgentMessageRouter router, IOptions<AgentGatewayOptions> options, TimeProvider clock,
+    IServiceScopeFactory scopes, IAgentSessionRegistry registry, AgentMessageRouter router, Handlers.ConfigurationPusher configurations, IOptions<AgentGatewayOptions> options, TimeProvider clock,
     ILogger<AgentSessionHandler> logger)
 {
     public const string HelloRequired = "HELLO_REQUIRED";
@@ -58,6 +58,9 @@ public sealed partial class AgentSessionHandler(
 
         await session.SendAsync(Welcome(session, start.Value, settings, now), callCancelled);
         LogConnected(logger, deviceId, session.SessionId);
+        // ConfigUpdate follows Welcome when the agent's applied version differs (05 section 2).
+        if (start.Value.ConfigVersion > 0 && hello.Hello.AppliedConfigVersion != start.Value.ConfigVersion)
+            await configurations.PushAsync(session, hello.Hello.AppliedConfigVersion, callCancelled);
 
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(callCancelled, session.Closed);
         var goodbye = false;

@@ -13,6 +13,9 @@ public sealed record AlertChange(string Kind, Guid AlertId, Guid TenantId, Guid 
 /// <summary>The <c>notificationCreated</c> payload; <see cref="TenantId"/> null = platform feed.</summary>
 public sealed record NotificationChange(Guid NotificationId, Guid? TenantId, string Severity, string Title, Guid? LocationId);
 
+/// <summary>The <c>configApplied</c> payload (06 section 5).</summary>
+public sealed record ConfigAppliedChange(Guid DeviceId, Guid TenantId, int Version, bool Success, string? Error);
+
 /// <summary>Pushes live events to the portal (SignalR in the API host; a no-op elsewhere).</summary>
 public interface ILiveNotifier
 {
@@ -25,6 +28,8 @@ public interface ILiveNotifier
     Task AlertChangedAsync(AlertChange change, CancellationToken cancellationToken);
 
     Task NotificationCreatedAsync(NotificationChange change, CancellationToken cancellationToken);
+
+    Task ConfigAppliedAsync(ConfigAppliedChange change, CancellationToken cancellationToken);
 }
 
 internal sealed class NoLiveNotifier : ILiveNotifier
@@ -38,4 +43,6 @@ internal sealed class NoLiveNotifier : ILiveNotifier
     public Task AlertChangedAsync(AlertChange change, CancellationToken cancellationToken) => Task.CompletedTask;
 
     public Task NotificationCreatedAsync(NotificationChange change, CancellationToken cancellationToken) => Task.CompletedTask;
+
+    public Task ConfigAppliedAsync(ConfigAppliedChange change, CancellationToken cancellationToken) => Task.CompletedTask;
 }
