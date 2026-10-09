@@ -36,6 +36,15 @@ public sealed class JwtOptions
     [Required]
     public string DeviceSigningKey { get; set; } = string.Empty;
 
+    /// <summary>
+    /// Keys replaced by a rotation (docs/operations.md section 5). Tokens signed with them stay valid, and refresh and
+    /// invitation secrets hashed with them are still found, until they are removed.
+    /// </summary>
+    public string[] PreviousSigningKeys { get; set; } = [];
+
+    /// <summary>Device keys replaced by a rotation; device secrets hashed with them are re-hashed at the next token exchange.</summary>
+    public string[] PreviousDeviceSigningKeys { get; set; } = [];
+
     [Range(1, 120)]
     public int AccessTokenMinutes { get; set; } = 15;
 

@@ -29,6 +29,9 @@ public sealed class DeviceCredential : Entity, ITenantOwned
 
     public bool IsRevoked => RevokedAt is not null;
 
+    /// <summary>Stores the hash of the same secret under the current device key (after a key rotation).</summary>
+    public void Rehash(string secretHash) => SecretHash = Guard.NotEmpty(secretHash, nameof(SecretHash), 128);
+
     public static DeviceCredential Issue(Guid deviceId, Guid tenantId, string secretHash, DateTimeOffset now) =>
         new()
         {

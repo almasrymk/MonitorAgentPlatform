@@ -9,10 +9,16 @@ using MonitorCloud.Infrastructure.Options;
 
 namespace MonitorCloud.Infrastructure.Devices;
 
-/// <summary>256-bit device secrets; the stored value is HMAC-SHA256 keyed with a pepper derived from the device key (D11).</summary>
+/// <summary>
+/// 256-bit device secrets; the stored value is HMAC-SHA256 keyed with a pepper derived from the device key (D11).
+/// Secrets hashed with a previous device key still verify (key rotation); <see cref="Hash"/> always uses the current key.
+/// </summary>
 internal sealed class DeviceSecretService(IOptions<JwtOptions> options) : IDeviceSecretService
 {
-    private readonly byte[] _pepper = SHA256.HashData(Encoding.UTF8.GetBytes($"device-secret:{options.Value.DeviceSigningKey}"));
+    private readonly byte[] _pepper = Pepper(options.Value.DeviceSigningKey);
+    private readonly byte[][] _previous = [.. options.Value.PreviousDeviceSigningKeys.Where(k => !string.IsNullOrEmpty(k)).Select(Pepper)];
+
+    private static byte[] Pepper(string key) => SHA256.HashData(Encoding.UTF8.GetBytes($"device-secret:{key}"));
 
     public DeviceSecret NewSecret()
     {
@@ -20,15 +26,19 @@ internal sealed class DeviceSecretService(IOptions<JwtOptions> options) : IDevic
         return new DeviceSecret(secret, Hash(secret));
     }
 
-    public string Hash(string secret) => Convert.ToHexString(HMACSHA256.HashData(_pepper, Encoding.UTF8.GetBytes(secret ?? string.Empty)));
+    public string Hash(string secret) => Hash(_pepper, secret);
+
+    private static string Hash(byte[] pepper, string secret) => Convert.ToHexString(HMACSHA256.HashData(pepper, Encoding.UTF8.GetBytes(secret ?? string.Empty)));
 
     public bool Verify(string secret, string hash)
     {
         if (string.IsNullOrEmpty(secret) || string.IsNullOrEmpty(hash))
             return false;
         var expected = Encoding.ASCII.GetBytes(hash);
-        var actual = Encoding.ASCII.GetBytes(Hash(secret));
-        return CryptographicOperations.FixedTimeEquals(expected, actual);
+        var matched = false;
+        foreach (var pepper in _previous.Prepend(_pepper))
+            matched |= CryptographicOperations.FixedTimeEquals(expected, Encoding.ASCII.GetBytes(Hash(pepper, secret)));
+        return matched;
     }
 }
 

@@ -44,7 +44,11 @@ public static class AuthenticationSetup
                 ValidateAudience = true,
                 ValidAudience = device ? settings.DeviceAudience : settings.Audience,
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(device ? settings.DeviceSigningKey : settings.SigningKey)),
+                // The current key and the keys replaced by a rotation (docs/operations.md section 5).
+                IssuerSigningKeys = (device ? [settings.DeviceSigningKey, .. settings.PreviousDeviceSigningKeys] : new[] { settings.SigningKey }.Concat(settings.PreviousSigningKeys))
+                    .Where(k => !string.IsNullOrEmpty(k))
+                    .Select(k => new SymmetricSecurityKey(Encoding.UTF8.GetBytes(k)))
+                    .ToList(),
                 ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.FromSeconds(30),

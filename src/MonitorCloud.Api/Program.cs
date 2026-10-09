@@ -8,6 +8,7 @@ Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateBootstrapLogger()
 try
 {
     var builder = WebApplication.CreateBuilder(args);
+    ProductionReadiness.EnsureReady(builder.Configuration, builder.Environment);
     builder.Host.UseSerilog((context, services, logger) => logger
         .ReadFrom.Configuration(context.Configuration)
         .ReadFrom.Services(services)

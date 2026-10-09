@@ -57,6 +57,12 @@ internal sealed class TokenService(IOptions<JwtOptions> options) : ITokenService
 
     public string HashInvitationToken(string token) => Hash("invitation", token);
 
+    public IReadOnlyList<string> RefreshTokenHashes(string token) => Keys.Select(k => Hash("refresh", token, k)).ToList();
+
+    public IReadOnlyList<string> InvitationTokenHashes(string token) => Keys.Select(k => Hash("invitation", token, k)).ToList();
+
+    private IEnumerable<string> Keys => [_options.SigningKey, .. _options.PreviousSigningKeys.Where(k => !string.IsNullOrEmpty(k))];
+
     private SecretToken NewSecret(string purpose)
     {
         var token = Base64UrlEncoder.Encode(RandomNumberGenerator.GetBytes(32));
@@ -64,9 +70,9 @@ internal sealed class TokenService(IOptions<JwtOptions> options) : ITokenService
     }
 
     /// <summary>HMAC-SHA256 keyed with the signing key, separated by purpose.</summary>
-    private string Hash(string purpose, string token)
+    private string Hash(string purpose, string token, string? signingKey = null)
     {
-        var key = SHA256.HashData(Encoding.UTF8.GetBytes($"{purpose}:{_options.SigningKey}"));
+        var key = SHA256.HashData(Encoding.UTF8.GetBytes($"{purpose}:{signingKey ?? _options.SigningKey}"));
         return Convert.ToHexString(HMACSHA256.HashData(key, Encoding.UTF8.GetBytes(token)));
     }
 }

@@ -22,7 +22,12 @@ public interface ITokenService
 
     string HashRefreshToken(string token);
 
+    /// <summary>The hash with the current key first, then with each previous key (key rotation).</summary>
+    IReadOnlyList<string> RefreshTokenHashes(string token);
+
     SecretToken NewInvitationToken();
 
     string HashInvitationToken(string token);
+
+    IReadOnlyList<string> InvitationTokenHashes(string token);
 }

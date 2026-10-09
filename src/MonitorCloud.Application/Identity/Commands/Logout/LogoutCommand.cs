@@ -24,8 +24,8 @@ internal sealed class LogoutCommandHandler(IAppDbContext db, ITokenService token
     public async Task<Result> Handle(LogoutCommand request, CancellationToken cancellationToken)
     {
         scope.RunAsSystem();
-        var hash = tokens.HashRefreshToken(request.RefreshToken);
-        var token = await db.Set<RefreshToken>().SingleOrDefaultAsync(t => t.TokenHash == hash, cancellationToken);
+        var hashes = tokens.RefreshTokenHashes(request.RefreshToken);
+        var token = await db.Set<RefreshToken>().SingleOrDefaultAsync(t => hashes.Contains(t.TokenHash), cancellationToken);
         if (token is not null)
             await sessions.RevokeFamilyAsync(token.FamilyId, clock.GetUtcNow(), cancellationToken);
         return Result.Success();

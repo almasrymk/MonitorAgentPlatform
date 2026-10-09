@@ -62,6 +62,11 @@ internal sealed class IssueDeviceTokenCommandHandler(
             return DeviceErrors.InvalidCredential;
         }
 
+        // Verified with a previous device key: keep it valid after that key is removed.
+        var current = secrets.Hash(request.DeviceSecret);
+        if (!string.Equals(current, credential.SecretHash, StringComparison.Ordinal))
+            credential.Rehash(current);
+
         credential.RegisterSuccess();
         var token = tokens.CreateDeviceToken(device.Id, device.TenantId, device.Fingerprint, now);
         return new DeviceTokenResult(token.Token, (int)(token.ExpiresAt - now).TotalSeconds);

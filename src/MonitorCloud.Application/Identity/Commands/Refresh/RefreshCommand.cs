@@ -33,8 +33,8 @@ internal sealed class RefreshCommandHandler(
     {
         scope.RunAsSystem();
         var now = clock.GetUtcNow();
-        var hash = tokens.HashRefreshToken(request.RefreshToken);
-        var token = await db.Set<RefreshToken>().SingleOrDefaultAsync(t => t.TokenHash == hash, cancellationToken);
+        var hashes = tokens.RefreshTokenHashes(request.RefreshToken);
+        var token = await db.Set<RefreshToken>().SingleOrDefaultAsync(t => hashes.Contains(t.TokenHash), cancellationToken);
         if (token is null)
             return IdentityErrors.RefreshInvalid;
 

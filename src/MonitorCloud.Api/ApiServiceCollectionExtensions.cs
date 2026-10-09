@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -27,6 +28,7 @@ public static class ApiServiceCollectionExtensions
         ArgumentNullException.ThrowIfNull(configuration);
         services.AddSingleton(TimeProvider.System);
         services.AddHttpContextAccessor();
+        services.Configure<ForwardedHeadersOptions>(o => ConfigureForwardedHeaders(o, configuration));
         services.AddScoped<ICurrentUser, HttpCurrentUser>();
 
         services.AddApplication();
@@ -98,8 +100,28 @@ public static class ApiServiceCollectionExtensions
         return services;
     }
 
+    /// <summary>
+    /// Behind a reverse proxy the client address and scheme come from <c>X-Forwarded-For</c> / <c>X-Forwarded-Proto</c>,
+    /// trusted only from <c>ReverseProxy:KnownProxies</c> / <c>ReverseProxy:KnownNetworks</c>. Without them the per-IP rate
+    /// limits would see the proxy only (docs/operations.md section 1).
+    /// </summary>
+    internal static void ConfigureForwardedHeaders(ForwardedHeadersOptions options, IConfiguration configuration)
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        options.ForwardLimit = 1;
+        options.KnownProxies.Clear();
+        options.KnownIPNetworks.Clear();
+        foreach (var proxy in configuration.GetSection("ReverseProxy:KnownProxies").Get<string[]>() ?? [])
+            options.KnownProxies.Add(System.Net.IPAddress.Parse(proxy));
+        foreach (var network in configuration.GetSection("ReverseProxy:KnownNetworks").Get<string[]>() ?? [])
+            options.KnownIPNetworks.Add(System.Net.IPNetwork.Parse(network));
+    }
+
     public static WebApplication UseApi(this WebApplication app)
     {
+        var proxies = app.Services.GetRequiredService<Microsoft.Extensions.Options.IOptions<ForwardedHeadersOptions>>().Value;
+        if (proxies.KnownProxies.Count > 0 || proxies.KnownIPNetworks.Count > 0)
+            app.UseForwardedHeaders();
         app.UseMiddleware<CorrelationIdMiddleware>();
         app.UseMiddleware<SecurityHeadersMiddleware>();
         app.UseSerilogRequestLogging(o => o.GetLevel = (ctx, _, ex) =>

@@ -33,15 +33,15 @@ internal sealed class AcceptInvitationCommandHandler(
     public async Task<Result> Handle(AcceptInvitationCommand request, CancellationToken cancellationToken)
     {
         scope.RunAsSystem();
-        var hash = tokens.HashInvitationToken(request.Token);
-        var user = await db.Set<User>().IgnoreQueryFilters().SingleOrDefaultAsync(u => u.InvitationTokenHash == hash, cancellationToken);
+        var hashes = tokens.InvitationTokenHashes(request.Token);
+        var user = await db.Set<User>().IgnoreQueryFilters().SingleOrDefaultAsync(u => u.InvitationTokenHash != null && hashes.Contains(u.InvitationTokenHash), cancellationToken);
         if (user is null)
             return IdentityErrors.InvitationInvalid;
 
         if (PasswordPolicy.Check(request.Password, user.Email) is { } weak)
             return IdentityErrors.WeakPassword(weak);
 
-        user.AcceptInvitation(hash, hasher.Hash(request.Password), clock.GetUtcNow());
+        user.AcceptInvitation(user.InvitationTokenHash!, hasher.Hash(request.Password), clock.GetUtcNow());
         audit.Add("user.invitation.accepted", "User", user.Id.ToString());
         return Result.Success();
     }
