@@ -11,6 +11,8 @@ public enum ErrorKind
     TooManyRequests,
     Gone,
     Unavailable,
+    PayloadTooLarge,
+    UnsupportedMediaType,
 }
 
 /// <summary>A stable, client-facing error. <see cref="Code"/> values (<c>AREA_REASON</c>) are part of the public API contract.</summary>
@@ -31,6 +33,8 @@ public sealed record Error(string Code, string Message, ErrorKind Kind)
     public static Error TooManyRequests(string code, string message) => new(code, message, ErrorKind.TooManyRequests);
     public static Error Gone(string code, string message) => new(code, message, ErrorKind.Gone);
     public static Error Unavailable(string code, string message) => new(code, message, ErrorKind.Unavailable);
+    public static Error PayloadTooLarge(string code, string message) => new(code, message, ErrorKind.PayloadTooLarge);
+    public static Error UnsupportedMediaType(string code, string message) => new(code, message, ErrorKind.UnsupportedMediaType);
 
     public Error With(string key, object? value)
     {

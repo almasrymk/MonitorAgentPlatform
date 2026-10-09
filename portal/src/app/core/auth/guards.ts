@@ -14,23 +14,31 @@ export const authGuard: CanActivateFn = async (_route, state) => {
   return router.createUrlTree(['/login'], { queryParams: state.url && state.url !== '/' ? { returnUrl: state.url } : {} });
 };
 
-/** Platform area for platform roles only, customer area for tenant roles only. */
+/**
+ * Platform area for platform roles only, customer area for tenant roles only. Guards of one route run together, so this
+ * waits for the session restore of `authGuard` (after a reload the user is not known yet).
+ */
 export function areaGuard(area: 'platform' | 'tenant'): CanActivateFn {
-  return () => {
+  return async () => {
     const auth = inject(AuthService);
+    const router = inject(Router);
+    if (!(await auth.restore())) {
+      return router.createUrlTree(['/login']);
+    }
     const allowed = area === 'platform' ? auth.isPlatform() : !auth.isPlatform();
-    return allowed ? true : inject(Router).createUrlTree([auth.home()]);
+    return allowed ? true : router.createUrlTree([auth.home()]);
   };
 }
 
 /** Route data `permission`: a hidden menu item's route is blocked too (07 section 3). */
-export const permissionGuard: CanActivateFn = (route) => {
+export const permissionGuard: CanActivateFn = async (route) => {
   const auth = inject(AuthService);
+  const router = inject(Router);
   const permission = route.data['permission'] as string | undefined;
-  if (!permission || auth.hasPermission(permission)) {
+  if (!permission || ((await auth.restore()) && auth.hasPermission(permission))) {
     return true;
   }
-  return inject(Router).createUrlTree([auth.home()]);
+  return router.createUrlTree([auth.home()]);
 };
 
 /** A workspace route needs the workspace opened (with a reason) through the Customers screen. */

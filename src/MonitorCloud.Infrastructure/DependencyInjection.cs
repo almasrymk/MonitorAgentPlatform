@@ -1,4 +1,5 @@
 using System.Text;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -63,6 +64,18 @@ public static class DependencyInjection
         services.AddHostedService(sp => sp.GetRequiredService<Telemetry.TelemetryJobs>());
         services.AddSingleton<Application.Telemetry.Contracts.ILiveSnapshotStore, Telemetry.LiveSnapshotStore>();
         services.AddSingleton<Application.Abstractions.Serialization.IInventoryCodec, Telemetry.InventoryCodecAdapter>();
+        services.AddOptions<Storage.StorageOptions>().Bind(configuration.GetSection(Storage.StorageOptions.Section));
+        // Keys live next to the files they protect when a storage root is configured (production); otherwise the per-user default.
+        var dataProtection = services.AddDataProtection().SetApplicationName("MonitorCloud");
+        if (configuration[$"{Storage.StorageOptions.Section}:Root"] is { Length: > 0 } storageRoot)
+            dataProtection.PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(storageRoot, "keys")));
+        services.AddSingleton<Application.Abstractions.Storage.IMediaStorage, Storage.FileMediaStorage>();
+        services.AddSingleton<Application.Abstractions.Storage.ISecretProtector, Storage.DataProtectionSecretProtector>();
+        services.AddSingleton<Application.Abstractions.Storage.IPdfRenderer, Storage.ChromiumPdfRenderer>();
+        services.AddHttpClient(Storage.HttpWebhookSender.ClientName, c => c.Timeout = TimeSpan.FromSeconds(10));
+        services.AddSingleton<Application.Abstractions.Storage.IWebhookSender, Storage.HttpWebhookSender>();
+        services.AddSingleton<Storage.ReportsJob>();
+        services.AddHostedService(sp => sp.GetRequiredService<Storage.ReportsJob>());
         services.AddSingleton<Monitoring.MonitoringJobs>();
         services.AddHostedService(sp => sp.GetRequiredService<Monitoring.MonitoringJobs>());
         services.AddScoped<Seeding.BootstrapSeeder>();

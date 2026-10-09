@@ -28,7 +28,13 @@ public abstract class EndpointSuiteBase(SqlServerFixture sql) : IAsyncLifetime
         ArgumentNullException.ThrowIfNull(endpoint);
         var request = new HttpRequestMessage(new HttpMethod(endpoint.Method), endpoint.Url(id) + query);
         if (endpoint.Method is "POST" or "PUT" or "PATCH")
-            request.Content = new StringContent("{}", System.Text.Encoding.UTF8, new MediaTypeHeaderValue("application/json"));
+        {
+            // Uploads take multipart (a small valid file), everything else a JSON body.
+            var multipart = endpoint.Metadata.GetMetadata<Microsoft.AspNetCore.Http.Metadata.IAcceptsMetadata>()?.ContentTypes.Contains("multipart/form-data") == true;
+            request.Content = multipart
+                ? new MultipartFormDataContent { { new ByteArrayContent("suite"u8.ToArray()), "file", "suite.txt" } }
+                : new StringContent("{}", System.Text.Encoding.UTF8, new MediaTypeHeaderValue("application/json"));
+        }
         return request;
     }
 }

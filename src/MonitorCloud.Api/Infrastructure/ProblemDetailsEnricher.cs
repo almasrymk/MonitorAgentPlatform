@@ -54,6 +54,8 @@ public static class ProblemDetailsEnricher
         ErrorKind.TooManyRequests => StatusCodes.Status429TooManyRequests,
         ErrorKind.Gone => StatusCodes.Status410Gone,
         ErrorKind.Unavailable => StatusCodes.Status503ServiceUnavailable,
+        ErrorKind.PayloadTooLarge => StatusCodes.Status413PayloadTooLarge,
+        ErrorKind.UnsupportedMediaType => StatusCodes.Status415UnsupportedMediaType,
         _ => StatusCodes.Status400BadRequest,
     };
 

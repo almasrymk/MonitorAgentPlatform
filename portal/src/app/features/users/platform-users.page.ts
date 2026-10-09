@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { PlatformUsersApi } from '../../core/api/api.services';
 import { Paged, UserListItem } from '../../core/api/models';
 import { toProblem } from '../../core/api/problem';
+import { AuthService } from '../../core/auth/auth.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { Button } from '../../shared/ui/button';
 import { Dialog } from '../../shared/ui/dialog';
@@ -17,9 +19,12 @@ import { UserAction, UsersTable } from './users-table';
 /** Users & Roles (platform staff). */
 @Component({
   selector: 'mc-platform-users-page',
-  imports: [FormsModule, PageHeader, UsersTable, Pagination, Dialog, Button, Icon, ErrorState],
+  imports: [FormsModule, RouterLink, PageHeader, UsersTable, Pagination, Dialog, Button, Icon, ErrorState],
   template: `
     <mc-page-header [title]="i18n.t('platformUsers.title')" [subtitle]="i18n.t('platformUsers.subtitle')">
+      @if (auth.hasPermission('platform.audit.read')) {
+        <a mcButton="secondary" routerLink="/admin/audit" data-testid="open-audit"><mc-icon name="shield" [size]="16" /> {{ i18n.t('audit.title') }}</a>
+      }
       <button type="button" mcButton="primary-solid" (click)="openNew()"><mc-icon name="plus" [size]="16" /> {{ i18n.t('users.add') }}</button>
     </mc-page-header>
     @if (failed()) {
@@ -55,6 +60,7 @@ import { UserAction, UsersTable } from './users-table';
 })
 export class PlatformUsersPage {
   protected readonly i18n = inject(I18nService);
+  protected readonly auth = inject(AuthService);
   private readonly api = inject(PlatformUsersApi);
 
   protected readonly sort = signal('name');

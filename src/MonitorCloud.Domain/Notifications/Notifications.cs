@@ -29,7 +29,17 @@ public sealed class AlertChannelSettings : Entity, ITenantOwned
     public bool InAppEnabled { get; private set; }
     public bool WebhookEnabled { get; private set; }
     public string? WebhookUrl { get; private set; }
+
+    /// <summary>The webhook signing secret, encrypted with Data Protection (never returned by the API).</summary>
+    public string? WebhookSecretProtected { get; private set; }
+
     public DateTimeOffset UpdatedAt { get; private set; }
+
+    public void SetWebhookSecret(string? protectedSecret, DateTimeOffset now)
+    {
+        WebhookSecretProtected = Guard.MaxLength(protectedSecret, nameof(WebhookSecretProtected), 4000);
+        UpdatedAt = now;
+    }
 
     public static AlertChannelSettings Default(Guid tenantId, DateTimeOffset now) =>
         new() { Id = tenantId, TenantId = tenantId, EmailEnabled = true, InAppEnabled = true, UpdatedAt = now };
@@ -183,6 +193,20 @@ public sealed class NotificationDelivery : Entity, ITenantOwned
             Recipient = Guard.NotEmpty(recipient, nameof(Recipient), 256),
             Subject = subject.Length <= 200 ? subject : subject[..200],
             Body = body.Length <= 4000 ? body : body[..4000],
+            Status = DeliveryStatus.Pending,
+            NextAttemptAt = now,
+        };
+
+    /// <summary>A webhook post of an alert: <see cref="Recipient"/> is the URL, <see cref="Body"/> the JSON payload.</summary>
+    public static NotificationDelivery Webhook(Guid tenantId, Guid? alertId, string url, string subject, string json, DateTimeOffset now) =>
+        new()
+        {
+            TenantId = Guard.NotEmpty(tenantId, nameof(TenantId)),
+            AlertId = alertId,
+            Channel = "Webhook",
+            Recipient = Guard.NotEmpty(url, nameof(Recipient), 256),
+            Subject = subject.Length <= 200 ? subject : subject[..200],
+            Body = json.Length <= 4000 ? json : json[..4000],
             Status = DeliveryStatus.Pending,
             NextAttemptAt = now,
         };

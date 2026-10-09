@@ -38,7 +38,24 @@ public sealed class CrossTenantTests(SqlServerFixture sql) : EndpointSuiteBase(s
         ["/api/v1/settings/alerts/recipients/{id:guid}"] = t => t.Recipient1.Id,
         ["/api/v1/locations/{id:guid}/enrollment-codes"] = t => t.Location1.Id,
         ["/api/v1/locations/{id:guid}/enrollment-codes/{codeId:guid}"] = t => t.Location1.Id,
+        ["/api/v1/reports/{id:guid}/download"] = t => t.Archive.Report1,
+        ["/api/v1/archive/contacts/{id:guid}"] = t => t.Archive.Contact1,
+        ["/api/v1/archive/notes/{id:guid}"] = t => t.Archive.Note1,
+        ["/api/v1/archive/files/{id:guid}"] = t => t.Archive.File1,
+        ["/api/v1/archive/files/{id:guid}/download"] = t => t.Archive.File1,
+        ["/api/v1/archive/remote-access/{id:guid}"] = t => t.Archive.RemoteAccess1,
+        ["/api/v1/archive/remote-access/{id:guid}/reveal"] = t => t.Archive.RemoteAccess1,
     };
+
+    /// <summary>
+    /// A refusal that is decided before any row is read: B's plan lacks the feature (Starter: no monitor points, no archive) or
+    /// B's Administrator lacks the permission (remote access is platform-only). Archive isolation with the feature is in ArchiveTests.
+    /// </summary>
+    private static bool RefusedUpFront(ApiEndpoint endpoint, HttpStatusCode status, string body) =>
+        status == HttpStatusCode.Forbidden
+        && (body.Contains("FEATURE_NOT_ENTITLED", StringComparison.Ordinal)
+            || (EndpointPermissions.Rows.TryGetValue(endpoint.Key, out var permission) && permission.Contains('.', StringComparison.Ordinal)
+                && !Roles.Grants(Roles.Administrator, permission) && body.Contains("AUTH_FORBIDDEN", StringComparison.Ordinal)));
 
     private IEnumerable<ApiEndpoint> TenantEndpointsWithIds => BusinessEndpoints.Where(e => e.IsTenant && e.HasParameters);
 
@@ -62,10 +79,8 @@ public sealed class CrossTenantTests(SqlServerFixture sql) : EndpointSuiteBase(s
             using var request = Request(endpoint, id);
             using var response = await client.SendAsync(request);
             var body = await response.Content.ReadAsStringAsync();
-            // Validation may answer first for an empty body, and B's plan may lack the feature (Starter: no monitor points);
-            // what must never happen is another 403, a 2xx or A's data.
-            var planRefusal = response.StatusCode == HttpStatusCode.Forbidden && body.Contains("FEATURE_NOT_ENTITLED", StringComparison.Ordinal);
-            if ((response.StatusCode is not (HttpStatusCode.NotFound or HttpStatusCode.BadRequest) && !planRefusal) || body.Contains(World.A.Tenant.Name, StringComparison.Ordinal))
+            // Validation may answer first for an empty body; what must never happen is another 403, a 2xx or A's data.
+            if ((response.StatusCode is not (HttpStatusCode.NotFound or HttpStatusCode.BadRequest) && !RefusedUpFront(endpoint, response.StatusCode, body)) || body.Contains(World.A.Tenant.Name, StringComparison.Ordinal))
                 failures.Add($"{endpoint} -> {(int)response.StatusCode} {body}");
         }
 
@@ -104,6 +119,8 @@ public sealed class CrossTenantTests(SqlServerFixture sql) : EndpointSuiteBase(s
         {
             using var response = await client.GetAsync(new Uri(endpoint.Route + "?pageSize=200", UriKind.Relative));
             var body = await response.Content.ReadAsStringAsync();
+            if (RefusedUpFront(endpoint, response.StatusCode, body))
+                continue;
             response.StatusCode.ShouldBe(HttpStatusCode.OK, endpoint.Key);
             if (aIds.Any(id => body.Contains(id, StringComparison.OrdinalIgnoreCase)) || body.Contains(World.A.Tenant.Name, StringComparison.Ordinal))
                 failures.Add(endpoint.Key);

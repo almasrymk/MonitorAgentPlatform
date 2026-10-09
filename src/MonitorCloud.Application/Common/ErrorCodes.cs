@@ -65,6 +65,14 @@ public static class ErrorCodes
     public const string RecipientEmailTaken = "RECIPIENT_EMAIL_TAKEN";
     public const string MonitorPointNotFound = "MONITOR_POINT_NOT_FOUND";
     public const string MonitorPointKeyTaken = "MONITOR_POINT_KEY_TAKEN";
+    public const string ReportNotFound = "REPORT_NOT_FOUND";
+    public const string ReportNotReady = "REPORT_NOT_READY";
+    public const string ReportPdfUnavailable = "REPORT_PDF_UNAVAILABLE";
+    public const string ArchiveItemNotFound = "ARCHIVE_ITEM_NOT_FOUND";
+    public const string UploadTypeNotAllowed = "UPLOAD_TYPE_NOT_ALLOWED";
+    public const string UploadEmpty = "UPLOAD_EMPTY";
+    public const string UploadTooLarge = "UPLOAD_TOO_LARGE";
+    public const string UploadNameInvalid = "UPLOAD_NAME_INVALID";
 
     public static IReadOnlyList<string> All { get; } = typeof(ErrorCodes)
         .GetFields(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)

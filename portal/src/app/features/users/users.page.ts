@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { LocationsApi, UsersApi } from '../../core/api/api.services';
 import { LocationCard, Paged, UserListItem } from '../../core/api/models';
 import { toProblem } from '../../core/api/problem';
+import { AuthService } from '../../core/auth/auth.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { ToastService } from '../../core/ui/toast.service';
 import { Button } from '../../shared/ui/button';
@@ -31,9 +33,12 @@ interface UserForm {
 /** Users & Permissions (customer, 07 section 5.8). */
 @Component({
   selector: 'mc-users-page',
-  imports: [FormsModule, PageHeader, Tabs, SearchInput, UsersTable, Pagination, Drawer, Button, Icon, ErrorState],
+  imports: [FormsModule, RouterLink, PageHeader, Tabs, SearchInput, UsersTable, Pagination, Drawer, Button, Icon, ErrorState],
   template: `
     <mc-page-header [title]="i18n.t('users.title')" [subtitle]="i18n.t('users.subtitle')">
+      @if (auth.hasPermission('audit.read')) {
+        <a mcButton="secondary" routerLink="../audit" data-testid="open-audit"><mc-icon name="shield" [size]="16" /> {{ i18n.t('audit.title') }}</a>
+      }
       <button type="button" mcButton="primary-solid" data-testid="add-user" (click)="openNew()"><mc-icon name="plus" [size]="16" /> {{ i18n.t('users.add') }}</button>
     </mc-page-header>
     <mc-tabs [tabs]="tabs()" [active]="tab()" (activeChange)="selectTab($event)" />
@@ -84,6 +89,7 @@ interface UserForm {
 })
 export class UsersPage {
   protected readonly i18n = inject(I18nService);
+  protected readonly auth = inject(AuthService);
   private readonly api = inject(UsersApi);
   private readonly locationsApi = inject(LocationsApi);
   private readonly toast = inject(ToastService);

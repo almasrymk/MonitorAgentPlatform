@@ -30,7 +30,15 @@ public sealed class NotificationFanOut(IAppDbContext db, IUnitOfWork unitOfWork,
             db.Set<Notification>().Add(notification);
         }
 
-        if (settings.EmailEnabled && (await entitlements.GetAsync(tenantId, ct)).Has(Features.NotificationsEmail))
+        var plan = await entitlements.GetAsync(tenantId, ct);
+        if (settings.WebhookEnabled && settings.WebhookUrl is { } url && plan.Has(Features.NotificationsWebhook))
+        {
+            var payload = System.Text.Json.JsonSerializer.Serialize(
+                new { type = "alert", tenantId, alertId, severity = SeverityName(severity), category, title, body, locationId, deviceId, at = now }, WebhookPayloads.Json);
+            db.Set<NotificationDelivery>().Add(NotificationDelivery.Webhook(tenantId, alertId, url, title, payload, now));
+        }
+
+        if (settings.EmailEnabled && plan.Has(Features.NotificationsEmail))
         {
             var recipients = await db.Set<AlertRecipient>().AsNoTracking().Where(r => r.IsActive).ToListAsync(ct);
             foreach (var recipient in recipients.Where(r => r.Wants(severity, locationId ?? Guid.Empty)))
@@ -101,7 +109,8 @@ internal sealed class NotificationPublisher(NotificationFanOut fanOut, ILocation
 }
 
 /// <summary>Sends due e-mail deliveries with retry (1, 2, 4, 8 minutes; 5 attempts). Runs in the system scope.</summary>
-public sealed class NotificationDeliveryService(IAppDbContext db, IUnitOfWork unitOfWork, IEmailSender email, TimeProvider clock)
+public sealed class NotificationDeliveryService(
+    IAppDbContext db, IUnitOfWork unitOfWork, IEmailSender email, Abstractions.Storage.IWebhookSender webhooks, Abstractions.Storage.ISecretProtector protector, TimeProvider clock)
 {
     public const int BatchSize = 50;
 
@@ -117,7 +126,18 @@ public sealed class NotificationDeliveryService(IAppDbContext db, IUnitOfWork un
         {
             try
             {
-                await email.SendAsync(new EmailMessage(delivery.Recipient, delivery.Subject, delivery.Body), ct);
+                if (delivery.Channel == "Webhook")
+                {
+                    var secret = await db.Set<AlertChannelSettings>().AsNoTracking().Where(s => s.TenantId == delivery.TenantId).Select(s => s.WebhookSecretProtected).SingleOrDefaultAsync(ct);
+                    var result = await webhooks.SendAsync(delivery.Recipient, secret is null ? null : protector.Unprotect(secret), delivery.Body, ct);
+                    if (!result.Success)
+                        throw new InvalidOperationException(result.Error ?? $"HTTP {result.StatusCode}");
+                }
+                else
+                {
+                    await email.SendAsync(new EmailMessage(delivery.Recipient, delivery.Subject, delivery.Body), ct);
+                }
+
                 delivery.Sent(clock.GetUtcNow());
             }
             catch (Exception ex) when (ex is not OperationCanceledException)

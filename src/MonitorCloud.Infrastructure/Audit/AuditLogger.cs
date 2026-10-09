@@ -13,12 +13,12 @@ internal sealed class AuditLogger(
     TimeProvider timeProvider,
     IServiceScopeFactory scopeFactory) : IAuditLogger
 {
-    public void Add(string action, string entityType, string? entityId, string? details = null, bool success = true) =>
-        db.Add(Create(action, entityType, entityId, details, success));
+    public void Add(string action, string entityType, string? entityId, string? details = null, bool success = true, AuditActor? actor = null) =>
+        db.Add(Create(action, entityType, entityId, details, success, actor));
 
-    public async Task WriteNowAsync(string action, string entityType, string? entityId, string? details, bool success, CancellationToken cancellationToken)
+    public async Task WriteNowAsync(string action, string entityType, string? entityId, string? details, bool success, CancellationToken cancellationToken, AuditActor? actor = null)
     {
-        var record = Create(action, entityType, entityId, details, success);
+        var record = Create(action, entityType, entityId, details, success, actor);
         await using var scope = scopeFactory.CreateAsyncScope();
         scope.ServiceProvider.GetRequiredService<ITenantScopeSetter>().RunAsSystem();
         var isolated = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -26,7 +26,7 @@ internal sealed class AuditLogger(
         await isolated.SaveChangesAsync(cancellationToken);
     }
 
-    private AuditRecord Create(string action, string entityType, string? entityId, string? details, bool success)
+    private AuditRecord Create(string action, string entityType, string? entityId, string? details, bool success, AuditActor? actor)
     {
         var actorType = currentUser.ActorType switch
         {
@@ -34,12 +34,12 @@ internal sealed class AuditLogger(
             ActorType.System => AuditActorType.System,
             _ => AuditActorType.User,
         };
-        var actorId = currentUser.UserId ?? currentUser.DeviceId;
+        var actorId = actor?.UserId ?? currentUser.UserId ?? currentUser.DeviceId;
         return AuditRecord.Create(
-            tenantContext.TenantId ?? currentUser.TenantId,
-            actorType,
+            actor is not null ? actor.TenantId : tenantContext.TenantId ?? currentUser.TenantId,
+            actor is not null ? AuditActorType.User : actorType,
             actorId,
-            currentUser.Name,
+            actor?.Name ?? currentUser.Name,
             action,
             entityType,
             entityId,

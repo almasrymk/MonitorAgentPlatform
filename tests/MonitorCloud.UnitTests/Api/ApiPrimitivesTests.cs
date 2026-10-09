@@ -25,6 +25,8 @@ public sealed class ApiPrimitivesTests
     [InlineData(ErrorKind.NotFound, 404)]
     [InlineData(ErrorKind.Conflict, 409)]
     [InlineData(ErrorKind.Gone, 410)]
+    [InlineData(ErrorKind.PayloadTooLarge, 413)]
+    [InlineData(ErrorKind.UnsupportedMediaType, 415)]
     [InlineData(ErrorKind.Locked, 423)]
     [InlineData(ErrorKind.TooManyRequests, 429)]
     public void Error_kinds_map_to_status_codes(ErrorKind kind, int status) =>

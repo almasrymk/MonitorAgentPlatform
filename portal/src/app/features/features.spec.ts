@@ -11,7 +11,6 @@ import { AcceptInvitationPage } from './auth/accept-invitation.page';
 import { LoginPage } from './auth/login.page';
 import { LocationsPage } from './locations/locations.page';
 import { CustomersPage } from './platform/customers.page';
-import { ComingSoonPage } from './shared/coming-soon.page';
 import { PlatformUsersPage } from './users/platform-users.page';
 import { UsersPage } from './users/users.page';
 
@@ -270,13 +269,4 @@ describe('feature screens', () => {
     });
   });
 
-  describe('ComingSoonPage', () => {
-    it('names the milestone', async () => {
-      TestBed.resetTestingModule();
-      TestBed.configureTestingModule({ providers: [{ provide: ActivatedRoute, useValue: { snapshot: { data: { breadcrumb: 'nav.devices', milestone: 'M3' } } } }] });
-      const { host } = await render(ComingSoonPage);
-      expect(text(host, 'h1')).toBe('Devices');
-      expect(host.textContent).toContain('milestone M3');
-    });
-  });
 });

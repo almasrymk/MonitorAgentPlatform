@@ -75,14 +75,22 @@ public sealed partial class TelemetryJobs(DatabaseOptionsAccessor database, IOpt
             """, new { since = since ?? currentHour.AddHours(-26), currentHour }, commandTimeout: 300);
     }
 
-    /// <summary>Deletes rows older than the retention windows. Returns the rows deleted.</summary>
+    /// <summary>
+    /// Deletes rows older than the retention windows: Platform Settings when saved, otherwise the <c>Telemetry</c> options.
+    /// Returns the rows deleted.
+    /// </summary>
     public async Task<int> RetentionAsync(CancellationToken cancellationToken)
     {
         var now = clock.GetUtcNow().UtcDateTime;
         var o = options.Value;
         var total = 0;
         await using var connection = new SqlConnection(database.ConnectionString);
-        foreach (var (table, days) in new[] { ("telemetry.MetricMinutes", o.RetentionMinuteDays), ("telemetry.MetricHours", o.RetentionHourDays), ("telemetry.DiskUsageHours", o.RetentionDiskDays), ("telemetry.MonitorPointSamples", o.RetentionMinuteDays) })
+        var platform = await connection.QuerySingleOrDefaultAsync<(int Minute, int Hour)?>(
+            "SELECT MinuteRetentionDays AS Minute, HourRetentionDays AS Hour FROM tenancy.PlatformSettings");
+        var minuteDays = platform?.Minute ?? o.RetentionMinuteDays;
+        var hourDays = platform?.Hour ?? o.RetentionHourDays;
+        var diskDays = platform?.Hour ?? o.RetentionDiskDays;
+        foreach (var (table, days) in new[] { ("telemetry.MetricMinutes", minuteDays), ("telemetry.MetricHours", hourDays), ("telemetry.DiskUsageHours", diskDays), ("telemetry.MonitorPointSamples", minuteDays) })
         {
             int deleted;
             do

@@ -212,8 +212,9 @@ public sealed class MonitoringSettings : Entity, ITenantOwned
     public AlertSeverity OfflineSeverity { get; private set; }
     public int OfflineDelayMinutes { get; private set; }
 
-    public static MonitoringSettings Default(Guid tenantId) =>
-        new() { Id = tenantId, TenantId = tenantId, OfflineSeverity = AlertSeverity.Critical, OfflineDelayMinutes = DefaultOfflineDelayMinutes };
+    /// <summary>The settings of a tenant that never saved its own: Critical after the platform default delay.</summary>
+    public static MonitoringSettings Default(Guid tenantId, int offlineDelayMinutes = DefaultOfflineDelayMinutes) =>
+        new() { Id = tenantId, TenantId = tenantId, OfflineSeverity = AlertSeverity.Critical, OfflineDelayMinutes = offlineDelayMinutes is >= 1 and <= 60 ? offlineDelayMinutes : DefaultOfflineDelayMinutes };
 
     public void Update(AlertSeverity offlineSeverity, int offlineDelayMinutes)
     {

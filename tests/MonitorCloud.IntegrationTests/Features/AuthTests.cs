@@ -39,7 +39,13 @@ public sealed class AuthTests(SqlServerFixture sql) : FeatureTestBase(sql)
         await LoginAsync(World.PlatformAdmin.Email.ToUpperInvariant());
 
         var audit = await App.InDbAsync(db => db.Set<AuditRecord>().Where(a => a.Action == "auth.login.succeeded").ToListAsync());
-        audit.ShouldHaveSingleItem().EntityId.ShouldBe(World.PlatformAdmin.Id.ToString());
+        var record = audit.ShouldHaveSingleItem();
+        record.EntityId.ShouldBe(World.PlatformAdmin.Id.ToString());
+        (record.ActorId, record.ActorName).ShouldBe(((Guid?)World.PlatformAdmin.Id, World.PlatformAdmin.FullName), "nobody is signed in yet: the record names the user");
+
+        await LoginAsync(World.A.Technician.Email);
+        var tenantRecord = await App.InDbAsync(db => db.Set<AuditRecord>().IgnoreQueryFilters().SingleAsync(a => a.Action == "auth.login.succeeded" && a.ActorId == World.A.Technician.Id));
+        (tenantRecord.TenantId, tenantRecord.ActorName).ShouldBe(((Guid?)World.A.Id, World.A.Technician.FullName));
     }
 
     [Fact]

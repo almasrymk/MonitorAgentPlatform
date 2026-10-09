@@ -14,6 +14,7 @@ internal sealed class AlertChannelSettingsConfiguration : IEntityTypeConfigurati
         builder.Property(x => x.TenantId).ValueGeneratedNever();
         builder.Ignore(x => x.Id);
         builder.Property(x => x.WebhookUrl).HasMaxLength(500);
+        builder.Property(x => x.WebhookSecretProtected).HasMaxLength(4000);
     }
 }
 

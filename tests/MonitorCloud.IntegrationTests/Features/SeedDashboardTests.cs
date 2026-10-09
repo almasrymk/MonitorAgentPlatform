@@ -75,6 +75,32 @@ public sealed class SeedDashboardTests(SeededDemoFixture fixture) : IClassFixtur
     }
 
     [Fact]
+    public async Task Acme_has_the_reports_and_archive_of_part_5()
+    {
+        var acme = await TenantIdAsync("ACME");
+
+        (await CountAsync($"SELECT COUNT(*) AS Value FROM reports.GeneratedReports WHERE TenantId = '{acme}' AND Status = 'Done' AND MediaId IS NOT NULL")).ShouldBe(4);
+        (await CountAsync($"SELECT COUNT(*) AS Value FROM archive.CustomerProfiles WHERE TenantId = '{acme}'")).ShouldBe(1);
+        (await CountAsync($"SELECT COUNT(*) AS Value FROM archive.Contacts WHERE TenantId = '{acme}'")).ShouldBe(3);
+        (await CountAsync($"SELECT COUNT(*) AS Value FROM archive.Files WHERE TenantId = '{acme}'")).ShouldBe(4);
+        (await CountAsync($"SELECT COUNT(*) AS Value FROM archive.Notes WHERE TenantId = '{acme}'")).ShouldBe(2);
+        (await CountAsync($"SELECT COUNT(*) AS Value FROM archive.Notes WHERE TenantId = '{acme}' AND IsInternal = 1")).ShouldBe(1);
+        (await CountAsync($"SELECT COUNT(*) AS Value FROM archive.RemoteAccessEntries WHERE TenantId = '{acme}'")).ShouldBe(2);
+
+        // The files are real: the admin downloads a report and an archive file.
+        using var client = await ClientAsync("admin@acme.test");
+        var reports = await (await client.GetAsync(new Uri("/api/v1/reports", UriKind.Relative))).ShouldBeOkAsync<PagedResult<MonitorCloud.Application.Reports.ReportDto>>();
+        var overview = reports.Items.First(r => r.Type == "overview");
+        var csv = await (await client.GetAsync(new Uri($"/api/v1/reports/{overview.Id}/download", UriKind.Relative))).Content.ReadAsStringAsync();
+        csv.ShouldContain("Cairo HQ");
+        var files = await (await client.GetAsync(new Uri("/api/v1/archive/files", UriKind.Relative))).ShouldBeOkAsync<IReadOnlyList<MonitorCloud.Application.Archive.ArchiveFileDto>>();
+        using var pdf = await client.GetAsync(new Uri($"/api/v1/archive/files/{files.Single(f => f.DisplayName == "Service Agreement 2026").Id}/download", UriKind.Relative));
+        (await pdf.Content.ReadAsByteArrayAsync()).Take(5).ShouldBe("%PDF-"u8.ToArray());
+        var notes = await (await client.GetAsync(new Uri("/api/v1/archive/notes", UriKind.Relative))).ShouldBeOkAsync<IReadOnlyList<MonitorCloud.Application.Archive.ArchiveNoteDto>>();
+        notes.Count.ShouldBe(1, "the internal note is for platform staff");
+    }
+
+    [Fact]
     public async Task Platform_dashboard_numbers_equal_sql_counts()
     {
         using var client = await ClientAsync("admin@monitor.local");

@@ -4,12 +4,6 @@ import { areaGuard, authGuard, homeRedirectGuard, permissionGuard, workspaceGuar
 import { AppShell } from './core/layout/app-shell';
 import { isDevMode } from '@angular/core';
 
-const soon = (breadcrumb: string, milestone: string, permission?: string) => ({
-  loadComponent: () => import('./features/shared/coming-soon.page').then((m) => m.ComingSoonPage),
-  data: { breadcrumb, milestone, permission },
-  canActivate: [permissionGuard],
-});
-
 /** Customer area routes, shared by `/app` (tenant roles) and `/admin/customers/:tenantId` (workspace). */
 const customerRoutes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'overview' },
@@ -54,6 +48,24 @@ const customerRoutes: Routes = [
             data: { breadcrumb: 'nav.notifications', permission: 'notifications.read' },
             canActivate: [permissionGuard],
           },
+          {
+            path: 'archive',
+            loadComponent: () => import('./features/archive/archive.page').then((m) => m.LocationArchivePage),
+            data: { breadcrumb: 'nav.archive', permission: 'archive.read' },
+            canActivate: [permissionGuard],
+          },
+          {
+            path: 'reports',
+            loadComponent: () => import('./features/reports/reports.page').then((m) => m.LocationReportsPage),
+            data: { breadcrumb: 'nav.reports', permission: 'reports.read' },
+            canActivate: [permissionGuard],
+          },
+          {
+            path: 'settings',
+            loadComponent: () => import('./features/locations/location-settings.page').then((m) => m.LocationSettingsPage),
+            data: { breadcrumb: 'nav.settings', permission: 'locations.read' },
+            canActivate: [permissionGuard],
+          },
         ],
       },
     ],
@@ -78,7 +90,12 @@ const customerRoutes: Routes = [
           { path: 'overview', loadComponent: () => import('./features/devices/device/device-overview.page').then((m) => m.DeviceOverviewPage), data: { breadcrumb: 'device.tab.overview' } },
           { path: 'monitor-points', loadComponent: () => import('./features/devices/device/device-monitor-points.page').then((m) => m.DeviceMonitorPointsPage), data: { breadcrumb: 'device.tab.monitorPoints' } },
           { path: 'applications', loadComponent: () => import('./features/devices/device/device-applications.page').then((m) => m.DeviceApplicationsPage), data: { breadcrumb: 'device.tab.applications' } },
-          { path: 'reports', ...soon('device.tab.reports', 'M9', 'reports.read') },
+          {
+            path: 'reports',
+            loadComponent: () => import('./features/reports/reports.page').then((m) => m.DeviceReportsPage),
+            data: { breadcrumb: 'device.tab.reports', permission: 'reports.read' },
+            canActivate: [permissionGuard],
+          },
           { path: 'settings', loadComponent: () => import('./features/devices/device/device-settings.page').then((m) => m.DeviceSettingsPage), data: { breadcrumb: 'device.tab.settings' } },
           { path: 'about', loadComponent: () => import('./features/devices/device/device-about.page').then((m) => m.DeviceAboutPage), data: { breadcrumb: 'device.tab.about' } },
         ],
@@ -91,14 +108,30 @@ const customerRoutes: Routes = [
     data: { breadcrumb: 'nav.subscriptions', permission: 'subscription.read' },
     canActivate: [permissionGuard],
   },
-  { path: 'reports', ...soon('nav.reports', 'M9', 'reports.read') },
+  {
+    path: 'reports',
+    loadComponent: () => import('./features/reports/reports.page').then((m) => m.ReportsPage),
+    data: { breadcrumb: 'nav.reports', permission: 'reports.read' },
+    canActivate: [permissionGuard],
+  },
   {
     path: 'users',
     loadComponent: () => import('./features/users/users.page').then((m) => m.UsersPage),
     data: { breadcrumb: 'nav.users', permission: 'users.manage' },
     canActivate: [permissionGuard],
   },
-  { path: 'archive', ...soon('nav.archive', 'M9', 'archive.read') },
+  {
+    path: 'archive',
+    loadComponent: () => import('./features/archive/archive.page').then((m) => m.ArchivePage),
+    data: { breadcrumb: 'nav.archive', permission: 'archive.read' },
+    canActivate: [permissionGuard],
+  },
+  {
+    path: 'audit',
+    loadComponent: () => import('./features/audit/audit.page').then((m) => m.AuditPage),
+    data: { breadcrumb: 'audit.title', permission: 'audit.read' },
+    canActivate: [permissionGuard],
+  },
   {
     path: 'settings',
     loadComponent: () => import('./features/settings/settings.page').then((m) => m.SettingsPage),
@@ -154,15 +187,36 @@ export const routes: Routes = [
         data: { breadcrumb: 'nav.notifications', permission: 'platform.dashboard.read' },
         canActivate: [permissionGuard],
       },
-      { path: 'archive', ...soon('nav.archive', 'M9', 'platform.tenants.read') },
-      { path: 'reports', ...soon('nav.reports', 'M9', 'platform.dashboard.read') },
+      {
+        path: 'archive',
+        loadComponent: () => import('./features/platform/platform-archive.page').then((m) => m.PlatformArchivePage),
+        data: { breadcrumb: 'nav.archive', permission: 'platform.tenants.read' },
+        canActivate: [permissionGuard],
+      },
+      {
+        path: 'reports',
+        loadComponent: () => import('./features/platform/platform-reports.page').then((m) => m.PlatformReportsPage),
+        data: { breadcrumb: 'nav.reports', permission: 'platform.dashboard.read' },
+        canActivate: [permissionGuard],
+      },
+      {
+        path: 'audit',
+        loadComponent: () => import('./features/audit/audit.page').then((m) => m.AuditPage),
+        data: { breadcrumb: 'audit.title', permission: 'platform.audit.read', platform: true },
+        canActivate: [permissionGuard],
+      },
       {
         path: 'users',
         loadComponent: () => import('./features/users/platform-users.page').then((m) => m.PlatformUsersPage),
         data: { breadcrumb: 'nav.usersRoles', permission: 'platform.users.manage' },
         canActivate: [permissionGuard],
       },
-      { path: 'settings', ...soon('nav.settings', 'M9', 'platform.settings.manage') },
+      {
+        path: 'settings',
+        loadComponent: () => import('./features/platform/platform-settings.page').then((m) => m.PlatformSettingsPage),
+        data: { breadcrumb: 'nav.settings', permission: 'platform.settings.manage' },
+        canActivate: [permissionGuard],
+      },
     ],
   },
   {

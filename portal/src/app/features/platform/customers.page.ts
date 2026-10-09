@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { TenantsApi } from '../../core/api/api.services';
@@ -96,6 +97,15 @@ export class CustomersPage {
   protected readonly dialogOpen = computed(() => this.action() !== null);
 
   constructor() {
+    // The top-bar search opens this page with ?search= (also when it is already open).
+    const route = inject(ActivatedRoute);
+    this.search.set(route.snapshot.queryParamMap.get('search') ?? '');
+    route.queryParamMap.pipe(takeUntilDestroyed()).subscribe((params) => {
+      const text = params.get('search');
+      if (text !== null && text !== this.search()) {
+        this.setFilter(() => this.search.set(text));
+      }
+    });
     void this.load();
   }
 

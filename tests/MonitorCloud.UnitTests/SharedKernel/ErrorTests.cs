@@ -14,6 +14,9 @@ public sealed class ErrorTests
         { Error.Locked, ErrorKind.Locked },
         { Error.TooManyRequests, ErrorKind.TooManyRequests },
         { Error.Gone, ErrorKind.Gone },
+        { Error.Unavailable, ErrorKind.Unavailable },
+        { Error.PayloadTooLarge, ErrorKind.PayloadTooLarge },
+        { Error.UnsupportedMediaType, ErrorKind.UnsupportedMediaType },
     };
 
     [Theory]

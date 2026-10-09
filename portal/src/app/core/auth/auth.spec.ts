@@ -204,15 +204,29 @@ describe('auth', () => {
 
     it('areaGuard keeps tenant users out of /admin and platform users out of /app', async () => {
       await signIn('ReportViewer');
-      expect((run(() => areaGuard('platform')(route(), state)) as UrlTree).toString()).toBe('/app/overview');
-      expect(run(() => areaGuard('tenant')(route(), state))).toBe(true);
+      expect(((await run(() => areaGuard('platform')(route(), state))) as UrlTree).toString()).toBe('/app/overview');
+      expect(await run(() => areaGuard('tenant')(route(), state))).toBe(true);
+    });
+
+    it('areaGuard waits for the session restore after a reload (platform users stay in /admin)', async () => {
+      await signIn('PlatformAdmin', ['platform.dashboard.read'], null);
+      const auth = TestBed.inject(AuthService);
+      const user = auth.user();
+      auth.user.set(null);
+      const restore = vi.spyOn(auth, 'restore').mockImplementation(async () => {
+        auth.user.set(user);
+        return true;
+      });
+
+      expect(await run(() => areaGuard('platform')(route(), state))).toBe(true);
+      expect(restore).toHaveBeenCalled();
     });
 
     it('permissionGuard blocks a route whose permission is missing', async () => {
       await signIn('ReportViewer', ['reports.read']);
-      expect((run(() => permissionGuard(route({ permission: 'users.manage' }), state)) as UrlTree).toString()).toBe('/app/overview');
-      expect(run(() => permissionGuard(route({ permission: 'reports.read' }), state))).toBe(true);
-      expect(run(() => permissionGuard(route(), state))).toBe(true);
+      expect(((await run(() => permissionGuard(route({ permission: 'users.manage' }), state))) as UrlTree).toString()).toBe('/app/overview');
+      expect(await run(() => permissionGuard(route({ permission: 'reports.read' }), state))).toBe(true);
+      expect(await run(() => permissionGuard(route(), state))).toBe(true);
     });
 
     it('workspaceGuard requires the workspace to be opened first', () => {

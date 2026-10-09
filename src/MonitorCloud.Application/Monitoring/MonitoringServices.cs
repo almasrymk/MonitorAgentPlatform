@@ -69,11 +69,12 @@ internal sealed class AlertDashboardReader(IReadDbContext db) : IAlertDashboardR
     }
 }
 
-internal sealed class MonitoringSettingsStore(IAppDbContext db) : IMonitoringSettingsStore
+internal sealed class MonitoringSettingsStore(IAppDbContext db, Tenancy.Contracts.IPlatformDefaults defaults) : IMonitoringSettingsStore
 {
     public async Task<OfflineAlertSettings> GetAsync(Guid tenantId, CancellationToken ct)
     {
-        var settings = await db.Set<MonitoringSettings>().AsNoTracking().SingleOrDefaultAsync(s => s.TenantId == tenantId, ct) ?? MonitoringSettings.Default(tenantId);
+        var settings = await db.Set<MonitoringSettings>().AsNoTracking().SingleOrDefaultAsync(s => s.TenantId == tenantId, ct)
+            ?? MonitoringSettings.Default(tenantId, await defaults.OfflineAlertDelayMinutesAsync(ct));
         return new OfflineAlertSettings(settings.OfflineSeverity.ToString(), settings.OfflineDelayMinutes);
     }
 

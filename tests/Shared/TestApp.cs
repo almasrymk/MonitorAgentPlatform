@@ -25,6 +25,9 @@ public class TestApp(SqlServerFixture sql) : WebApplicationFactory<Program>, IAs
     public CapturingEmailSender Mail { get; } = new();
     public string ConnectionString { get; } = sql.NewDatabase();
 
+    /// <summary>Files and Data Protection keys of this app (a fresh temp folder).</summary>
+    public string StorageRoot { get; } = Path.Combine(Path.GetTempPath(), "monitorcloud-tests", Guid.NewGuid().ToString("N"));
+
     public virtual Task InitializeAsync()
     {
         // Building the server runs Program, which applies the migrations.
@@ -32,7 +35,19 @@ public class TestApp(SqlServerFixture sql) : WebApplicationFactory<Program>, IAs
         return Task.CompletedTask;
     }
 
-    public new virtual async Task DisposeAsync() => await base.DisposeAsync();
+    public new virtual async Task DisposeAsync()
+    {
+        await base.DisposeAsync();
+        try
+        {
+            if (Directory.Exists(StorageRoot))
+                Directory.Delete(StorageRoot, recursive: true);
+        }
+        catch (IOException)
+        {
+            // A file still open by the OS; the temp folder is cleaned up eventually.
+        }
+    }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -41,6 +56,7 @@ public class TestApp(SqlServerFixture sql) : WebApplicationFactory<Program>, IAs
         builder.UseSetting("ConnectionStrings:Monitor", ConnectionString);
         builder.UseSetting("Seed:ApplyMigrations", "true");
         builder.UseSetting("Seed:DemoData", "false");
+        builder.UseSetting("Storage:Root", StorageRoot);
         builder.UseSetting("Outbox:Enabled", "false");
         builder.UseSetting("Jwt:SigningKey", UserSigningKey);
         builder.UseSetting("Jwt:DeviceSigningKey", DeviceSigningKey);

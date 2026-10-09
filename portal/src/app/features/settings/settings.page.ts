@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { LocationsApi } from '../../core/api/api.services';
 import { LocationCard } from '../../core/api/models';
 import { AlertSettings, ConfigDocument, ConfigurationApi, GeneralSettings, Recipient, SettingsApi } from '../../core/api/monitoring.api';
+import { Integrations, IntegrationsApi, WebhookTest } from '../../core/api/reports.api';
 import { ThresholdsForm, editable, normalised } from '../configuration/thresholds-form';
 import { toProblem } from '../../core/api/problem';
 import { I18nService } from '../../core/i18n/i18n.service';
@@ -16,7 +18,7 @@ import { Drawer } from '../../shared/ui/drawer';
 import { PageHeader } from '../../shared/ui/headers';
 import { Icon } from '../../shared/ui/icon';
 import { Skeleton } from '../../shared/ui/skeleton';
-import { EmptyState, ErrorState } from '../../shared/ui/states';
+import { ErrorState } from '../../shared/ui/states';
 import { StatusPill } from '../../shared/ui/status-pill';
 import { TabItem, Tabs } from '../../shared/ui/tabs';
 
@@ -39,10 +41,10 @@ interface RecipientForm {
   isActive: boolean;
 }
 
-/** Settings (07 section 5.8): General, Alert Settings and Monitoring (default thresholds); Locations and Integrations follow in M9. */
+/** Settings (07 section 5.8): General, Alert Settings, Monitoring (default thresholds), Locations (links) and Integrations (webhook). */
 @Component({
   selector: 'mc-settings-page',
-  imports: [FormsModule, PageHeader, Tabs, Card, DataTable, CellDef, Drawer, Button, Icon, Skeleton, EmptyState, ErrorState, StatusPill, ThresholdsForm],
+  imports: [FormsModule, RouterLink, PageHeader, Tabs, Card, DataTable, CellDef, Drawer, Button, Icon, Skeleton, ErrorState, StatusPill, ThresholdsForm],
   template: `
     <mc-page-header [title]="i18n.t('nav.settings')" [subtitle]="i18n.t('settings.subtitle')" />
     <mc-tabs [tabs]="tabs()" [(active)]="tab" />
@@ -137,8 +139,51 @@ interface RecipientForm {
           <mc-skeleton [height]="240" />
         }
       </mc-card>
-    } @else {
-      <mc-empty-state icon="info" [title]="i18n.t('comingSoon.title')" [message]="i18n.t('comingSoon.message', { milestone: 'M9' })" />
+    } @else if (tab() === 'locations') {
+      <mc-card [title]="i18n.t('nav.locations')" [flush]="true" class="block" data-testid="settings-locations">
+        <a cardActions mcButton="primary-outline" size="sm" routerLink="../locations">{{ i18n.t('settings.manageLocations') }}</a>
+        <mc-data-table [columns]="locationColumns()" [rows]="locations()" [emptyText]="i18n.t('locations.empty')">
+          <ng-template mcCell="name" let-row><strong>{{ l(row).isDefault ? i18n.t('locations.unassigned') : l(row).name }}</strong></ng-template>
+          <ng-template mcCell="city" let-row>{{ l(row).city || '—' }}</ng-template>
+          <ng-template mcCell="devices" let-row>{{ l(row).devices }}</ng-template>
+          <ng-template mcCell="actions" let-row>
+            <a mcButton="ghost" size="sm" [routerLink]="['../locations', l(row).id, 'settings']" [attr.data-testid]="'location-settings-' + l(row).id">{{ i18n.t('nav.settings') }}</a>
+            <a mcButton="ghost" size="sm" [routerLink]="['../locations', l(row).id, 'overview']">{{ i18n.t('common.view') }}</a>
+          </ng-template>
+        </mc-data-table>
+      </mc-card>
+    } @else if (tab() === 'integrations') {
+      @if (integrations(); as it) {
+        <mc-card [title]="i18n.t('settings.webhook')" class="block narrow-card" data-testid="integrations">
+          <p class="hint">{{ it.webhookEntitled ? i18n.t('settings.webhookIntegrationHint') : i18n.t('settings.notInPlan') }}</p>
+          <form class="mc-form" (ngSubmit)="saveIntegrations()">
+            <label class="inline"><input type="checkbox" role="switch" name="webhookEnabled" [(ngModel)]="hook.enabled" [disabled]="!it.webhookEntitled" data-testid="integration-enabled" />
+              <span>{{ i18n.t('settings.webhookEnabled') }}</span></label>
+            <label><span>{{ i18n.t('settings.webhookUrl') }}</span>
+              <input name="webhookUrl" type="url" maxlength="500" placeholder="https://" [(ngModel)]="hook.url" [disabled]="!it.webhookEntitled" data-testid="integration-url" />
+            </label>
+            <label><span>{{ i18n.t('settings.webhookSecret') }}</span>
+              <input name="secret" type="password" maxlength="200" autocomplete="new-password" [(ngModel)]="hook.secret" [disabled]="!it.webhookEntitled"
+                [placeholder]="it.hasSecret ? i18n.t('settings.secretStored') : ''" data-testid="integration-secret" />
+              <small>{{ i18n.t('settings.secretHint') }}</small>
+            </label>
+            @if (it.hasSecret) {
+              <label class="inline"><input type="checkbox" name="removeSecret" [(ngModel)]="hook.removeSecret" /> <span>{{ i18n.t('settings.removeSecret') }}</span></label>
+            }
+            @if (testResult(); as r) {
+              <p class="test" [class.ok]="r.success" role="status" data-testid="webhook-test-result">
+                {{ r.success ? i18n.t('settings.testOk', { status: r.statusCode ?? '' }) : i18n.t('settings.testFailed', { error: r.error ?? '' }) }}
+              </p>
+            }
+            <div class="actions gap">
+              <button type="button" mcButton="secondary" [disabled]="busy() || !it.webhookEntitled || !it.webhookUrl" (click)="testWebhook()" data-testid="test-webhook">{{ i18n.t('settings.testWebhook') }}</button>
+              <button type="submit" mcButton="primary-solid" [disabled]="busy() || !it.webhookEntitled" data-testid="save-integrations">{{ i18n.t('common.save') }}</button>
+            </div>
+          </form>
+        </mc-card>
+      } @else {
+        <mc-skeleton [height]="240" />
+      }
     }
 
     <mc-drawer [open]="form() !== null" (openChange)="!$event && form.set(null)" [title]="form()?.id ? i18n.t('settings.editRecipient') : i18n.t('settings.addRecipient')">
@@ -189,6 +234,10 @@ interface RecipientForm {
     .channels small { color: var(--mc-text-muted); }
     input[role='switch'] { inline-size: 36px; block-size: 20px; accent-color: var(--mc-brand); }
     .inline { flex-direction: row; align-items: center; gap: var(--mc-space-2); }
+    .narrow-card { max-inline-size: 640px; }
+    .gap { gap: var(--mc-space-2); }
+    .test { margin: 0; padding: var(--mc-space-2) var(--mc-space-3); border-radius: var(--mc-radius-md); background: var(--mc-danger-soft); color: var(--mc-danger); }
+    .test.ok { background: var(--mc-success-soft); color: var(--mc-success); }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -212,6 +261,17 @@ export class SettingsPage {
   protected readonly form = signal<RecipientForm | null>(null);
   protected readonly formError = signal<string | null>(null);
   protected channels: Channels = { emailEnabled: true, inAppEnabled: true, webhookEnabled: false, webhookUrl: '' };
+  private readonly integrationsApi = inject(IntegrationsApi);
+  protected readonly integrations = signal<Integrations | null>(null);
+  protected readonly testResult = signal<WebhookTest | null>(null);
+  protected hook = { enabled: false, url: '', secret: '', removeSecret: false };
+
+  protected readonly locationColumns = computed<Column[]>(() => [
+    { key: 'name', label: this.i18n.t('locations.name') },
+    { key: 'city', label: this.i18n.t('locations.city') },
+    { key: 'devices', label: this.i18n.t('locations.devices') },
+    { key: 'actions', label: '', width: '180px' },
+  ]);
 
   protected readonly tabs = computed<TabItem[]>(() => [
     { id: 'general', label: this.i18n.t('settings.general') },
@@ -243,6 +303,7 @@ export class SettingsPage {
       this.channels = { emailEnabled: alerts.emailEnabled, inAppEnabled: alerts.inAppEnabled, webhookEnabled: alerts.webhookEnabled, webhookUrl: alerts.webhookUrl ?? '' };
       this.recipients.set(recipients);
       this.defaults.set(editable(await firstValueFrom(this.configuration.defaults())));
+      this.setIntegrations(await firstValueFrom(this.integrationsApi.get()));
     } catch {
       this.failed.set(true);
     }
@@ -257,6 +318,42 @@ export class SettingsPage {
     try {
       this.defaults.set(editable(await firstValueFrom(this.configuration.updateDefaults(normalised(d)))));
       this.toast.success(this.i18n.t('settings.saved'));
+    } catch {
+      // The error toast explains why.
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  private setIntegrations(value: Integrations): void {
+    this.integrations.set(value);
+    this.hook = { enabled: value.webhookEnabled, url: value.webhookUrl ?? '', secret: '', removeSecret: false };
+  }
+
+  protected l(row: unknown): LocationCard {
+    return row as LocationCard;
+  }
+
+  protected async saveIntegrations(): Promise<void> {
+    this.busy.set(true);
+    this.testResult.set(null);
+    try {
+      const h = this.hook;
+      const secret = h.removeSecret ? '' : h.secret === '' ? null : h.secret;
+      this.setIntegrations(await firstValueFrom(this.integrationsApi.update({ webhookEnabled: h.enabled, webhookUrl: h.url.trim() || null, secret })));
+      this.alerts.set(await firstValueFrom(this.api.alerts()));
+      this.toast.success(this.i18n.t('settings.saved'));
+    } catch {
+      // The error toast explains why.
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  protected async testWebhook(): Promise<void> {
+    this.busy.set(true);
+    try {
+      this.testResult.set(await firstValueFrom(this.integrationsApi.test()));
     } catch {
       // The error toast explains why.
     } finally {

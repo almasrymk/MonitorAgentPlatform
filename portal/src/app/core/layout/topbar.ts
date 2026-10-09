@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import { Avatar } from '../../shared/ui/avatar';
 import { Icon } from '../../shared/ui/icon';
@@ -9,7 +9,10 @@ import { I18nService, Language } from '../i18n/i18n.service';
 import { DateRange, DateRangeStore } from '../state/date-range.store';
 import { NotificationsStore } from '../state/notifications.store';
 
-/** Top bar: brand, search (placeholder until M9), date range, bell with the unread count, user menu with language and sign-out. */
+/**
+ * Top bar: brand, search (customers on the platform, devices inside a customer; Enter opens the filtered list), date range,
+ * bell with the unread count, user menu with language and sign-out.
+ */
 @Component({
   selector: 'mc-topbar',
   imports: [Avatar, Icon, Select, RouterLink],
@@ -20,7 +23,8 @@ import { NotificationsStore } from '../state/notifications.store';
     </div>
     <label class="search">
       <mc-icon name="search" [size]="16" />
-      <input type="search" [attr.placeholder]="i18n.t('topbar.search')" [attr.aria-label]="i18n.t('topbar.search')" disabled />
+      <input type="search" [attr.placeholder]="bell.platform() ? i18n.t('topbar.searchCustomers') : i18n.t('topbar.searchDevices')" [attr.aria-label]="i18n.t('topbar.search')"
+        (keydown.enter)="search($any($event.target))" data-testid="topbar-search" />
     </label>
     <div class="right">
       <mc-select [label]="i18n.t('topbar.dateRange')" [options]="rangeOptions()" [value]="dates.range()" (valueChange)="dates.range.set($any($event))" />
@@ -79,6 +83,18 @@ export class Topbar {
   protected readonly dates = inject(DateRangeStore);
   protected readonly bell = inject(NotificationsStore);
   protected readonly menuOpen = signal(false);
+  private readonly router = inject(Router);
+
+  /** Opens Customers (platform) or Devices (customer area / workspace) filtered by the text. */
+  protected search(input: HTMLInputElement): void {
+    const text = input.value.trim();
+    if (!text) {
+      return;
+    }
+    const root = this.bell.root();
+    void this.router.navigate(this.bell.platform() ? ['/admin/customers'] : [root, 'devices'], { queryParams: { search: text } });
+    input.value = '';
+  }
 
   protected rangeOptions() {
     return this.dates.options.map((range: DateRange) => ({ value: range, label: this.i18n.t(`range.${range}`) }));

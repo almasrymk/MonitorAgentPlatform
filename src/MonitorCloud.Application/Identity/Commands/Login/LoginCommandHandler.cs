@@ -38,14 +38,14 @@ internal sealed class LoginCommandHandler(
 
         if (user.IsLockedOut(now))
         {
-            await audit.WriteNowAsync("auth.login.locked", "User", user.Id.ToString(), null, false, cancellationToken);
+            await audit.WriteNowAsync("auth.login.locked", "User", user.Id.ToString(), null, false, cancellationToken, Actor(user));
             return IdentityErrors.Locked(user.LockoutRemaining(now));
         }
 
         if (user.Status != UserStatus.Active || user.PasswordHash is null || !hasher.Verify(user.PasswordHash, request.Password))
         {
             user.RegisterFailedSignIn(now);
-            audit.Add("auth.login.failed", "User", user.Id.ToString(), $"Failed attempt {user.FailedLoginCount}", success: false);
+            audit.Add("auth.login.failed", "User", user.Id.ToString(), $"Failed attempt {user.FailedLoginCount}", success: false, actor: Actor(user));
             // The failure must persist although the command fails: save explicitly before returning.
             await unitOfWork.SaveChangesAsync(cancellationToken);
             return user.IsLockedOut(now) ? IdentityErrors.Locked(user.LockoutRemaining(now)) : IdentityErrors.InvalidCredentials;
@@ -53,12 +53,15 @@ internal sealed class LoginCommandHandler(
 
         if (await sessions.CheckTenantAsync(user, cancellationToken) is { } tenantError)
         {
-            await audit.WriteNowAsync("auth.login.failed", "User", user.Id.ToString(), "Customer suspended or archived", false, cancellationToken);
+            await audit.WriteNowAsync("auth.login.failed", "User", user.Id.ToString(), "Customer suspended or archived", false, cancellationToken, Actor(user));
             return tenantError;
         }
 
         user.RegisterSuccessfulSignIn(now);
-        audit.Add("auth.login.succeeded", "User", user.Id.ToString());
+        audit.Add("auth.login.succeeded", "User", user.Id.ToString(), actor: Actor(user));
         return await sessions.IssueAsync(user, Guid.CreateVersion7(), caller.IpAddress, now, cancellationToken);
     }
+
+    /// <summary>Nobody is signed in yet: the record names the user who tried.</summary>
+    private static AuditActor Actor(User user) => new(user.Id, user.FullName, user.TenantId);
 }

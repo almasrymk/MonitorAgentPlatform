@@ -37,6 +37,11 @@ const PATHS: Record<string, string> = {
   empty: 'M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7',
   edit: 'M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z',
   trash: 'M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6',
+  download: 'M12 3v12M7 10l5 5 5-5M4 21h16',
+  file: 'M14 3H6v18h12V7l-4-4zM14 3v4h4M9 13h6M9 17h6',
+  eye: 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12zM12 15a3 3 0 100-6 3 3 0 000 6z',
+  key: 'M21 2l-2 2M15.5 7.5l3 3L22 7l-3-3M11.4 11.6a5.5 5.5 0 11-7.8 7.8 5.5 5.5 0 017.8-7.8zM11.4 11.6L19 4',
+  upload: 'M12 21V9M7 14l5-5 5 5M4 3h16',
 };
 
 @Component({

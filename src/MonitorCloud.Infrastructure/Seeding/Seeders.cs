@@ -38,7 +38,7 @@ public sealed partial class BootstrapSeeder(AppDbContext db, Application.Identit
 /// <summary>
 /// The demo data of 08, deterministic (<c>new Random(20261006)</c>, dates relative to the moment of seeding).
 /// Part 1 (M1): platform users, the 48 customers, their locations and users. Part 2 (M3): devices, device state,
-/// licence rows and the inventory of the fixed devices.
+/// licence rows and the inventory of the fixed devices. Parts 3-5: telemetry, monitoring, reports and archive.
 /// </summary>
 public sealed partial class DemoSeeder(
     AppDbContext db,
@@ -47,6 +47,10 @@ public sealed partial class DemoSeeder(
     FakeLicensingStore licensingStore,
     LicensingSyncService licensingSync,
     IOptions<LicensingSettings> licensingSettings,
+    Application.Abstractions.Storage.IMediaStorage storage,
+    Application.Abstractions.Storage.ISecretProtector protector,
+    Application.Reports.ReportGenerationService reports,
+    Application.Abstractions.Context.ITenantScopeSetter scope,
     TimeProvider clock,
     ILogger<DemoSeeder> logger)
 {
@@ -130,6 +134,9 @@ public sealed partial class DemoSeeder(
         // Part 4 (M6): alerts, daily statistics, notifications, audit activity, monitor points, recipients.
         var monitoring = new DemoMonitoring(db, now, new Random(DemoData.Seed + 4));
         await monitoring.RunAsync([.. DemoData.Detailed.Select(d => d.Code)], cancellationToken);
+
+        // Part 5 (M9): Acme reports and archive.
+        await new DemoArchive(db, storage, protector, reports, scope, now).RunAsync(cancellationToken);
 
         // 08 section 4: one valid enrollment code for Acme / Cairo HQ, printed at seed time.
         var cairo = await db.Set<Location>().FirstAsync(l => l.Code == "CAIRO-HQ", cancellationToken);

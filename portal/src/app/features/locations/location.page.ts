@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { debounceTime } from 'rxjs';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
+import { AuthService } from '../../core/auth/auth.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { BreadcrumbLabels } from '../../core/layout/breadcrumb-labels';
 import { LiveService } from '../../core/live/live.service';
@@ -11,7 +12,7 @@ import { Skeleton } from '../../shared/ui/skeleton';
 import { ErrorState } from '../../shared/ui/states';
 import { LocationContext } from './location-context';
 
-/** A location: entity header and the Overview / Devices / Notifications tabs (07 sections 5.5, 5.6 and 5.8). */
+/** A location: entity header and the Overview, Devices, Notifications, Archive, Reports and Settings tabs (07 sections 3, 5.5, 5.6 and 5.8). */
 @Component({
   selector: 'mc-location-page',
   imports: [RouterOutlet, RouterLink, RouterLinkActive, EntityHeader, Skeleton, ErrorState],
@@ -28,6 +29,13 @@ import { LocationContext } from './location-context';
       <a routerLink="overview" routerLinkActive="active" ariaCurrentWhenActive="page" data-testid="tab-overview">{{ i18n.t('locations.tabOverview') }}</a>
       <a routerLink="devices" routerLinkActive="active" ariaCurrentWhenActive="page" data-testid="tab-devices">{{ i18n.t('locations.tabDevices') }}</a>
       <a routerLink="notifications" routerLinkActive="active" ariaCurrentWhenActive="page" data-testid="tab-notifications">{{ i18n.t('nav.notifications') }}</a>
+      @if (auth.hasPermission('archive.read')) {
+        <a routerLink="archive" routerLinkActive="active" ariaCurrentWhenActive="page" data-testid="tab-archive">{{ i18n.t('nav.archive') }}</a>
+      }
+      @if (auth.hasPermission('reports.read')) {
+        <a routerLink="reports" routerLinkActive="active" ariaCurrentWhenActive="page" data-testid="tab-reports">{{ i18n.t('nav.reports') }}</a>
+      }
+      <a routerLink="settings" routerLinkActive="active" ariaCurrentWhenActive="page" data-testid="tab-settings">{{ i18n.t('nav.settings') }}</a>
     </nav>
     <router-outlet />
   `,
@@ -43,6 +51,7 @@ export class LocationPage {
   protected readonly i18n = inject(I18nService);
   protected readonly context = inject(LocationContext);
   protected readonly router = inject(Router);
+  protected readonly auth = inject(AuthService);
   readonly id = input.required<string>();
 
   protected readonly online = computed(() => (this.context.dashboard()?.tiles.find((t) => t.key === 'online')?.value ?? 0) > 0);

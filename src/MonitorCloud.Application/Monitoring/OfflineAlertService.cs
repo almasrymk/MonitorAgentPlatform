@@ -12,7 +12,8 @@ namespace MonitorCloud.Application.Monitoring;
 /// offline within 60 s, one location notification replaces the per-device notifications (the alerts stay per device).
 /// Runs in the system scope.
 /// </summary>
-public sealed class OfflineAlertService(IAppDbContext db, IUnitOfWork unitOfWork, AlertBook alerts, IDeviceStatsDirectory stats, INotificationPublisher notifications, TimeProvider clock)
+public sealed class OfflineAlertService(
+    IAppDbContext db, IUnitOfWork unitOfWork, AlertBook alerts, IDeviceStatsDirectory stats, INotificationPublisher notifications, Tenancy.Contracts.IPlatformDefaults defaults, TimeProvider clock)
 {
     public static readonly TimeSpan OutageWindow = TimeSpan.FromSeconds(60);
 
@@ -26,8 +27,10 @@ public sealed class OfflineAlertService(IAppDbContext db, IUnitOfWork unitOfWork
 
         var tenantIds = pending.Select(p => p.TenantId).Distinct().ToList();
         var settings = await db.Set<MonitoringSettings>().AsNoTracking().Where(s => tenantIds.Contains(s.TenantId)).ToDictionaryAsync(s => s.TenantId, ct);
+        var platformDelay = await defaults.OfflineAlertDelayMinutesAsync(ct);
+        MonitoringSettings Setting(Guid tenantId) => settings.GetValueOrDefault(tenantId) ?? MonitoringSettings.Default(tenantId, platformDelay);
         var due = pending
-            .Where(p => p.WentOfflineAt.AddMinutes(Setting(settings, p.TenantId).OfflineDelayMinutes) <= now)
+            .Where(p => p.WentOfflineAt.AddMinutes(Setting(p.TenantId).OfflineDelayMinutes) <= now)
             .ToList();
         if (due.Count == 0)
             return 0;
@@ -39,7 +42,7 @@ public sealed class OfflineAlertService(IAppDbContext db, IUnitOfWork unitOfWork
             var outage = items.Count >= 2
                 && items.Max(p => p.WentOfflineAt) - items.Min(p => p.WentOfflineAt) <= OutageWindow
                 && (online.GetValueOrDefault(group.Key.LocationId)?.Online ?? 0) == 0;
-            var setting = Setting(settings, group.Key.TenantId);
+            var setting = Setting(group.Key.TenantId);
             foreach (var p in items)
             {
                 var planned = p.Reason is "HostShuttingDown" or "Updating";
@@ -63,7 +66,4 @@ public sealed class OfflineAlertService(IAppDbContext db, IUnitOfWork unitOfWork
         await unitOfWork.SaveChangesAsync(ct);
         return due.Count;
     }
-
-    private static MonitoringSettings Setting(Dictionary<Guid, MonitoringSettings> settings, Guid tenantId) =>
-        settings.GetValueOrDefault(tenantId) ?? MonitoringSettings.Default(tenantId);
 }
