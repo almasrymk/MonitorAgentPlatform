@@ -22,6 +22,7 @@ public sealed class ProductionReadinessTests
         ["Storage:Root"] = "/var/lib/monitor-cloud",
         ["AllowedHosts"] = "api.example.com;gateway.example.com",
         ["Serilog:MinimumLevel:Default"] = "Information",
+        ["Commands:SigningKey"] = "-----BEGIN PRIVATE KEY-----\nfrom-the-environment\n-----END PRIVATE KEY-----",
     };
 
     private static IConfiguration Config(Dictionary<string, string?> values) => new ConfigurationBuilder().AddInMemoryCollection(values).Build();
@@ -52,6 +53,7 @@ public sealed class ProductionReadinessTests
     [InlineData("Storage:Root", "", "Storage:Root")]
     [InlineData("AllowedHosts", "*", "AllowedHosts")]
     [InlineData("Serilog:MinimumLevel:Default", "Debug", "Serilog:MinimumLevel:Default")]
+    [InlineData("Commands:SigningKey", "", "Commands:SigningKey")]
     public void Each_unsafe_setting_is_named(string key, string value, string expected)
     {
         var values = Ready();

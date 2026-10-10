@@ -74,6 +74,10 @@ public static class DependencyInjection
         services.AddSingleton<Application.Abstractions.Storage.IPdfRenderer, Storage.ChromiumPdfRenderer>();
         services.AddHttpClient(Storage.HttpWebhookSender.ClientName, c => c.Timeout = TimeSpan.FromSeconds(10));
         services.AddSingleton<Application.Abstractions.Storage.IWebhookSender, Storage.HttpWebhookSender>();
+        services.AddOptions<Commands.CommandOptions>().Bind(configuration.GetSection(Commands.CommandOptions.Section));
+        services.AddSingleton<Application.Abstractions.Commands.ICommandSigner, Commands.EcdsaCommandSigner>();
+        services.AddSingleton<Commands.CommandsJob>();
+        services.AddHostedService(sp => sp.GetRequiredService<Commands.CommandsJob>());
         services.AddSingleton<Storage.ReportsJob>();
         services.AddHostedService(sp => sp.GetRequiredService<Storage.ReportsJob>());
         services.AddSingleton<Monitoring.MonitoringJobs>();

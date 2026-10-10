@@ -3,6 +3,8 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import {
+  DeviceCommand,
+  RemoteActions,
   AuditRecord,
   AuthResult,
   DeviceDetails,
@@ -250,6 +252,19 @@ export class DevicesApi {
   /** Keeps live mode on for 60 s; never shows an error toast (the screen works without it). */
   liveSession(id: string): Observable<void> {
     return this.http.post<void>(`${BASE}/devices/${id}/live-sessions`, {}, { context: new HttpContext().set(SKIP_ERROR_TOAST, true) });
+  }
+
+  /** Whether the Remote Actions menu may be shown (feature, licence, device setting); the permission is checked by the caller. */
+  remoteActions(id: string): Observable<RemoteActions> {
+    return this.http.get<RemoteActions>(`${BASE}/devices/${id}/remote-actions`, { context: new HttpContext().set(SKIP_ERROR_TOAST, true) });
+  }
+
+  sendCommand(id: string, body: { type: string; service: string | null; reason: string }): Observable<DeviceCommand> {
+    return this.http.post<DeviceCommand>(`${BASE}/devices/${id}/commands`, body);
+  }
+
+  commands(id: string, page = 1, pageSize = 20): Observable<Paged<DeviceCommand>> {
+    return this.http.get<Paged<DeviceCommand>>(`${BASE}/devices/${id}/commands`, { params: query({ page, pageSize }) });
   }
 }
 

@@ -584,3 +584,52 @@ now has its own Serilog logger (`preserveStaticLogger`), so hosts in one process
 - The mobile Lighthouse profile scores 62-67; the desktop profile (the designs' layout) 91-93.
 - Location photos of the designs are not available; the cards show a location icon.
 - The platform name of Platform Settings is stored but not yet shown in the portal header.
+
+## M11 - Remote actions (done 2026-10-10)
+
+### Tasks
+
+| Id | Status | Notes |
+|---|---|---|
+| MC-1101 | Done | `commands` schema and `DeviceCommand` aggregate (Pending -> Sent -> Succeeded / Failed / Rejected / Expired). `POST /devices/{id}/commands` (202; plan feature `remote.actions`, `devices.manage`, licensed device, `features.remoteActions`; reason 10-500 characters; plain service names), `GET /devices/{id}/commands` (history), `GET /devices/{id}/remote-actions` (whether the menu may be shown and why not). ES256 signer (`Commands:SigningKey`, P1363, RFC 7638 `kid`); enrollment returns the JWK set. Audit: `device.command.requested`, `.completed`, `.expired`. Production check requires the key |
+| MC-1102 | Done | The gateway sends a new command at once to a connected device and the open ones after `Welcome`, then marks them sent. `CommandResult` is guaranteed (acked after it is stored). A 30 s job expires unanswered commands one minute after their expiry |
+| AG-13 | Done | UBGMonitor branch `cloud/m11-commands` (not merged; `master` untouched): `CommandVerifier` (local switch off by default, known key, signature over the canonical text with its own device id, expiry, 10-minute nonce memory kept in `cloud.db`), `CommandRunner` (six types, one guaranteed result each), `ServiceCommandExecutor` (speed test; restart through exit code 1 and the service manager; services through ServiceController / systemctl / launchctl without a shell; never the agent's own service). 13 new agent tests; agent suite 117 passed, 2 skipped (platform / live-cloud) |
+| MC-1103 | Done | Remote Actions button on the device header (only with feature, permission, licence and device setting), confirmation dialog with reason and service name, command history drawer with status, requester and result. "Allow remote actions" check box in the configuration form. Demo seed: on for WEB-SRV-01 of Cairo HQ |
+
+### Test results (2026-10-10)
+
+| Suite | Count | Result |
+|---|---|---|
+| Backend unit (11 new: command aggregate, signer) | 402 | passed |
+| Architecture (Commands module added to the isolation rules) | 297 | passed |
+| Gateway (14 new: delivery to a connected and to an offline device, expiry, local switch, cloud-side refusals, unlicensed device, JWK set; the agent checks one by one) | 66 | passed |
+| Integration (cross-tenant rows for the three new routes) | 247 | passed |
+| Contract, fake | 16 | passed |
+| Portal unit (4 new: Remote Actions) | 166 | passed |
+| Portal e2e (2 new: send with reason and history; absent without permission or device setting) | 39 | passed (2 skipped: the screenshot capture) |
+| Agent (UBGMonitor, 13 new) | 117 | passed (2 skipped) |
+
+Coverage: Domain 98.0% line, Application 94.9% line / 82.4% branch, backend 96.3% line; portal 81.6% statements.
+
+### Acceptance
+
+- A command with a bad signature, an expired time, a replayed nonce or a wrong device id is refused by the agent:
+  `CloudCommandTests` (agent) and `CommandVerifierTests` (simulator, same rules).
+- The local switch refuses everything (`The_local_switch_refuses_everything`, and end to end through the gateway).
+- Every command and result is audited (gateway test checks the audit rows, including the expiry).
+- The button is absent without the feature, the permission or the device setting (portal unit and e2e tests; the
+  API refuses the same cases).
+
+### Deviations from the plan
+
+ADR 0011: signed-text format, key file in development, the expiry grace minute, the device setting check box, the
+history drawer, agent details (nonces across restarts, service names, own service).
+
+### Notes for the product owner
+
+- Agents enrolled before M11 have no command keys and refuse remote actions until they enroll again.
+- Remote actions are off on every agent by default (`Cloud:AllowRemoteActions`); the customer turns them on per
+  machine.
+- The agent branch `cloud/m11-commands` builds on `cloud/m7-connector`; both wait for your review before merging.
+- e2e runs need the API started with `RateLimiting__Auth__PermitLimit=1000` (as in CI); with the default 20 sign-ins
+  per minute the suite hits 429.

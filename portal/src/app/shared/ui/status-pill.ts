@@ -3,9 +3,9 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { I18nService } from '../../core/i18n/i18n.service';
 
 const TONES: Record<string, string> = {
-  online: 'success', active: 'success', healthy: 'success', licensed: 'success',
-  warning: 'warning', expiring: 'warning', invited: 'info', info: 'info',
-  critical: 'danger', suspended: 'danger',
+  online: 'success', active: 'success', healthy: 'success', licensed: 'success', succeeded: 'success',
+  warning: 'warning', expiring: 'warning', invited: 'info', info: 'info', pending: 'info', sent: 'info',
+  critical: 'danger', suspended: 'danger', failed: 'danger', rejected: 'danger',
   offline: 'neutral', inactive: 'neutral', unknown: 'neutral', unlicensed: 'neutral', archived: 'neutral', resolved: 'neutral', closed: 'neutral',
 };
 

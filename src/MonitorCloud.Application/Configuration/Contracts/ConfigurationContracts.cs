@@ -17,3 +17,12 @@ public interface IAgentConfigurationReader
 {
     Task<AgentConfiguration?> GetAsync(Guid deviceId, CancellationToken ct);
 }
+
+/// <summary>
+/// The device setting of remote actions (<c>features.remoteActions</c> of 05 section 8): the device's configuration, or
+/// the tenant defaults when it has none yet. Off unless someone turned it on.
+/// </summary>
+public interface IRemoteActionsSetting
+{
+    Task<bool> EnabledAsync(Guid deviceId, CancellationToken ct);
+}

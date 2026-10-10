@@ -50,6 +50,10 @@ public static class ErrorCodes
     public const string DeviceInvalidCredential = "DEVICE_INVALID_CREDENTIAL";
     public const string DeviceRetired = "DEVICE_RETIRED";
     public const string DeviceUnlicensed = "DEVICE_UNLICENSED";
+    public const string CommandNotFound = "COMMAND_NOT_FOUND";
+    public const string RemoteActionsDisabled = "REMOTE_ACTIONS_DISABLED";
+    public const string CommandTypeUnknown = "COMMAND_TYPE_UNKNOWN";
+    public const string CommandCompleted = "COMMAND_COMPLETED";
     public const string EnrollInvalidLocationCode = "ENROLL_INVALID_LOCATION_CODE";
     public const string EnrollTenantNotActive = "ENROLL_TENANT_NOT_ACTIVE";
     public const string EnrollProtocolUnsupported = "ENROLL_PROTOCOL_UNSUPPORTED";

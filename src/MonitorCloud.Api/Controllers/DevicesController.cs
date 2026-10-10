@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using MonitorCloud.Application.Commands;
 using MonitorCloud.Application.Common;
 using MonitorCloud.Application.Devices;
 using MonitorCloud.Application.Telemetry;
@@ -82,4 +83,31 @@ public sealed class DevicesController(ISender sender) : ApiControllerBase(sender
         var result = await Sender.Send(new StartLiveSessionCommand(id), cancellationToken);
         return result.IsSuccess ? NoContent() : Problem(result.Error!);
     }
+
+    public sealed record CommandRequest(string? Type, string? Service, string? Reason);
+
+    /// <summary>A signed remote action (05 section 9): 202, delivered by the gateway while it has not expired (5 minutes).</summary>
+    [HttpPost("{id:guid}/commands")]
+    [ProducesResponseType<DeviceCommandDto>(StatusCodes.Status202Accepted)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict, "application/problem+json")]
+    public async Task<IActionResult> SendCommand(Guid id, CommandRequest r, CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(new SendDeviceCommandCommand(id, r.Type ?? string.Empty, string.IsNullOrWhiteSpace(r.Service) ? null : r.Service.Trim(), r.Reason ?? string.Empty), cancellationToken);
+        return result.IsSuccess ? Accepted(result.Value) : Problem(result.Error!);
+    }
+
+    /// <summary>Command history of the device, newest first.</summary>
+    [HttpGet("{id:guid}/commands")]
+    [ProducesResponseType<PagedResult<DeviceCommandDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> Commands(Guid id, [FromQuery] int? page, [FromQuery] int? pageSize, CancellationToken cancellationToken) =>
+        FromResult(await Sender.Send(new GetDeviceCommandsQuery(id, page, pageSize), cancellationToken));
+
+    /// <summary>Whether the Remote Actions menu is offered (plan feature, licence, device setting).</summary>
+    [HttpGet("{id:guid}/remote-actions")]
+    [ProducesResponseType<RemoteActionsDto>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, "application/problem+json")]
+    public async Task<IActionResult> RemoteActions(Guid id, CancellationToken cancellationToken) =>
+        FromResult(await Sender.Send(new GetRemoteActionsQuery(id), cancellationToken));
 }

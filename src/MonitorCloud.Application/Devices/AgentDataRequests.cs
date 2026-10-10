@@ -18,7 +18,8 @@ internal sealed class DeviceDirectory(IReadDbContext db) : IDeviceDirectory
     public async Task<DeviceRef?> FindAsync(Guid deviceId, CancellationToken cancellationToken) =>
         await db.Query<Device>()
             .Where(d => d.Id == deviceId && d.Status == DeviceStatus.Active)
-            .Select(d => new DeviceRef(d.Id, d.TenantId, d.LocationId, d.Name))
+            .Select(d => new DeviceRef(d.Id, d.TenantId, d.LocationId, d.Name,
+                db.Query<DeviceState>().Where(s => s.DeviceId == d.Id).Select(s => s.LicenseState).FirstOrDefault() == LicenseStateValue.Licensed))
             .SingleOrDefaultAsync(cancellationToken);
 }
 

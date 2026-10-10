@@ -64,7 +64,8 @@ The cloud does the following:
 
 1. It activates a seat in the Licensing Platform.
 2. It places the device in the location of the code.
-3. It returns the device id, a device secret and the gateway address.
+3. It returns the device id, a device secret, the gateway address and the public command-signing keys
+   (`commandSigningKeys`, a JWK set; remote actions, section 5a).
 
 The agent stores them in `cloud.json` in its state folder:
 
@@ -108,6 +109,41 @@ hour.
   everything after it, oldest first. The minute history therefore has no gaps after an outage. Minutes older than
   the cloud's retention (30 days) are acknowledged and dropped.
 
+## 5a. Remote actions (M11)
+
+From the device screen an administrator can send six actions: `refresh-inventory`, `run-speed-test`,
+`restart-agent`, `service-start`, `service-stop`, `service-restart` (the service ones with a service name). The
+portal shows the Remote Actions button only when the plan includes remote actions, the user has `devices.manage`,
+the device is licensed and **Allow remote actions** is ticked in the device's Settings tab. Every action needs a
+reason; requests, results and expiries are in the audit log.
+
+**On the agent they are off by default.** Turn them on per machine:
+
+```json
+"Cloud": { "AllowRemoteActions": true }
+```
+
+With `false` the agent refuses every command, whatever the cloud says.
+
+The agent checks each command before it runs it, in this order:
+
+1. the local switch;
+2. the key id is one of the `commandSigningKeys` received at enrollment;
+3. the ES256 signature (64 bytes, r then s) over the UTF-8 text
+   `command_id|type|parameters_json|expires_at|nonce|device_id`, with both ids as 32 hex digits, `expires_at` as Unix
+   milliseconds and the agent's **own** device id (a command for another device fails here);
+4. not expired, and the expiry at most 5 minutes (+30 s clock skew) ahead;
+5. the nonce was not seen in the last 10 minutes (kept in `cloud.db`, so also across restarts).
+
+A refusal is sent back as `REJECTED` (or `EXPIRED`) with the reason, for example `Invalid signature.`. Service
+names must be plain names (`W3SVC`, `nginx`, `com.example.daemon`); they go to `ServiceController`, `systemctl` or
+`launchctl` as one argument, never through a shell. `restart-agent` exits the service with code 1 after 5 s and the
+service manager starts it again. The agent's own service cannot be stopped remotely.
+
+A command that the device does not answer is marked Expired one minute after its 5-minute expiry. An offline device
+gets pending commands right after it reconnects, if they have not expired.
+
+Agents enrolled before M11 have no keys and refuse commands ("Unknown signing key") until they enroll again.
 ## 6. Troubleshooting
 
 ### Enrollment errors

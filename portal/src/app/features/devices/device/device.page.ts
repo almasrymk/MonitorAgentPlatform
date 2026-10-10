@@ -16,6 +16,7 @@ import { Skeleton } from '../../../shared/ui/skeleton';
 import { ErrorState } from '../../../shared/ui/states';
 import { StatusPill } from '../../../shared/ui/status-pill';
 import { DeviceContext } from './device-context';
+import { RemoteActions } from './remote-actions';
 
 /** How often the open device screen renews live mode (05 section 4). */
 export const LIVE_RENEW_MS = 30_000;
@@ -26,7 +27,7 @@ export const LIVE_RENEW_MS = 30_000;
  */
 @Component({
   selector: 'mc-device-page',
-  imports: [DatePipe, RouterOutlet, RouterLink, OsIcon, StatusPill, CopyButton, Skeleton, ErrorState],
+  imports: [DatePipe, RouterOutlet, RouterLink, OsIcon, StatusPill, CopyButton, Skeleton, ErrorState, RemoteActions],
   providers: [DeviceContext],
   templateUrl: './device.page.html',
   styleUrl: './device.page.scss',

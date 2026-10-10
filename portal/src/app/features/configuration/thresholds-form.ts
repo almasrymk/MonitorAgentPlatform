@@ -68,6 +68,10 @@ export function normalised(document: ConfigDocument): ConfigDocument {
       <span>{{ i18n.t('config.sampleSeconds') }}</span>
       <input type="number" min="1" max="30" name="sample" [(ngModel)]="d.telemetry.sampleSeconds" [disabled]="readonly()" /> s
     </label>
+    <label class="sample">
+      <input type="checkbox" name="remote-actions" [(ngModel)]="d.features.remoteActions" [disabled]="readonly()" data-testid="remote-actions-setting" />
+      <span>{{ i18n.t('config.remoteActions') }}</span>
+    </label>
   `,
   styles: `
     .grid { inline-size: 100%; border-collapse: collapse; }
@@ -75,6 +79,7 @@ export function normalised(document: ConfigDocument): ConfigDocument {
     thead th { color: var(--mc-text-muted); font-size: var(--mc-fs-sm); }
     tbody th { font-weight: var(--mc-fw-medium); }
     input { inline-size: 80px; block-size: 32px; padding-inline: var(--mc-space-2); background: var(--mc-bg-input); color: var(--mc-text); border: 1px solid var(--mc-border); border-radius: var(--mc-radius-sm); font: inherit; }
+    .sample input[type='checkbox'] { inline-size: auto; block-size: auto; }
     .sample { display: flex; align-items: center; gap: var(--mc-space-2); margin-block-start: var(--mc-space-4); }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

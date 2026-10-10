@@ -29,6 +29,8 @@ export type PlatformDashboard = Schemas['PlatformDashboardDto'];
 export type DeviceOverview = Schemas['DeviceOverviewDto'];
 export type DeviceMetrics = Schemas['DeviceMetricsDto'];
 export type DeviceDisk = Schemas['DiskDto'];
+export type DeviceCommand = Schemas['DeviceCommandDto'];
+export type RemoteActions = Schemas['RemoteActionsDto'];
 export type InventoryDoc = Schemas['InventoryDto'];
 
 export interface Paged<T> {

@@ -12,7 +12,8 @@ internal sealed class NoLiveModeControl : ILiveModeControl
     public Task<bool> RequestLiveAsync(Guid deviceId, CancellationToken cancellationToken) => Task.FromResult(false);
 }
 
-public sealed record DeviceRef(Guid Id, Guid TenantId, Guid LocationId, string Name);
+/// <summary><paramref name="Licensed"/>: the device holds a seat (unlicensed devices may not receive remote actions, 04 section 6).</summary>
+public sealed record DeviceRef(Guid Id, Guid TenantId, Guid LocationId, string Name, bool Licensed = true);
 
 /// <summary>Finds an active device in the caller's scope (other modules check device ids with it).</summary>
 public interface IDeviceDirectory

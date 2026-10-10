@@ -31,6 +31,9 @@ public static class AgentGatewayRegistration
         services.AddSingleton<Handlers.ClockSkewMonitor>();
         services.AddSingleton<IAgentMessageHandler, Handlers.ConfigAppliedHandler>();
         services.AddSingleton<Handlers.ConfigurationPusher>();
+        services.AddSingleton<IAgentMessageHandler, Handlers.CommandResultHandler>();
+        services.AddSingleton<Handlers.CommandPusher>();
+        services.AddScoped<Application.Abstractions.Messaging.IIntegrationEventHandler<Domain.Commands.DeviceCommandRequestedV1>, Handlers.PushRequestedCommands>();
         services.AddSingleton<Application.Devices.Contracts.ILiveModeControl, LiveModeController>();
         services.AddSingleton<AgentMessageRouter>();
         services.AddSingleton<AgentSessionHandler>();

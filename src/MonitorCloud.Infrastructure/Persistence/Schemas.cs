@@ -16,7 +16,8 @@ public static class Schemas
     public const string Audit = "audit";
     public const string Messaging = "messaging";
     public const string Media = "media";
+    public const string Commands = "commands";
 
     public static readonly IReadOnlyList<string> All =
-        [Identity, Tenancy, Licensing, Devices, Telemetry, Monitoring, Notifications, Configuration, Reports, Archive, Audit, Messaging, Media];
+        [Identity, Tenancy, Licensing, Devices, Telemetry, Monitoring, Notifications, Configuration, Reports, Archive, Audit, Messaging, Media, Commands];
 }

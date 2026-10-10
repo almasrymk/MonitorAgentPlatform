@@ -30,6 +30,8 @@ public static class ProductionReadiness
         }
 
         Require(userKey.Length == 0 || !string.Equals(userKey, deviceKey, StringComparison.Ordinal), "Jwt:SigningKey and Jwt:DeviceSigningKey must differ.");
+        var commandKey = configuration["Commands:SigningKey"] ?? string.Empty;
+        Require(commandKey.Contains("PRIVATE KEY", StringComparison.Ordinal), "Commands:SigningKey must hold the ES256 private key (PKCS#8 PEM).");
         Require(!configuration.GetValue("Seed:DemoData", false), "Seed:DemoData must be false (the demo seed refuses Production anyway).");
         Require(string.Equals(configuration["Licensing:Mode"], "Live", StringComparison.OrdinalIgnoreCase), "Licensing:Mode must be Live.");
         Require(!TestMarkers.Any(m => (configuration["Licensing:ClientSecret"] ?? string.Empty).Contains(m, StringComparison.OrdinalIgnoreCase)),

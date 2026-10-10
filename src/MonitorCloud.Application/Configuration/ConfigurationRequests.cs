@@ -224,3 +224,13 @@ internal sealed class PushConfigApplied(ILiveNotifier live) : IIntegrationEventH
     public Task HandleAsync(DeviceConfigurationAppliedV1 integrationEvent, CancellationToken cancellationToken) =>
         live.ConfigAppliedAsync(new ConfigAppliedChange(integrationEvent.DeviceId, integrationEvent.TenantId, integrationEvent.Version, integrationEvent.Success, integrationEvent.Error), cancellationToken);
 }
+
+internal sealed class RemoteActionsSetting(IReadDbContext db) : IRemoteActionsSetting
+{
+    public async Task<bool> EnabledAsync(Guid deviceId, CancellationToken ct)
+    {
+        var json = await db.Query<DeviceConfiguration>().Where(c => c.DeviceId == deviceId).Select(c => c.DocumentJson).SingleOrDefaultAsync(ct)
+            ?? await db.Query<TenantConfigurationDefaults>().Select(d => d.DocumentJson).FirstOrDefaultAsync(ct);
+        return ConfigDocuments.TryParse(json)?.Features.RemoteActions ?? false;
+    }
+}

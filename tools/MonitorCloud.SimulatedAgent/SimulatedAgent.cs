@@ -84,6 +84,37 @@ public sealed class SimulatedAgent(AgentIdentity identity, GrpcChannel channel) 
 
     private string? _cpuIssueSeverity;
 
+    private CommandVerifier? _verifier;
+    private readonly ConcurrentQueue<CommandResult> _commandResults = new();
+
+    /// <summary>The checks of remote actions (05 section 9); load the enrollment's <c>commandSigningKeys</c> with <see cref="CommandVerifier.LoadKeys"/>.</summary>
+    public CommandVerifier Commands => _verifier ??= new CommandVerifier(Identity.DeviceId, Clock);
+
+    /// <summary>The results sent for received commands.</summary>
+    public IReadOnlyCollection<CommandResult> CommandResults => _commandResults;
+
+    /// <summary>Verifies a <c>Command</c>, "runs" it and answers <c>CommandResult</c> (guaranteed).</summary>
+    private async Task ExecuteCommandAsync(Command command, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var refused = Commands.Check(command);
+            var result = new CommandResult
+            {
+                CommandId = command.CommandId,
+                Status = refused?.Status ?? CommandStatus.Succeeded,
+                Output = refused?.Reason ?? $"simulated {command.Type} {command.ParametersJson}",
+                CompletedAt = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTimeOffset(Clock.GetUtcNow()),
+            };
+            _commandResults.Enqueue(result);
+            await SendGuaranteedAsync(new AgentMessage { CommandResult = result }, cancellationToken);
+        }
+        catch (Exception ex) when (ex is RpcException or InvalidOperationException or OperationCanceledException)
+        {
+            // A closed stream: the cloud expires the command.
+        }
+    }
+
     /// <summary>Applies a <c>ConfigUpdate</c> (or rejects it) and answers <c>ConfigApplied</c>.</summary>
     private async Task ApplyConfigAsync(ConfigUpdate update, CancellationToken cancellationToken)
     {
@@ -339,6 +370,9 @@ public sealed class SimulatedAgent(AgentIdentity identity, GrpcChannel channel) 
                         break;
                     case CloudMessage.BodyOneofCase.ConfigUpdate:
                         _ = ApplyConfigAsync(message.ConfigUpdate, cancellationToken);
+                        break;
+                    case CloudMessage.BodyOneofCase.Command:
+                        _ = ExecuteCommandAsync(message.Command, cancellationToken);
                         break;
                 }
             }

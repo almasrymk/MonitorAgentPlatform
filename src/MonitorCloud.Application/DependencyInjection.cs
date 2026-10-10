@@ -71,6 +71,8 @@ public static class DependencyInjection
         services.AddScoped<Configuration.ConfigurationService>();
         services.AddScoped<Configuration.Contracts.IConfigurationVersioning>(sp => sp.GetRequiredService<Configuration.ConfigurationService>());
         services.AddScoped<Configuration.Contracts.IAgentConfigurationReader, Configuration.AgentConfigurationReader>();
+        services.AddScoped<Configuration.Contracts.IRemoteActionsSetting, Configuration.RemoteActionsSetting>();
+        services.AddScoped<Commands.CommandExpiryService>();
 
         services.AddScoped<Devices.Contracts.IDeviceReportReader, Devices.DeviceReportReader>();
         services.AddScoped<Telemetry.Contracts.ITelemetryReportReader, Telemetry.TelemetryReportReader>();

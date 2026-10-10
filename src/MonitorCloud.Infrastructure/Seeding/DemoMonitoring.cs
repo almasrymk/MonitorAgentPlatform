@@ -228,6 +228,9 @@ internal sealed class DemoMonitoring(AppDbContext db, DateTimeOffset now, Random
             .FirstOrDefaultAsync(ct);
         if (web is null)
             return;
+        // M11: remote actions are switched on for this one device so the Remote Actions menu can be tried.
+        db.Set<Domain.Configuration.DeviceConfiguration>().Add(Domain.Configuration.DeviceConfiguration.Create(web.Id, web.TenantId,
+            Application.Configuration.ConfigDocuments.Serialize(Application.Configuration.ConfigDocuments.Default with { Features = new Application.Configuration.FeatureSettings(true) }), now));
         var points = new (string Key, string Name, string Type, string Target, PointStatus Status, string Message, decimal? Ms)[]
         {
             ("ftp", "FTP Server", "Application", "FileZilla Server.exe", PointStatus.Healthy, "Running", null),

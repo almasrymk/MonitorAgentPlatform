@@ -21,6 +21,7 @@
       <div><dt>{{ i18n.t('device.uptime') }}</dt><dd>{{ up() }}</dd></div>
       <div><dt>{{ i18n.t('device.agentVersion') }}</dt><dd>{{ d.agentVersion ?? '—' }}</dd></div>
     </dl>
+    <mc-remote-actions [deviceId]="d.id" [deviceName]="d.name" />
   </header>
 
   @if (!context.online()) {

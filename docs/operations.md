@@ -12,7 +12,7 @@ Values come from `appsettings.json`, then environment variables (`__` as the sep
 when: the connection string is empty; a JWT key is shorter than 32 characters, contains `DEV-ONLY`/`TEST-ONLY`/
 `CI-ONLY`, or both keys are equal; `Seed:DemoData` is true; `Licensing:Mode` is not `Live`; `Cors:Origins` is empty
 or holds a non-https or local origin; `Agent:PublicBaseUrl`, `Agent:GatewayUrl` or `Portal:BaseUrl` is not a public
-https address; `Storage:Root` is empty; `AllowedHosts` is `*`; or the log level is Debug/Verbose.
+https address; `Commands:SigningKey` holds no PEM private key; `Storage:Root` is empty; `AllowedHosts` is `*`; or the log level is Debug/Verbose.
 
 | Key | Default | Notes |
 |---|---|---|
@@ -43,6 +43,8 @@ https address; `Storage:Root` is empty; `AllowedHosts` is `*`; or the log level 
 | `Storage:ChromiumPath` | auto | Browser for PDF reports; empty = Edge/Chrome/Chromium in the usual places. Without one, PDF is reported as unavailable. |
 | `RateLimiting:Auth:PermitLimit` / `Refresh` / `Enroll` / `AgentToken` | 20 / 300 / 10 / 120 per minute and IP | Auth = sign-in and invitations; Refresh = token refresh and sign-out (an office behind one address refreshes often). 429 `RATE_LIMITED` with `Retry-After`. |
 | `ReverseProxy:KnownProxies` / `ReverseProxy:KnownNetworks` | `[]` | Addresses (e.g. `10.0.0.5`) or networks (e.g. `10.0.0.0/8`) of the reverse proxy. `X-Forwarded-For` / `X-Forwarded-Proto` are trusted only from them. **Set this behind a proxy**, or every client shares the proxy's rate limit and HTTPS is not detected. |
+| `Commands:SigningKey` | - (Development: created in `{Storage:Root}/keys/command-signing.pem`) | ES256 (P-256) private key, PKCS#8 PEM, signs remote actions (M11). Required in Production. |
+| `Commands:PreviousPublicKeys` / `JobsEnabled` | `[]` / `true` | Public PEM keys still published after a rotation (section 5); the 30 s expiry job. |
 | `Outbox:PollInterval` / `BatchSize` / `Enabled` | `00:00:02` / 50 / `true` | |
 | `Serilog:*` | console, Information | Structured logs; secrets are never logged (tested). |
 
@@ -117,9 +119,15 @@ Test a restore on a copy every quarter.
 **After a leak** of a key, rotate without the previous key. Every user signs in again. Every agent re-enrolls with
 its product key (secrets cannot be verified any more).
 
-**Command-signing keys** belong to the Licensing Platform. Monitor Cloud only passes the current public key set to
-agents at enrollment and on reconnect. Rotate them in the Licensing Platform (its runbook); agents receive the new
-set on the next connection.
+**Command-signing key (`Commands:SigningKey`, M11).** An ES256 (P-256) private key as PKCS#8 PEM, from the
+environment (`Commands__SigningKey`). Create one with `openssl ecparam -name prime256v1 -genkey -noout | openssl pkcs8
+-topk8 -nocrypt`. Agents receive the public keys only at enrollment (`commandSigningKeys`).
+
+1. Put the new private key in `Commands__SigningKey` and the old public key (`openssl ec -pubout`) in
+   `Commands__PreviousPublicKeys__0`. Restart. New commands are signed with the new key.
+2. Agents enrolled with the old key set refuse new commands ("Unknown signing key") until they enroll again with
+   their product key; their monitoring is not affected.
+3. Remove the previous public key when no agent needs it any more. After a leak, rotate without it.
 
 **Data Protection keys** (`{Storage:Root}/keys`) roll over by themselves every 90 days and old keys stay for
 decryption. Never delete that folder.

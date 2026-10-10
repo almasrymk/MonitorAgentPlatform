@@ -60,6 +60,7 @@ internal sealed class EnrollDeviceCommandHandler(
     IMemoryCache cache,
     IOptions<AgentSettings> agent,
     ILicensingPolicy policy,
+    Abstractions.Commands.ICommandSigner commandSigner,
     TimeProvider clock) : ICommandHandler<EnrollDeviceCommand, EnrollmentResult>
 {
     public static readonly Error RateLimited = Error.TooManyRequests("RATE_LIMITED", "Too many enrollments for this device. Try again later.");
@@ -148,7 +149,7 @@ internal sealed class EnrollDeviceCommandHandler(
         var locationName = (await locations.GetAsync([device.LocationId], cancellationToken)).GetValueOrDefault(device.LocationId)?.Name ?? string.Empty;
         var keys = await licensing.GetSigningKeysJsonAsync(cancellationToken);
         return new EnrollmentResult(
-            device.Id, tenantName, locationName, secret.Secret, "/api/agent/v1/token", settings.GatewayUrl, NoCommandKeys(),
+            device.Id, tenantName, locationName, secret.Secret, "/api/agent/v1/token", settings.GatewayUrl, Parse(commandSigner.PublicKeysJson())!.Value,
             new EnrollmentLicense("Licensed", seat.Value.Token, seat.Value.CheckAfter, keys.IsSuccess ? Parse(keys.Value) : null));
     }
 
@@ -164,8 +165,6 @@ internal sealed class EnrollDeviceCommandHandler(
         return error;
     }
 
-    /// <summary>Command signing keys arrive with remote actions (M11); until then the set is empty.</summary>
-    private static JsonElement NoCommandKeys() => Parse("{\"keys\":[]}")!.Value;
 
     private static JsonElement? Parse(string json)
     {

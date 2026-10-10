@@ -15,7 +15,7 @@ internal static class Assemblies
 
     /// <summary>Business modules (01 section 2). Messaging and Audit are shared and exempt from isolation.</summary>
     public static readonly string[] Modules =
-        ["Identity", "Tenancy", "Licensing", "Devices", "Telemetry", "Monitoring", "Notifications", "Configuration", "Reports", "Archive", "Media"];
+        ["Identity", "Tenancy", "Licensing", "Devices", "Telemetry", "Monitoring", "Notifications", "Configuration", "Reports", "Archive", "Media", "Commands"];
 
     public static readonly string[] SharedModules = ["Audit", "Messaging"];
 }
