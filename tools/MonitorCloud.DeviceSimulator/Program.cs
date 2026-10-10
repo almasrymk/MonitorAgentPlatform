@@ -9,7 +9,7 @@
 // --licensing seed/licensing-fake.json (demo product keys, Fake mode), --admin-email / --admin-password (to create
 // the location enrollment code; default admin@{tenant}.test with the demo password of 08), --run-id <id> (new
 // fingerprints for this run, e.g. for tests: re-enrolling one fingerprint is limited to 5 per hour).
-// Metrics, scenarios and load runs arrive with telemetry ingestion (M5) and load tests (M10).
+// --platform-password (load: the platform administrator that watches the live hub; demo password of 08).
 
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -22,8 +22,7 @@ using MonitorCloud.SimulatedAgent;
 var options = Options.Parse(args);
 if (options.Command is not ("enroll" or "run" or "load"))
 {
-    Console.Error.WriteLine("Usage: simulator enroll --count <n> | run --devices <n>  [--tenant acme] [--location CAIRO-HQ] [--api <url>]");
-    Console.Error.WriteLine("Scenarios and load runs (--scenario, load) arrive with M5 and M10.");
+    Console.Error.WriteLine("Usage: simulator enroll --count <n> | run --devices <n> [--issue cpu] | load --devices <n> --duration 10m  [--tenant acme] [--location CAIRO-HQ] [--api <url>]");
     return 2;
 }
 
@@ -198,7 +197,7 @@ async Task PumpTelemetryAsync(SimulatedAgent agent, CancellationToken cancellati
     }
 }
 
-internal sealed record Options(string Command, int Count, int Devices, int Seconds, string Tenant, string Location, string Api, string? Gateway, string StorePath, string LicensingPath, string? AdminEmail, string AdminPassword, string? RunId, TimeSpan Duration, string Report, string? ServerProcess, string? Issue, int IssueAfter, int ClearAfter)
+internal sealed record Options(string Command, int Count, int Devices, int Seconds, string Tenant, string Location, string Api, string? Gateway, string StorePath, string LicensingPath, string? AdminEmail, string AdminPassword, string? RunId, TimeSpan Duration, string Report, string? ServerProcess, string? Issue, int IssueAfter, int ClearAfter, string PlatformPassword = "Admin@12345")
 {
     public static Options Parse(string[] args)
     {
@@ -215,7 +214,7 @@ internal sealed record Options(string Command, int Count, int Devices, int Secon
             Value("--api") ?? "http://localhost:5300", Value("--gateway"), Value("--store") ?? Path.Combine("seed", "simulator.local.json"),
             Value("--licensing") ?? Path.Combine("seed", "licensing-fake.json"), Value("--admin-email"), Value("--admin-password") ?? "Demo@12345", Value("--run-id"),
             ParseDuration(Value("--duration")), Value("--report") ?? Path.Combine("docs", "perf", "load.json"), Value("--server-process"), Value("--issue"), Number("--issue-after", 5),
-            int.TryParse(Value("--clear-after"), out var clear) ? clear : 0);
+            int.TryParse(Value("--clear-after"), out var clear) ? clear : 0, Value("--platform-password") ?? "Admin@12345");
     }
 
     private static TimeSpan ParseDuration(string? value)

@@ -9,10 +9,14 @@ try
 {
     var builder = WebApplication.CreateBuilder(args);
     ProductionReadiness.EnsureReady(builder.Configuration, builder.Environment);
-    builder.Host.UseSerilog((context, services, logger) => logger
-        .ReadFrom.Configuration(context.Configuration)
-        .ReadFrom.Services(services)
-        .Enrich.FromLogContext());
+    // The host gets its own logger; the static one stays the bootstrap logger for start-up failures. Several hosts in
+    // one process (the test suites) then never close each other's logger.
+    builder.Host.UseSerilog(
+        (context, services, logger) => logger
+            .ReadFrom.Configuration(context.Configuration)
+            .ReadFrom.Services(services)
+            .Enrich.FromLogContext(),
+        preserveStaticLogger: true);
 
     builder.Services.AddApi(builder.Configuration, builder.Environment);
 

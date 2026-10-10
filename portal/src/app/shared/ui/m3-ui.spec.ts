@@ -268,7 +268,7 @@ describe('M3 design-system components', () => {
     it('shows plan, device health counts, health ring and licence usage', async () => {
       const { host } = await render(CustomerCard, { card: tenant(), canManage: true });
       expect(text(host, '[data-testid="plan-name"]')).toBe('Enterprise');
-      expect(text(host, '[data-testid="customer-devices"]')).toBe('316');
+      expect(host.querySelector('[data-testid="customer-devices"]')?.getAttribute('data-count')).toBe('316');
       expect(text(host, '[data-testid="customer-critical"]')).toBe('15');
       expect(text(host, '[data-testid="ring-value"]')).toBe('78.2%');
       expect(text(host, '[data-testid="usage-text"]')).toBe('290 / 500');
@@ -293,7 +293,7 @@ describe('M3 design-system components', () => {
       const { host } = await render(CustomerCard, { card: tenant({ nextRenewal: null, devices: null }), canManage: false });
       expect(host.textContent).not.toContain('Suspend');
       expect(text(host, '[data-testid="renewal"]')).toBe('—');
-      expect(text(host, '[data-testid="customer-devices"]')).toBe('0');
+      expect(host.querySelector('[data-testid="customer-devices"]')?.getAttribute('data-count')).toBe('0');
     });
   });
 });

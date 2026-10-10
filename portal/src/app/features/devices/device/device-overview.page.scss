@@ -59,6 +59,13 @@
     padding-block: var(--mc-space-2);
   }
 
+  th {
+    color: var(--mc-text-muted);
+    font-weight: var(--mc-fw-medium);
+    text-align: start;
+    padding-block: 2px;
+  }
+
   td {
     padding: 2px 0;
     border-block-start: 1px solid var(--mc-border);
@@ -66,6 +73,39 @@
 
   .num {
     text-align: end;
+    padding-inline-start: var(--mc-space-2);
+  }
+
+  .value {
+    white-space: nowrap;
+  }
+
+  .bar {
+    inline-size: 30%;
+    padding-inline-start: var(--mc-space-2);
+  }
+
+  .fill {
+    display: block;
+    block-size: 6px;
+    border-radius: var(--mc-radius-pill);
+    background: var(--mc-series-cpu);
+
+    &.ram { background: var(--mc-series-ram); }
+    &.disk { background: var(--mc-series-disk); }
+    &.network { background: var(--mc-series-network); }
+  }
+}
+
+.service-facts {
+  margin-block: var(--mc-space-3) 0;
+  padding-block-start: var(--mc-space-3);
+  border-block-start: 1px solid var(--mc-border);
+  font-weight: var(--mc-fw-medium);
+
+  .sep {
+    margin-inline: var(--mc-space-2);
+    color: var(--mc-text-muted);
   }
 }
 

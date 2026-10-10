@@ -47,14 +47,8 @@ export class Chart {
 
   private async init(): Promise<void> {
     try {
-      const [core, charts, components, renderers] = await Promise.all([
-        import('echarts/core'),
-        import('echarts/charts'),
-        import('echarts/components'),
-        import('echarts/renderers'),
-      ]);
-      core.use([charts.LineChart, charts.GaugeChart, components.GridComponent, components.TooltipComponent, components.LegendComponent, renderers.CanvasRenderer]);
-      this.chart = core.init(this.canvas().nativeElement, undefined, { renderer: 'canvas' }) as unknown as ChartHandle;
+      const echarts = await import('./echarts-setup');
+      this.chart = echarts.init(this.canvas().nativeElement, undefined, { renderer: 'canvas' }) as unknown as ChartHandle;
       this.chart.setOption(this.option(), true);
       if (typeof ResizeObserver !== 'undefined') {
         this.observer = new ResizeObserver(() => this.chart?.resize());

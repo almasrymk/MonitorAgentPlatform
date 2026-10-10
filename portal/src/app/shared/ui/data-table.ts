@@ -30,7 +30,8 @@ export class CellDef {
   selector: 'mc-data-table',
   imports: [NgTemplateOutlet, Icon, Skeleton],
   template: `
-    <div class="scroller">
+    <!-- Focusable so a table wider than its card scrolls with the keyboard (WCAG 2.1.1). -->
+    <div class="scroller" tabindex="0">
       <table>
         <thead>
           <tr>
@@ -82,10 +83,13 @@ export class CellDef {
     table { inline-size: 100%; border-collapse: collapse; font-size: var(--mc-fs-md); }
     thead th { position: sticky; inset-block-start: 0; background: var(--mc-bg-card-raised); color: var(--mc-text-muted); font-weight: var(--mc-fw-medium); text-align: start; padding: var(--mc-space-2) var(--mc-space-3); white-space: nowrap; }
     tbody td { padding: var(--mc-space-3); border-block-end: 1px solid var(--mc-border); vertical-align: middle; }
+    /* Dashboard widgets (07 section 5): one line per row, long text cut with an ellipsis. */
+    :host(.compact) tbody td { padding-block: var(--mc-space-2); white-space: nowrap; max-inline-size: 280px; overflow: hidden; text-overflow: ellipsis; }
     tbody tr:hover td { background: var(--mc-bg-hover); }
     .sort { display: inline-flex; align-items: center; gap: 4px; background: none; border: 0; color: inherit; font: inherit; cursor: pointer; padding: 0; }
     .empty { text-align: center; color: var(--mc-text-muted); padding: var(--mc-space-6); }
   `,
+  host: { '[class.compact]': 'compact()' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DataTable<T extends object> {
@@ -93,6 +97,8 @@ export class DataTable<T extends object> {
   readonly rows = input.required<T[]>();
   readonly loading = input(false);
   readonly emptyText = input('');
+  /** One line per row (dashboard widgets). */
+  readonly compact = input(false);
   readonly trackBy = input<(row: T) => unknown>((row: T) => (row as { id?: unknown }).id ?? row);
   /** Current sort (`name` or `-name`). */
   readonly sort = model<string | null>(null);

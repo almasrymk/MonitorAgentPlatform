@@ -65,7 +65,7 @@ test.describe('Live mode', () => {
     expect(seen.size).toBeGreaterThan(1);
 
     // Closing the screen leaves the device group: no further samples reach the browser.
-    await page.getByTestId('nav-devices').click();
+    await page.getByTestId('sidebar-back').click();
     await page.waitForTimeout(1_000);
     const afterClose = samples.length;
     await page.waitForTimeout(8_000);

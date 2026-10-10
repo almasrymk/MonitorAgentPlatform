@@ -1,10 +1,10 @@
 <mc-page-header [title]="i18n.t('customers.title')" [subtitle]="i18n.t('customers.subtitle')" />
 
 <section class="tiles">
-  <mc-kpi-tile icon="customers" tone="info" [label]="i18n.t('customers.total')" [value]="summary()?.total ?? null" />
-  <mc-kpi-tile icon="check" tone="success" [label]="i18n.t('customers.active')" [value]="summary()?.active ?? null" />
-  <mc-kpi-tile icon="calendar" tone="warning" [label]="i18n.t('customers.expiringSoon')" [value]="summary()?.expiringSoon ?? null" goodWhen="down" />
-  <mc-kpi-tile icon="alert" tone="danger" [label]="i18n.t('customers.suspendedTile')" [value]="summary()?.suspended ?? null" goodWhen="down" />
+  <mc-kpi-tile icon="customers" tone="info" [label]="i18n.t('customers.total')" [value]="summary()?.total ?? null" [delta]="summary()?.newLast30Days ?? null" [caption]="i18n.t('dashboard.vsLast30')" />
+  <mc-kpi-tile icon="check" tone="success" [label]="i18n.t('customers.active')" [value]="summary()?.active ?? null" [caption]="ofTotal(summary()?.active)" />
+  <mc-kpi-tile icon="calendar" tone="warning" [label]="i18n.t('customers.expiringSoon')" [value]="summary()?.expiringSoon ?? null" goodWhen="down" [caption]="i18n.t('customers.within30Days')" />
+  <mc-kpi-tile icon="alert" tone="danger" [label]="i18n.t('customers.suspendedTile')" [value]="summary()?.suspended ?? null" goodWhen="down" [caption]="ofTotal(summary()?.suspended)" />
 </section>
 
 <section class="toolbar">

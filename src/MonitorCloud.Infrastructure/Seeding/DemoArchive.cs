@@ -32,8 +32,8 @@ internal sealed class DemoArchive(AppDbContext db, IMediaStorage storage, ISecre
         var admin = await db.Set<User>().IgnoreQueryFilters().SingleAsync(u => u.Email == "admin@acme.test", ct);
         var support = await db.Set<User>().IgnoreQueryFilters().SingleAsync(u => u.Email == "support@monitor.local", ct);
         var cairo = await db.Set<Location>().IgnoreQueryFilters().SingleAsync(l => l.TenantId == acme.Id && l.Code == "CAIRO-HQ", ct);
-        var desk = await db.Set<Device>().IgnoreQueryFilters().FirstAsync(d => d.TenantId == acme.Id && d.Name == "DESK-01", ct);
-        var fileServer = await db.Set<Device>().IgnoreQueryFilters().FirstAsync(d => d.TenantId == acme.Id && d.Name == "FILE-SRV-01", ct);
+        var desk = await db.Set<Device>().IgnoreQueryFilters().FirstAsync(d => d.TenantId == acme.Id && d.Name == "DESK-01" && d.LocalIp == "192.168.1.40", ct);
+        var fileServer = await db.Set<Device>().IgnoreQueryFilters().FirstAsync(d => d.TenantId == acme.Id && d.Name == "FILE-SRV-01" && d.LocalIp == "192.168.1.80", ct);
 
         var profile = CustomerProfile.Create(acme.Id, now);
         profile.Update("Logistics", "https://acme.test", "+20 2 0000 0100", "1 Sample Street, Cairo", "Support User", now);

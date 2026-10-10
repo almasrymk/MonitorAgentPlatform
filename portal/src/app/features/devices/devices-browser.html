@@ -66,7 +66,11 @@
 
 @if (showSummary()) {
   <mc-card [title]="i18n.t('devices.recentAlerts')" class="alerts">
-    <mc-empty-state icon="bell" [title]="i18n.t('dashboard.noAlerts')" [message]="i18n.t('dashboard.alertsSoon')" />
+    @if (recentAlerts().length > 0) {
+      <mc-recent-alerts [alerts]="recentAlerts()" />
+    } @else {
+      <mc-empty-state icon="bell" [title]="i18n.t('dashboard.noAlerts')" />
+    }
   </mc-card>
 }
 

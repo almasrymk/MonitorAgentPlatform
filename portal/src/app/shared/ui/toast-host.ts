@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 
+import { I18nService } from '../../core/i18n/i18n.service';
 import { ToastService } from '../../core/ui/toast.service';
 import { Icon } from './icon';
 
@@ -12,7 +13,7 @@ import { Icon } from './icon';
         <div class="toast" [attr.data-kind]="toast.kind" role="status" data-testid="toast">
           <mc-icon [name]="toast.kind === 'error' ? 'alert' : toast.kind === 'success' ? 'check' : 'info'" [size]="16" />
           <span>{{ toast.message }}</span>
-          <button type="button" aria-label="Dismiss" (click)="toasts.dismiss(toast.id)"><mc-icon name="close" [size]="14" /></button>
+          <button type="button" [attr.aria-label]="i18n.t('common.close')" (click)="toasts.dismiss(toast.id)"><mc-icon name="close" [size]="14" /></button>
         </div>
       }
     </div>
@@ -29,4 +30,5 @@ import { Icon } from './icon';
 })
 export class ToastHost {
   protected readonly toasts = inject(ToastService);
+  protected readonly i18n = inject(I18nService);
 }

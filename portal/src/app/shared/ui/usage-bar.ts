@@ -4,7 +4,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 @Component({
   selector: 'mc-usage-bar',
   template: `
-    <div class="track" role="progressbar" [attr.aria-valuenow]="used()" aria-valuemin="0" [attr.aria-valuemax]="limit()" [attr.aria-label]="label()">
+    <div class="track" role="progressbar" [attr.aria-valuenow]="used()" aria-valuemin="0" [attr.aria-valuemax]="limit()" [attr.aria-label]="label() || used() + ' / ' + limit()">
       <div class="fill" [attr.data-level]="level()" [style.inline-size.%]="percent()"></div>
     </div>
     <span class="text" data-testid="usage-text">{{ used() }} / {{ limit() ?? '∞' }}</span>

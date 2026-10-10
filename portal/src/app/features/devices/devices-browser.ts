@@ -6,6 +6,8 @@ import { firstValueFrom } from 'rxjs';
 
 import { DevicesApi, LocationsApi } from '../../core/api/api.services';
 import { DeviceListItem, DevicesSummary, LocationCard, Paged } from '../../core/api/models';
+import { AlertsApi } from '../../core/api/monitoring.api';
+import type { components } from '../../core/api/schema';
 import { AuthService } from '../../core/auth/auth.service';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { areaRoot } from '../../core/layout/area';
@@ -29,6 +31,7 @@ import { EmptyState, ErrorState } from '../../shared/ui/states';
 import { StatusPill } from '../../shared/ui/status-pill';
 import { ViewMode, ViewToggle } from '../../shared/ui/view-toggle';
 import { AddDeviceDialog } from './add-device-dialog';
+import { RecentAlerts } from '../alerts/alert-widgets';
 
 interface PendingAction {
   action: DeviceAction;
@@ -44,6 +47,7 @@ interface PendingAction {
 @Component({
   selector: 'mc-devices-browser',
   imports: [
+    RecentAlerts,
     FormsModule, KpiTile, SearchInput, Select, ViewToggle, Button, Icon, DeviceCard, DataTable, CellDef, OsIcon, StatusPill, Pagination, Skeleton, EmptyState, ErrorState,
     Dialog, Card, AddDeviceDialog,
   ],
@@ -211,11 +215,27 @@ export class DevicesBrowser {
   /** Only the newest request may update the view: a slow older answer must not overwrite a newer filter. */
   private request = 0;
 
+  /** The open alerts of the shown devices (all, or the selected location) for Recent Device Alerts. */
+  protected readonly recentAlerts = signal<components['schemas']['RecentAlertDto'][]>([]);
+  private readonly alertsApi = inject(AlertsApi);
+
+  private async loadAlerts(locationId: string | null): Promise<void> {
+    try {
+      const open = await firstValueFrom(this.alertsApi.list({ locationId, status: 'open', pageSize: 6 }));
+      this.recentAlerts.set(open.items.map((a) => ({
+        id: a.id, at: a.lastSeenAt, severity: a.severity, tenantId: null, customerName: null, deviceId: a.deviceId, deviceName: a.deviceName, locationName: a.locationName, message: a.title,
+      })));
+    } catch {
+      this.recentAlerts.set([]);
+    }
+  }
+
   async load(): Promise<void> {
     const request = ++this.request;
     this.loading.set(true);
     this.failed.set(false);
     const locationId = this.locationId() ?? (this.locationFilter() || null);
+    void this.loadAlerts(locationId);
     try {
       const [result, summary] = await Promise.all([
         firstValueFrom(

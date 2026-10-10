@@ -73,8 +73,8 @@ export type RecentAlertsMode = 'platform' | 'tenant' | 'location';
   selector: 'mc-recent-alerts',
   imports: [DatePipe, DataTable, CellDef, StatusPill],
   template: `
-    <mc-data-table [columns]="columns()" [rows]="alerts()" [emptyText]="i18n.t('dashboard.noAlerts')" data-testid="recent-alerts">
-      <ng-template mcCell="at" let-row><span class="time" [attr.title]="r(row).at">{{ r(row).at | date: 'short' : undefined : locale() }}</span></ng-template>
+    <mc-data-table [compact]="true" [columns]="columns()" [rows]="alerts()" [emptyText]="i18n.t('dashboard.noAlerts')" data-testid="recent-alerts">
+      <ng-template mcCell="at" let-row><span class="time" [attr.title]="r(row).at">{{ r(row).at | date: (today(r(row).at) ? 'shortTime' : 'd MMM, HH:mm') : undefined : locale() }}</span></ng-template>
       <ng-template mcCell="severity" let-row><mc-status-pill [status]="r(row).severity" [label]="i18n.t('severity.' + r(row).severity.toLowerCase())" /></ng-template>
       <ng-template mcCell="customerName" let-row>{{ r(row).customerName ?? '—' }}</ng-template>
       <ng-template mcCell="deviceName" let-row><strong>{{ r(row).deviceName ?? '—' }}</strong></ng-template>
@@ -90,6 +90,11 @@ export class RecentAlerts {
   readonly alerts = input.required<RecentAlertDto[]>();
   readonly mode = input<RecentAlertsMode>('tenant');
   protected readonly locale = computed(() => (this.i18n.language() === 'ar' ? 'ar-EG' : 'en-GB'));
+
+  /** Recent alerts of today show the time only (as in the designs); older ones the day as well. */
+  protected today(at: string): boolean {
+    return new Date(at).toDateString() === new Date().toDateString();
+  }
 
   protected r(row: unknown): RecentAlertDto {
     return row as RecentAlertDto;

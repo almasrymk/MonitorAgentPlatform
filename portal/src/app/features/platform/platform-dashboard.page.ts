@@ -64,7 +64,7 @@ const ACTIVITY_TONES: Record<string, TimelineItem['tone']> = { device: 'success'
       <section class="row">
         <mc-card [title]="i18n.t('platformDashboard.topCustomers')" [flush]="true">
           <button cardActions type="button" mcButton="ghost" size="sm" (click)="go('customers')">{{ i18n.t('common.viewAll') }}</button>
-          <mc-data-table [columns]="customerColumns()" [rows]="indexed(d.topCustomers)" data-testid="top-customers">
+          <mc-data-table [compact]="true" [columns]="customerColumns()" [rows]="indexed(d.topCustomers)" data-testid="top-customers">
             <ng-template mcCell="rank" let-row>{{ c(row).rank }}</ng-template>
             <ng-template mcCell="name" let-row><strong>{{ c(row).name }}</strong></ng-template>
             <ng-template mcCell="healthScore" let-row><mc-health-bar [value]="c(row).healthScore" [label]="i18n.t('customers.healthScore')" /></ng-template>
@@ -72,7 +72,7 @@ const ACTIVITY_TONES: Record<string, TimelineItem['tone']> = { device: 'success'
         </mc-card>
         <mc-card [title]="i18n.t('platformDashboard.expiring')" [flush]="true">
           <button cardActions type="button" mcButton="ghost" size="sm" (click)="go('customers')">{{ i18n.t('common.viewAll') }}</button>
-          <mc-data-table [columns]="expiringColumns()" [rows]="d.expiringSubscriptions" [emptyText]="i18n.t('platformDashboard.noneExpiring')">
+          <mc-data-table [compact]="true" [columns]="expiringColumns()" [rows]="d.expiringSubscriptions" [emptyText]="i18n.t('platformDashboard.noneExpiring')">
             <ng-template mcCell="name" let-row><strong>{{ e(row).name }}</strong></ng-template>
             <ng-template mcCell="planName" let-row>{{ e(row).planName ?? '—' }}</ng-template>
             <ng-template mcCell="daysLeft" let-row>{{ i18n.t('platformDashboard.days', { n: e(row).daysLeft }) }}</ng-template>

@@ -8,7 +8,7 @@ import { AuthService } from '../auth/auth.service';
 import { I18nService } from '../i18n/i18n.service';
 import { ScopeStore } from '../state/scope.store';
 import { Breadcrumb } from './breadcrumb';
-import { CUSTOMER_MENU, NavItem, PLATFORM_MENU } from './navigation';
+import { CUSTOMER_MENU, NavItem, PLATFORM_MENU, DEVICE_MENU, LOCATION_MENU } from './navigation';
 import { Sidebar } from './sidebar';
 import { Topbar } from './topbar';
 import { WorkspaceBanner } from './workspace-banner';
@@ -36,8 +36,16 @@ export class AppShell {
 
   /** Which sidebar the current route shows. */
   protected readonly context = computed<{ items: NavItem[]; base: string; back: { key: string; path: string } | null }>(() => {
-    const url = this.url();
+    const url = this.url().split(/[?#]/)[0];
     const workspace = this.scope.workspace();
+    // A location or a device has its own menu with a back link (07 section 3).
+    const inner = /^((?:\/app|\/admin\/customers\/[^/]+))\/(locations|devices)\/([^/]+)/.exec(url);
+    if (inner && (inner[1] === '/app' || workspace)) {
+      const [, area, kind, id] = inner;
+      return kind === 'locations'
+        ? { items: LOCATION_MENU, base: `${area}/locations/${id}`, back: { key: 'nav.locations', path: `${area}/locations` } }
+        : { items: DEVICE_MENU, base: `${area}/devices/${id}`, back: { key: 'nav.devices', path: `${area}/devices` } };
+    }
     if (url.startsWith('/admin/customers/') && workspace) {
       return { items: CUSTOMER_MENU, base: `/admin/customers/${workspace.id}`, back: { key: 'nav.customers', path: '/admin/customers' } };
     }

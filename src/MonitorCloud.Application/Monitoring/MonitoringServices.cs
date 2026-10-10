@@ -26,6 +26,18 @@ internal sealed class OpenAlertCounter(IReadDbContext db) : IOpenAlertCounter
 
 internal sealed class AlertDashboardReader(IReadDbContext db) : IAlertDashboardReader
 {
+    public async Task<IReadOnlyDictionary<Guid, string>> WorstOpenTitlesAsync(IReadOnlyCollection<Guid> deviceIds, CancellationToken ct)
+    {
+        if (deviceIds.Count == 0)
+            return new Dictionary<Guid, string>();
+        var open = await db.Query<Alert>()
+            .Where(a => deviceIds.Contains(a.DeviceId) && a.Status != AlertStatus.Resolved)
+            .Select(a => new { a.DeviceId, a.Severity, a.Title, a.LastSeenAt })
+            .ToListAsync(ct);
+        return open.GroupBy(a => a.DeviceId)
+            .ToDictionary(g => g.Key, g => g.OrderByDescending(a => a.Severity).ThenByDescending(a => a.LastSeenAt).First().Title);
+    }
+
     public async Task<IReadOnlyList<AlertDay>> TrendAsync(Guid? locationId, DateOnly from, DateOnly to, CancellationToken ct)
     {
         var query = db.Query<AlertDailyStat>().Where(s => s.Day >= from && s.Day <= to);

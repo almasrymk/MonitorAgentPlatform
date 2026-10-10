@@ -107,7 +107,7 @@ internal sealed class GetTenantsQueryHandler(IReadDbContext db, IEntitlementDire
 [RequirePermission(Permissions.PlatformTenantsRead)]
 public sealed record GetTenantsSummaryQuery : IQuery<TenantsSummaryDto>;
 
-internal sealed class GetTenantsSummaryQueryHandler(IReadDbContext db, IEntitlementDirectory entitlements) : IQueryHandler<GetTenantsSummaryQuery, TenantsSummaryDto>
+internal sealed class GetTenantsSummaryQueryHandler(IReadDbContext db, IEntitlementDirectory entitlements, TimeProvider clock) : IQueryHandler<GetTenantsSummaryQuery, TenantsSummaryDto>
 {
     public async Task<Result<TenantsSummaryDto>> Handle(GetTenantsSummaryQuery request, CancellationToken cancellationToken)
     {
@@ -118,7 +118,9 @@ internal sealed class GetTenantsSummaryQueryHandler(IReadDbContext db, IEntitlem
             .ToListAsync(cancellationToken);
         var active = counts.Where(c => c.Status == TenantStatus.Active).Sum(c => c.Count);
         var suspended = counts.Where(c => c.Status == TenantStatus.Suspended).Sum(c => c.Count);
-        return new TenantsSummaryDto(active + suspended, active, await entitlements.CountExpiringSoonAsync(cancellationToken), suspended);
+        var since = clock.GetUtcNow().AddDays(-30);
+        var created = await db.Query<Tenant>().CountAsync(t => t.Status != TenantStatus.Archived && t.CreatedAt >= since, cancellationToken);
+        return new TenantsSummaryDto(active + suspended, active, await entitlements.CountExpiringSoonAsync(cancellationToken), suspended, created);
     }
 }
 

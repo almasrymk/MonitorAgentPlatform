@@ -223,7 +223,8 @@ internal sealed class DemoMonitoring(AppDbContext db, DateTimeOffset now, Random
 
     private async Task AddMonitorPointsAsync(CancellationToken ct)
     {
-        var web = await db.Set<Device>().AsNoTracking().Where(d => d.Name == "WEB-SRV-01").Join(db.Set<Tenant>().Where(t => t.Code == "ACME"), d => d.TenantId, t => t.Id, (d, _) => d)
+        // The fixed WEB-SRV-01 of 08 (192.168.1.10): generated devices of other locations may carry the same name.
+        var web = await db.Set<Device>().AsNoTracking().Where(d => d.Name == "WEB-SRV-01" && d.LocalIp == "192.168.1.10").Join(db.Set<Tenant>().Where(t => t.Code == "ACME"), d => d.TenantId, t => t.Id, (d, _) => d)
             .FirstOrDefaultAsync(ct);
         if (web is null)
             return;

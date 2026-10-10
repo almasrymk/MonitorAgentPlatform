@@ -39,10 +39,10 @@
       <mc-incident-trend [trend]="d.incidentTrend" />
     </mc-card>
     <mc-card [title]="i18n.t('dashboard.topProblematic')" [flush]="true">
-      <mc-data-table [columns]="problemColumns()" [rows]="d.topProblematicDevices" [emptyText]="i18n.t('dashboard.noProblems')">
+      <mc-data-table [compact]="true" [columns]="problemColumns()" [rows]="d.topProblematicDevices" [emptyText]="i18n.t('dashboard.noProblems')">
         <ng-template mcCell="name" let-row><strong>{{ problem(row).name }}</strong></ng-template>
         <ng-template mcCell="locationName" let-row>{{ problem(row).locationName ?? '—' }}</ng-template>
-        <ng-template mcCell="issue" let-row>{{ i18n.t('dashboard.issues.' + problem(row).issue) }}</ng-template>
+        <ng-template mcCell="issue" let-row>{{ problem(row).issueTitle || i18n.t('dashboard.issues.' + problem(row).issue) }}</ng-template>
         <ng-template mcCell="health" let-row><mc-status-pill [status]="problem(row).connection === 'Offline' ? 'offline' : problem(row).health" /></ng-template>
       </mc-data-table>
     </mc-card>
@@ -50,7 +50,7 @@
 
   <section class="row wide-first">
     <mc-card [title]="i18n.t('dashboard.statusByLocation')" [flush]="true">
-      <mc-data-table [columns]="locationColumns()" [rows]="d.deviceStatusByLocation" data-testid="status-by-location">
+      <mc-data-table [compact]="true" [columns]="locationColumns()" [rows]="d.deviceStatusByLocation" data-testid="status-by-location">
         <ng-template mcCell="name" let-row><strong>{{ locationRow(row).name }}</strong></ng-template>
         <ng-template mcCell="warning" let-row><span class="warning">{{ locationRow(row).warning }}</span></ng-template>
         <ng-template mcCell="critical" let-row><span class="danger">{{ locationRow(row).critical }}</span></ng-template>

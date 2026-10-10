@@ -54,7 +54,7 @@ public sealed class TenantsTests(SqlServerFixture sql) : FeatureTestBase(sql)
         list.Items.ShouldHaveSingleItem().Id.ShouldBe(World.A.Id);
         list.Items[0].Locations.ShouldBe(2);
         archived.Items.ShouldHaveSingleItem().Id.ShouldBe(World.B.Id);
-        summary.ShouldBe(new TenantsSummaryDto(1, 1, 0, 0));
+        summary.ShouldBe(new TenantsSummaryDto(1, 1, 0, 0, 1), "A was created now and B is archived");
     }
 
     [Fact]

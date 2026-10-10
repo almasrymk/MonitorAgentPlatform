@@ -3,6 +3,9 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\MonitorCloud.SimulatedAgent\MonitorCloud.SimulatedAgent.csproj" />
   </ItemGroup>
 </Project>

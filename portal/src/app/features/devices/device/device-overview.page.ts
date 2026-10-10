@@ -210,4 +210,46 @@ export class DeviceOverviewPage {
         : [{ key, value: Array.isArray(value) ? `${value.length}` : String(value) }],
     );
   }
+
+  /** `cpu.logicalProcessors` as "CPU · Logical processors". */
+  protected label(key: string): string {
+    const words = (part: string) => {
+      const text = part.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/Gb$/, 'GB').toLowerCase();
+      return /^(cpu|ram|os|ip|dns|bios|mac)$/.test(text) ? text.toUpperCase() : text.charAt(0).toUpperCase() + text.slice(1);
+    };
+    return key.split('.').map(words).join(' · ');
+  }
+
+  /** One line per Hardware & OS section, as in the design: the main facts when present, else the first values. */
+  protected summary(kind: string): string {
+    const entries = this.entries(this.inventory()[kind]);
+    if (entries.length === 0) {
+      return '';
+    }
+    const value = (...keys: string[]) => keys.map((k) => entries.find((e) => e.key === k)?.value).find((v) => !!v && v !== 'undefined');
+    const parts =
+      kind === 'hardware'
+        ? [
+            value('cpu.model'),
+            value('cpu.cores') && `${value('cpu.cores')} ${this.i18n.t('device.fact.cores').toLowerCase()}${value('cpu.logicalProcessors') ? ` (${value('cpu.logicalProcessors')})` : ''}`,
+            value('memory.totalGb') && `${value('memory.totalGb')} GB RAM`,
+          ]
+        : kind === 'os'
+          ? [value('name', 'caption', 'os.name', 'productName'), value('version', 'os.version', 'displayVersion'), value('build', 'os.build'), value('architecture', 'os.architecture')]
+          : [value('ipAddress', 'ip', 'localIp', 'adapters.0.ip'), value('dns', 'dnsServers'), value('gateway', 'defaultGateway')];
+    const known = parts.filter((p): p is string => !!p);
+    return (known.length ? known : entries.slice(0, 3).map((e) => e.value)).join(' | ');
+  }
+
+  /** Top 5 values with the unit of the card (snapshot: CPU %, RAM MB, disk and network KB/s). */
+  protected topValue(card: string, value: number): string {
+    const rounded = Math.round(value * 10) / 10;
+    return card === 'cpu' ? `${rounded}%` : card === 'ram' ? `${Math.round(value)} MB` : `${rounded} KB/s`;
+  }
+
+  /** Bar length relative to the largest value of the list. */
+  protected topShare(top: { value: number }[], value: number): number {
+    const max = Math.max(...top.slice(0, 5).map((p) => p.value), 0);
+    return max > 0 ? Math.round((100 * value) / max) : 0;
+  }
 }

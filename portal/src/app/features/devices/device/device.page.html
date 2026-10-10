@@ -26,12 +26,6 @@
   @if (!context.online()) {
     <p class="offline" role="status" data-testid="offline-banner">{{ i18n.t('device.offlineSince', { when: lastSeen() }) }}</p>
   }
-
-  <nav class="tabs" [attr.aria-label]="i18n.t('device.tabs')">
-    @for (tab of tabs; track tab.path) {
-      <a [routerLink]="tab.path" routerLinkActive="active" ariaCurrentWhenActive="page" [attr.data-testid]="'device-tab-' + tab.path">{{ i18n.t(tab.key) }}</a>
-    }
-  </nav>
   <router-outlet />
 } @else {
   <mc-skeleton [height]="96" />

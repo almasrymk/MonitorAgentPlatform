@@ -15,7 +15,8 @@ public sealed record TrendPointDto(DateOnly Day, int Value);
 /// <summary>An open alert in the "Recent Alerts" blocks of the dashboards.</summary>
 public sealed record RecentAlertDto(Guid Id, DateTimeOffset At, string Severity, Guid? TenantId, string? CustomerName, Guid? DeviceId, string? DeviceName, string? LocationName, string Message);
 
-public sealed record ProblemDeviceDto(Guid Id, string Name, Guid LocationId, string? LocationName, string Issue, string Health, string Connection, int OpenAlerts, DateTimeOffset? LastSeenAt);
+/// <summary><paramref name="IssueTitle"/>: the most severe open alert of a critical or warning device (shown instead of the issue kind).</summary>
+public sealed record ProblemDeviceDto(Guid Id, string Name, Guid LocationId, string? LocationName, string Issue, string? IssueTitle, string Health, string Connection, int OpenAlerts, DateTimeOffset? LastSeenAt);
 
 public sealed record LocationStatusRowDto(Guid LocationId, string Name, int Total, int Online, int Healthy, int Warning, int Critical, decimal? HealthPercent);
 

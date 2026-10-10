@@ -28,7 +28,7 @@ test.describe('Reports, archive and settings', () => {
     await page.goto('/app/locations');
     await page.getByText('Cairo HQ').first().click();
     for (const tab of ['overview', 'devices', 'notifications', 'archive', 'reports', 'settings']) {
-      await page.getByTestId(`tab-${tab}`).click();
+      await page.getByTestId(`nav-${tab}`).click();
       await expect(page.getByTestId('retry'), tab).toHaveCount(0);
     }
     await expect(page.getByTestId('location-name')).toHaveValue('Cairo HQ');

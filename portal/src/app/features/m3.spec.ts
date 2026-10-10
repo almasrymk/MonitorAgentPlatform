@@ -29,7 +29,7 @@ export const tenantDashboard: TenantDashboard = {
   locations: [{ id: 'l1', name: 'Cairo HQ', code: 'CAIRO-HQ', city: 'Cairo', country: 'Egypt', isDefault: false, status: 'Active', devices: 142, online: 134, warning: 6, critical: 2, healthScore: 88.7 }],
   locationsHealth: { total: 316, healthy: 247, warning: 36, critical: 15, offline: 18 },
   incidentTrend: [],
-  topProblematicDevices: [{ id: 'd1', name: 'WEB-SRV-01', locationId: 'l1', locationName: 'Cairo HQ', issue: 'critical', health: 'Critical', connection: 'Online', openAlerts: 3, lastSeenAt: null }],
+  topProblematicDevices: [{ id: 'd1', name: 'WEB-SRV-01', locationId: 'l1', locationName: 'Cairo HQ', issue: 'critical', issueTitle: null, health: 'Critical', connection: 'Online', openAlerts: 3, lastSeenAt: null }],
   deviceStatusByLocation: [{ locationId: 'l1', name: 'Cairo HQ', total: 142, online: 134, healthy: 126, warning: 6, critical: 2, healthPercent: 88.7 }],
   recentAlerts: [],
   license: { licensed: 290, unlicensed: 26, planName: 'Enterprise', used: 290, limit: 500, renewsAt: '2027-01-15T00:00:00Z' },
@@ -45,7 +45,7 @@ const locationDashboard: LocationDashboard = {
   devicesByOs: [{ name: 'Windows', count: 98, percent: 69 }, { name: 'Linux', count: 28, percent: 19.7 }, { name: 'MacOS', count: 12, percent: 8.5 }, { name: 'Other', count: 4, percent: 2.8 }],
   deviceHealth: { total: 142, healthy: 126, warning: 6, critical: 2, offline: 8 },
   resources: { onlineDevices: 134, cpu: 31.2, ram: 51.8, disk: 52.4, healthScore: 88.7 },
-  topProblematicDevices: [{ id: 'd1', name: 'WEB-SRV-01', locationId: 'l1', locationName: 'Cairo HQ', issue: 'critical', health: 'Critical', connection: 'Online', openAlerts: 3, lastSeenAt: null }],
+  topProblematicDevices: [{ id: 'd1', name: 'WEB-SRV-01', locationId: 'l1', locationName: 'Cairo HQ', issue: 'critical', issueTitle: null, health: 'Critical', connection: 'Online', openAlerts: 3, lastSeenAt: null }],
   recentAlerts: [],
 };
 
@@ -61,7 +61,11 @@ describe('M3 screens', () => {
     http = TestBed.inject(HttpTestingController);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    // The Devices screen also loads the open alerts of Recent Device Alerts.
+    http.match((r) => r.url === '/api/v1/alerts').forEach((r) => r.flush({ items: [], total: 0, page: 1, pageSize: 6 }));
+    http.verify();
+  });
 
   async function signIn(permissions: string[], role = 'Administrator'): Promise<void> {
     const auth = TestBed.inject(AuthService);
@@ -114,7 +118,6 @@ describe('M3 screens', () => {
       fixture.detectChanges();
       expect(host.querySelector('mc-entity-header')?.textContent).toContain('Cairo HQ');
       expect(host.querySelector('mc-entity-header')?.textContent).toContain('Acme Corporation');
-      expect(host.querySelector('[data-testid="tab-devices"]')?.getAttribute('href')).toContain('devices');
     });
 
     it('shows tiles, OS and health donuts, resource rings, problems and the summary', async () => {

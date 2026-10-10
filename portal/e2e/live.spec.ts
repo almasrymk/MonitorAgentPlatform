@@ -42,7 +42,7 @@ test.describe('Live device state', () => {
     await signedIn(page, accounts.acmeAdmin, /\/app\/overview$/);
     await page.getByTestId('nav-locations').click();
     await page.getByTestId('location-card').filter({ hasText: 'Cairo HQ' }).click();
-    await page.getByTestId('tab-devices').click();
+    await page.getByTestId('nav-devices').click();
     await page.getByTestId('device-search').locator('input').fill('SIM-ACME');
     await page.getByTestId('device-search').locator('input').press('Enter');
 

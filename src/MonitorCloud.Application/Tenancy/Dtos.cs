@@ -39,7 +39,8 @@ public sealed record TenantCardDto(
     string? SubscriptionStatus = null,
     bool ExpiringSoon = false);
 
-public sealed record TenantsSummaryDto(int Total, int Active, int ExpiringSoon, int Suspended);
+/// <summary>Customers tiles; <paramref name="NewLast30Days"/> is the delta of the Total tile ("+6 vs last 30 days").</summary>
+public sealed record TenantsSummaryDto(int Total, int Active, int ExpiringSoon, int Suspended, int NewLast30Days);
 
 public sealed record LocationDto(
     Guid Id,

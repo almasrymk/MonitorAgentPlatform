@@ -14,7 +14,7 @@ test.describe('Central configuration', () => {
   });
 
   test('a threshold change saves a new target version', async ({ page }) => {
-    await page.getByTestId('device-tab-settings').click();
+    await page.getByTestId('nav-settings').click();
     const target = page.getByTestId('target-version');
     await expect(target).not.toHaveText('');
     const before = Number((await target.textContent())?.trim().replace('—', '0') || '0');
@@ -29,7 +29,7 @@ test.describe('Central configuration', () => {
   });
 
   test('a monitor point is added and removed', async ({ page }) => {
-    await page.getByTestId('device-tab-monitor-points').click();
+    await page.getByTestId('nav-monitor-points').click();
     await page.getByTestId('add-point').click();
     await page.getByTestId('point-type').selectOption('Ping');
     await page.getByTestId('point-name').fill('E2E Gateway');

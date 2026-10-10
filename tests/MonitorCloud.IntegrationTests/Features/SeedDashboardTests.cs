@@ -72,6 +72,7 @@ public sealed class SeedDashboardTests(SeededDemoFixture fixture) : IClassFixtur
         var fixedNames = await App.InDbAsync(db => db.Database.SqlQueryRaw<string>("SELECT Name AS Value FROM devices.Devices WHERE LocalIp LIKE '192.168.1.%' ").ToListAsync());
         fixedNames.Order().ShouldBe(["APP-SRV-02", "BR-DC-01", "DB-SRV-01", "DESK-01", "DEV-MAC-01", "FILE-SRV-01", "SQL-DB-01", "WEB-SRV-01"]);
         (await CountAsync("SELECT COUNT(*) AS Value FROM devices.InventoryDocuments i JOIN devices.Devices d ON d.Id = i.DeviceId WHERE d.Name = 'WEB-SRV-01' AND d.LocalIp = '192.168.1.10'")).ShouldBe(7);
+        (await CountAsync("SELECT COUNT(*) AS Value FROM monitoring.MonitorPoints p JOIN devices.Devices d ON d.Id = p.DeviceId WHERE d.Name = 'WEB-SRV-01' AND d.LocalIp = '192.168.1.10'")).ShouldBe(6, "the monitor points belong to the fixed WEB-SRV-01");
     }
 
     [Fact]
@@ -219,6 +220,14 @@ public sealed class SeedDashboardTests(SeededDemoFixture fixture) : IClassFixtur
 
         dashboard.TopProblematicDevices.Count.ShouldBe(5);
         dashboard.TopProblematicDevices.ShouldAllBe(d => d.Health == "Critical");
+        foreach (var device in dashboard.TopProblematicDevices)
+        {
+            // The issue is the title of the device's most severe, newest open alert (as in the designs).
+            var id = device.Id;
+            var title = await App.InDbAsync(db => db.Database.SqlQuery<string>(
+                $"SELECT TOP 1 Title AS Value FROM monitoring.Alerts WHERE DeviceId = {id} AND Status = 'Open' ORDER BY CASE Severity WHEN 'Critical' THEN 3 WHEN 'Warning' THEN 2 ELSE 1 END DESC, LastSeenAt DESC").SingleAsync());
+            device.IssueTitle.ShouldBe(title, device.Name);
+        }
         dashboard.License.Licensed.ShouldBe(290);
         dashboard.License.Limit.ShouldBe(500);
     }

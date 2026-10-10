@@ -42,7 +42,15 @@ export class TrendChart {
       animation: false,
       grid: { left: 36, right: 8, top: 8, bottom: 24 },
       tooltip: { trigger: 'axis' },
-      xAxis: { type: 'time', axisLine: { lineStyle: { color: grid } }, axisLabel: { color: text, fontSize: 10, hideOverlap: true }, splitLine: { show: false } },
+      xAxis: { type: 'time', axisLine: { lineStyle: { color: grid } }, axisLabel: {
+          color: text,
+          fontSize: 10,
+          hideOverlap: true,
+          // 'Oct 6' for days (as in the designs), the time for hours and minutes.
+          formatter: { year: '{yyyy}', month: '{MMM}', day: '{MMM} {d}', hour: '{HH}:{mm}', minute: '{HH}:{mm}', second: '{HH}:{mm}:{ss}' },
+        },
+        splitLine: { show: false },
+      },
       yAxis: { type: 'value', max: this.max() ?? undefined, min: 0, axisLabel: { color: text, fontSize: 10 }, splitLine: { lineStyle: { color: grid, opacity: 0.5 } } },
       series: this.series().map((s) => {
         const color = tokenColor(s.color, element);

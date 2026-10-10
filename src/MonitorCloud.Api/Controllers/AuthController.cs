@@ -36,14 +36,14 @@ public sealed class AuthController(ISender sender) : ApiControllerBase(sender)
 
     [HttpPost("refresh")]
     [AllowAnonymous]
-    [EnableRateLimiting(ApiServiceCollectionExtensions.AuthRateLimit)]
+    [EnableRateLimiting(ApiServiceCollectionExtensions.RefreshRateLimit)]
     [ProducesResponseType<AuthResultDto>(StatusCodes.Status200OK)]
     public async Task<IActionResult> Refresh(RefreshRequest request, CancellationToken cancellationToken) =>
         FromResult(await Sender.Send(new RefreshCommand(request.RefreshToken ?? string.Empty), cancellationToken));
 
     [HttpPost("logout")]
     [AllowAnonymous]
-    [EnableRateLimiting(ApiServiceCollectionExtensions.AuthRateLimit)]
+    [EnableRateLimiting(ApiServiceCollectionExtensions.RefreshRateLimit)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Logout(RefreshRequest request, CancellationToken cancellationToken) =>
         FromResult(await Sender.Send(new LogoutCommand(request.RefreshToken ?? string.Empty), cancellationToken));

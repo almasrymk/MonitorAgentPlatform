@@ -65,7 +65,7 @@ import { NotificationsStore } from '../state/notifications.store';
     .right { margin-inline-start: auto; display: flex; align-items: center; gap: var(--mc-space-3); }
     .bell { position: relative; background: none; border: 0; color: var(--mc-text-secondary); cursor: pointer; display: inline-flex; padding: 6px; border-radius: var(--mc-radius-md); }
     .bell:hover { background: var(--mc-bg-hover); }
-    .badge { position: absolute; inset-block-start: 0; inset-inline-end: 0; min-inline-size: 16px; block-size: 16px; padding-inline: 4px; border-radius: var(--mc-radius-pill); background: var(--mc-danger); color: var(--mc-text); font-size: 10px; font-weight: var(--mc-fw-bold); display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
+    .badge { position: absolute; inset-block-start: 0; inset-inline-end: 0; min-inline-size: 16px; block-size: 16px; padding-inline: 4px; border-radius: var(--mc-radius-pill); background: var(--mc-danger-solid); color: var(--mc-on-solid); font-size: 10px; font-weight: var(--mc-fw-bold); display: inline-flex; align-items: center; justify-content: center; line-height: 1; }
     .user { position: relative; }
     .user-button { display: flex; align-items: center; gap: var(--mc-space-2); background: none; border: 0; color: var(--mc-text); cursor: pointer; font: inherit; padding: 4px; border-radius: var(--mc-radius-md); }
     .user-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.2; }

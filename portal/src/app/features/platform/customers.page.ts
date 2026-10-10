@@ -96,6 +96,12 @@ export class CustomersPage {
 
   protected readonly dialogOpen = computed(() => this.action() !== null);
 
+  /** "88% of total" under the Active and Suspended tiles. */
+  protected ofTotal(count: number | undefined): string {
+    const total = this.summary()?.total ?? 0;
+    return count === undefined || total === 0 ? '' : this.i18n.t('dashboard.ofTotal', { percent: Math.round((100 * count) / total) });
+  }
+
   constructor() {
     // The top-bar search opens this page with ?search= (also when it is already open).
     const route = inject(ActivatedRoute);

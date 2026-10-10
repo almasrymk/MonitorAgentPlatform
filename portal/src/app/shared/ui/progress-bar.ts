@@ -9,7 +9,7 @@ export type BarTone = 'cpu' | 'ram' | 'disk' | 'success' | 'warning' | 'danger' 
     @if (label()) {
       <span class="label">{{ label() }}</span>
     }
-    <div class="track" role="progressbar" [attr.aria-valuenow]="clamped()" aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="label()">
+    <div class="track" role="progressbar" [attr.aria-valuenow]="clamped()" aria-valuemin="0" aria-valuemax="100" [attr.aria-label]="label() || clamped() + '%'">
       <div class="fill" [attr.data-tone]="tone()" [style.inline-size.%]="clamped() ?? 0"></div>
     </div>
     <span class="value" data-testid="progress-value">{{ clamped() === null ? '—' : clamped() + '%' }}</span>

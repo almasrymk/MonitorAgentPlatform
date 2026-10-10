@@ -520,3 +520,67 @@ ADR 0009 lists the details decided in M9. Visible ones: PDF uses the browser ins
 Archive tab shows only that location's remote access and the files; the Audit Log opens from the Users screens
 (the menus have no Audit item). The heaviest platform report (performance, 90 days, 2,373 devices) takes about
 4 s; it is on the M10 performance list. The platform name is stored but not shown in the portal yet.
+
+## M10 - Hardening and release candidate (done 2026-10-10)
+
+### Tasks
+
+| Id | Status | Notes |
+|---|---|---|
+| MC-1001 | Done | Arabic dictionary complete (every key of `en.json` is in `ar.json`; plan names stay product names). Report column and summary labels are translated by key on screen. RTL pass: direction icons flip (pagination, back link, accordion). Found and fixed: Arabic screens with dates threw `Missing locale data for "ar-EG"`, so parts of them never rendered |
+| MC-1002 | Done | `e2e/accessibility.spec.ts`: axe (WCAG 2.1 A/AA, serious and critical) on the sign-in page, every customer screen in English and Arabic, every platform screen and the device screen; keyboard navigation of the device menu. Fixed: text contrast (tokens, ADR 0010), progress bars without a name, the unread dot, the Report Type list roles, the toast close label |
+| MC-1003 | Done | New security tests: token tampering (wrong key, issuer, audience, expiry, changed tenant), mass assignment (extra `tenantId`/`role`/`status`), SQL-injection probes on every search parameter, secrets never in the logs (every log event of sign-in, refresh, enrollment and token exchange inspected), 429 + `Retry-After` on sign-in, refresh, enrollment and token. Dependency audit: NuGet clean; npm: two High in dev tooling only, fixed. Rate limits tuned: refresh has its own limit (300/min/IP). Behind a reverse proxy the client address comes from trusted proxies only (`ReverseProxy:*`) |
+| MC-1004 | Done | Release load test: 1,500 devices for 20 minutes; every target of 09 section 8 met (`docs/perf/2026-10-10.md`). Fixed: ECharts was loaded as two full barrels (2 x 262 kB) |
+| MC-1005 | Done | `docs/operations.md`: full configuration reference, production check, health, migrations as a release step, backup and restore (database, media, Data Protection keys), key rotation (user, device, command-signing, Data Protection), runbooks (Licensing down, gateway overloaded, database full) |
+| MC-1006 | Done | In Production the API refuses to start with unsafe settings and names each one (never the value). Key rotation without signing everyone out or re-enrolling agents (`Jwt:Previous*SigningKeys`) |
+| MC-1007 | Done | Full e2e suite green. Screens captured (`e2e/screens.spec.ts`, `docs/screens/`) and compared with the six designs. Fixed: contextual sidebar inside a location and a device (07 section 3) instead of in-page tabs; customer cards in the design's order with tile captions and the new-customers delta; Recent Activity limited to the designed events; Top Problematic Devices shows the alert title; dashboard tables keep one line per row; Recent Device Alerts on the Devices screen shows the open alerts (it still had a pre-M6 placeholder); Top 5 tables with headers and bars; disk sizes in GB; readable Hardware & OS with a summary line; trend axes as "Oct 6"; seeded monitor points were on another device named WEB-SRV-01 |
+
+### Test results (2026-10-10)
+
+| Suite | Count | Result |
+|---|---|---|
+| Backend unit (17 new: production readiness) | 391 | passed |
+| Architecture | 253 | passed |
+| Gateway | 52 | passed |
+| Integration (15 new: token tampering, mass assignment, SQL-injection probes, secrets never logged, rate limits, trusted proxy, key rotation, platform settings, issue titles, seed points) | 247 | passed |
+| Contract, fake | 16 | passed |
+| Portal unit | 162 | passed |
+| Portal e2e (5 new: accessibility in English and Arabic, platform, device and keyboard) | 37 | passed (2 skipped: the screenshot capture, run with `SCREENS=1`) |
+| Load test, 1,500 devices for 20 minutes | - | every 09 section 8 target met (`docs/perf/2026-10-10.md`) |
+
+Coverage: Domain 98.0% line, Application 94.7% line / 82.3% branch, backend 96.2% line; portal 81.2% statements.
+
+Also fixed: one test read the log sink while start-up logging of another host could still reach it. Each API host
+now has its own Serilog logger (`preserveStaticLogger`), so hosts in one process never close each other's logger.
+
+### Acceptance
+
+- All CI jobs' steps pass locally: build with warnings as errors, unit, architecture, integration, gateway and contract
+  suites, coverage gates, pending-migration check, portal lint, unit with coverage, budgets, e2e.
+- Every gate of 09 is met (section 8 targets: `docs/perf/2026-10-10.md`; Lighthouse on the desktop profile, ADR 0010).
+- No `TODO` or stub without a plan reference: the only forward reference is the command-signing key set of M11
+  (remote actions, 10-milestones.md).
+- Every deviation from the plan has an ADR: 0001-0010 (list below).
+
+### Deviations from the plan and their ADRs
+
+| ADR | Subject |
+|---|---|
+| 0001 | Recording decisions |
+| 0002 | Authorization attributes and entitlement scope |
+| 0003 | Request file grouping |
+| 0004 | Devices module details (M3) |
+| 0005 | Telemetry details (M5) |
+| 0006 | Alerts and notifications details (M6) |
+| 0007 | Agent connector in the agent repository (M7) |
+| 0008 | Central configuration details (M8) |
+| 0009 | Reports, archive and settings details: PDF through the host browser, restricted users' reports, upload codes, location tabs, audit list placement (M9) |
+| 0010 | Hardening: production check, key rotation, trusted proxies, refresh limit, contrast tokens, Lighthouse profile, English report files (M10) |
+
+### Notes for the product owner
+
+- ADR 0010 changes colour tokens for contrast. In the dark theme only the faint text is brighter. The light theme
+  colours were estimates and are now darker.
+- The mobile Lighthouse profile scores 62-67; the desktop profile (the designs' layout) 91-93.
+- Location photos of the designs are not available; the cards show a location icon.
+- The platform name of Platform Settings is stored but not yet shown in the portal header.

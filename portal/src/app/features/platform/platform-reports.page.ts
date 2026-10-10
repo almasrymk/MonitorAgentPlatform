@@ -81,10 +81,10 @@ export function toCsv(data: ReportData): string {
         } @else if (data(); as d) {
           <div class="summary" data-testid="report-summary">
             @for (s of d.summary; track s.label) {
-              <div class="tile"><span>{{ s.label }}</span><strong>{{ s.value }}</strong></div>
+              <div class="tile"><span>{{ label('sum', s.label) }}</span><strong>{{ s.value }}</strong></div>
             }
           </div>
-          <mc-card [title]="d.title" [flush]="true">
+          <mc-card [title]="i18n.t('reports.types.' + type())" [flush]="true">
             @if (d.rows.length === 0) {
               <mc-empty-state icon="reports" [title]="i18n.t('reports.noRows')" />
             } @else {
@@ -93,7 +93,7 @@ export function toCsv(data: ReportData): string {
                   <thead>
                     <tr>
                       @for (c of d.columns; track c.key) {
-                        <th scope="col" [class.n]="c.numeric">{{ c.label }}</th>
+                        <th scope="col" [class.n]="c.numeric">{{ label('col', c.key, c.label) }}</th>
                       }
                     </tr>
                   </thead>
@@ -180,6 +180,12 @@ export class PlatformReportsPage {
         this.failed.set(true);
       }
     }
+  }
+
+  /** Server labels are English; the portal translates them by column key or summary label when it knows them. */
+  protected label(kind: 'col' | 'sum', key: string, fallback = key): string {
+    const name = `reports.${kind}.${key}`;
+    return this.i18n.has(name) ? this.i18n.t(name) : fallback;
   }
 
   protected text(value: unknown): string {

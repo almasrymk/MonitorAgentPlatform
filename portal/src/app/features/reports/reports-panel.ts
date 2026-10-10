@@ -47,10 +47,10 @@ export function fileSize(bytes: number): string {
       <div class="columns">
         <mc-card [title]="i18n.t('reports.type')" [flush]="true" data-testid="report-types">
           @if (types(); as list) {
-            <ul class="types" role="listbox" [attr.aria-label]="i18n.t('reports.type')">
+            <ul class="types" [attr.aria-label]="i18n.t('reports.type')">
               @for (t of list; track t.type) {
                 <li>
-                  <button type="button" role="option" [class.selected]="selected() === t.type" [attr.aria-selected]="selected() === t.type" [disabled]="!t.entitled"
+                  <button type="button" [class.selected]="selected() === t.type" [attr.aria-pressed]="selected() === t.type" [disabled]="!t.entitled"
                     (click)="selected.set(t.type)" [attr.data-testid]="'type-' + t.type">
                     <mc-icon name="reports" [size]="16" />
                     <span>{{ i18n.t('reports.types.' + t.type) }}</span>

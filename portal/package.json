@@ -34,6 +34,7 @@
     "@angular/build": "^21.2.25",
     "@angular/cli": "^21.2.25",
     "@angular/compiler-cli": "^21.2.0",
+    "@axe-core/playwright": "4.10.2",
     "@playwright/test": "1.63.0",
     "@vitest/coverage-v8": "4.1.11",
     "angular-eslint": "21.4.0",

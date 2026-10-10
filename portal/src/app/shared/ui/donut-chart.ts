@@ -86,9 +86,8 @@ export class DonutChart {
 
   private async init(): Promise<void> {
     try {
-      const [core, charts, renderers] = await Promise.all([import('echarts/core'), import('echarts/charts'), import('echarts/renderers')]);
-      core.use([charts.PieChart, renderers.CanvasRenderer]);
-      this.chart = core.init(this.canvas().nativeElement, undefined, { renderer: 'canvas' }) as unknown as ChartHandle;
+      const echarts = await import('./echarts-setup');
+      this.chart = echarts.init(this.canvas().nativeElement, undefined, { renderer: 'canvas' }) as unknown as ChartHandle;
       this.chart.setOption(this.option(this.rows()), true);
       if (typeof ResizeObserver !== 'undefined') {
         this.observer = new ResizeObserver(() => this.chart?.resize());

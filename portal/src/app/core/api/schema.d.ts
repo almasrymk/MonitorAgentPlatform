@@ -8755,6 +8755,7 @@ export interface components {
             locationId: string;
             locationName: null | string;
             issue: string;
+            issueTitle: null | string;
             health: string;
             connection: string;
             /** Format: int32 */
@@ -9053,6 +9054,8 @@ export interface components {
             expiringSoon: number;
             /** Format: int32 */
             suspended: number;
+            /** Format: int32 */
+            newLast30Days: number;
         };
         Thresholds: {
             cpu: components["schemas"]["UsageThreshold"];

@@ -29,7 +29,7 @@ test.describe('Devices and dashboards', () => {
     await expect(page.getByTestId('devices-by-os')).toContainText('Windows');
     await expect(page.getByTestId('resources')).toContainText('Across 134 online devices');
 
-    await page.getByTestId('tab-devices').click();
+    await page.getByTestId('nav-devices').click();
     await expect(page.getByTestId('tile-offline').getByTestId('kpi-value')).toHaveText('8');
     const web = page.getByTestId('device-card').filter({ hasText: 'WEB-SRV-01' });
     await expect(web).toHaveCount(1);
@@ -48,7 +48,7 @@ test.describe('Devices and dashboards', () => {
     await signedIn(page, accounts.acmeAdmin, /\/app\/overview$/);
     await page.getByTestId('nav-locations').click();
     await page.getByTestId('location-card').filter({ hasText: 'Dubai Office' }).click();
-    await page.getByTestId('tab-devices').click();
+    await page.getByTestId('nav-devices').click();
 
     await page.getByTestId('add-device').click();
     await page.getByTestId('create-code').click();
@@ -81,7 +81,7 @@ test.describe('Devices and dashboards', () => {
 
     await page.getByTestId('customer-search').locator('input').fill('Gulf');
     const gulf = page.getByTestId('customer-card').filter({ hasText: 'Gulf Engineering' });
-    await expect(gulf.getByTestId('customer-devices')).toHaveText('428');
+    await expect(gulf.getByTestId('customer-devices')).toHaveAttribute('data-count', '428');
     await page.getByTestId('customer-search').locator('input').fill('');
     await page.getByTestId('health-filter').locator('select').selectOption('critical');
     await expect(page.getByTestId('customer-card').filter({ hasText: 'Acme Corporation' })).toHaveCount(1);

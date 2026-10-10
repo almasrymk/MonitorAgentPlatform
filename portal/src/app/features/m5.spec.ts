@@ -161,7 +161,7 @@ describe('M5 device screen', () => {
       expect(host.querySelector('[data-testid="service-status"]')?.textContent).toContain('Running');
       expect(host.querySelector('[data-testid="disk-status"]')?.textContent).toContain('Critical 92%');
       expect(host.querySelector('[data-testid="hardware-os"]')?.textContent).toContain('Dell Inc.');
-      expect(host.querySelector('[data-testid="hardware-os"]')?.textContent).toContain('cpu.cores');
+      expect(host.querySelector('[data-testid="hardware-os"]')?.textContent).toContain('CPU · Cores');
 
       context.live.set({ deviceId: 'd1', at: '', cpu: 12.5, ram: 30, diskActive: 1, rxBps: 1_250_000, txBps: 1, cpuTempC: 60 });
       fixture.detectChanges();

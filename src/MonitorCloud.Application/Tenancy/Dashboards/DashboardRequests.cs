@@ -67,11 +67,15 @@ internal static class DashboardMath
         return list.Select(i => new NamedCountDto(i.Name, i.Count, Percent(i.Count, total) ?? 0)).ToList();
     }
 
-    public static async Task<IReadOnlyList<ProblemDeviceDto>> ProblemsAsync(IDeviceDashboardReader devices, ILocationLookup locations, Guid? locationId, CancellationToken ct)
+    public static async Task<IReadOnlyList<ProblemDeviceDto>> ProblemsAsync(
+        IDeviceDashboardReader devices, ILocationLookup locations, IAlertDashboardReader alerts, Guid? locationId, CancellationToken ct)
     {
         var rows = await devices.TopProblematicAsync(locationId, 5, ct);
         var names = await locations.GetAsync([.. rows.Select(r => r.LocationId).Distinct()], ct);
-        return rows.Select(r => new ProblemDeviceDto(r.Id, r.Name, r.LocationId, names.GetValueOrDefault(r.LocationId)?.Name, r.Issue, r.Health, r.Connection, r.OpenAlerts, r.LastSeenAt)).ToList();
+        // The designs show the alert itself ("High CPU usage (92%)"); offline and unlicensed devices keep their issue kind.
+        var titles = await alerts.WorstOpenTitlesAsync([.. rows.Select(r => r.Id)], ct);
+        return rows.Select(r => new ProblemDeviceDto(r.Id, r.Name, r.LocationId, names.GetValueOrDefault(r.LocationId)?.Name, r.Issue,
+            r.Issue is "critical" or "warning" ? titles.GetValueOrDefault(r.Id) : null, r.Health, r.Connection, r.OpenAlerts, r.LastSeenAt)).ToList();
     }
 }
 
@@ -139,7 +143,7 @@ internal sealed class GetTenantDashboardQueryHandler(
             cards.Where(c => !c.IsDefault || c.Devices > 0).ToList(),
             DashboardMath.Health(total),
             await DashboardMath.IncidentTrendAsync(alerts, null, request.TrendDays ?? 7, tenant.TimeZone, now, cancellationToken),
-            await DashboardMath.ProblemsAsync(devices, locations, null, cancellationToken),
+            await DashboardMath.ProblemsAsync(devices, locations, alerts, null, cancellationToken),
             byLocation,
             await DashboardMath.RecentAlertsAsync(alerts, deviceNames, locations, null, null, cancellationToken),
             new LicenseSummaryDto(total.Licensed, total.Unlicensed, entitlement?.PlanName, entitlement?.ActiveSeats ?? total.Licensed, entitlement?.MaxDevices, entitlement?.RenewsAt));
@@ -197,7 +201,7 @@ internal sealed class GetLocationDashboardQueryHandler(
             DashboardMath.WithPercent(os.Select(o => (o.OsFamily, o.Devices))),
             DashboardMath.Health(c),
             new ResourceAveragesDto(resources.OnlineDevices, resources.Cpu, resources.Ram, resources.Disk, c.HealthScore),
-            await DashboardMath.ProblemsAsync(devices, locations, location.Id, cancellationToken),
+            await DashboardMath.ProblemsAsync(devices, locations, alerts, location.Id, cancellationToken),
             await DashboardMath.RecentAlertsAsync(alerts, deviceNames, locations, null, location.Id, cancellationToken));
     }
 }
@@ -226,6 +230,12 @@ internal sealed class GetPlatformDashboardQueryHandler(
     public const int TopCustomers = 5;
     public const int ExpiringRows = 5;
     public const int ActivityRows = 8;
+
+    /// <summary>The events of Recent Activity (07 section 5.1): device registered, user login, plan updated, device archived, user added.</summary>
+    public static readonly string[] ActivityActions =
+    [
+        "device.enrolled", "device.reenrolled", "auth.login", "auth.login.succeeded", "tenant.plan_updated", "device.retired", "user.invited", "platform.user.created",
+    ];
 
     public async Task<Result<PlatformDashboardDto>> Handle(GetPlatformDashboardQuery request, CancellationToken cancellationToken)
     {
@@ -261,7 +271,7 @@ internal sealed class GetPlatformDashboardQueryHandler(
         var tenantNames = await names.GetAsync([.. top.Select(t => t.Key).Concat(expiring.Select(e => e.TenantId)).Distinct()], cancellationToken);
 
         var activity = await db.Query<AuditRecord>()
-            .Where(a => a.Success)
+            .Where(a => a.Success && ActivityActions.Contains(a.Action))
             .OrderByDescending(a => a.At)
             .Take(ActivityRows)
             .Select(a => new { a.At, a.Action, a.ActorName, a.EntityType, a.Details, a.TenantId })

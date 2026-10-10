@@ -2,7 +2,8 @@
   <mc-card [title]="i18n.t('device.serviceStatus')" data-testid="service-status">
     @if (context.snapshot()?.service; as service) {
       <mc-status-pill [status]="service.status === 'Running' ? 'online' : 'offline'" [label]="service.status ?? '—'" />
-      <p class="muted">{{ i18n.t('device.serviceUptime', { uptime: serviceUptime() }) }}</p>
+      <p class="muted">{{ service.status === 'Running' ? i18n.t('device.serviceRunning') : i18n.t('device.serviceNotRunning') }}</p>
+      <p class="service-facts">{{ i18n.t('device.serviceUptime', { uptime: serviceUptime() }) }}@if (context.snapshot()?.ram?.totalGb; as ram) { <span class="sep">|</span> RAM: {{ ram }} GB }</p>
     } @else {
       <mc-empty-state icon="devices" [title]="i18n.t('device.noSnapshot')" />
     }
@@ -34,9 +35,17 @@
       @if (card.top.length) {
         <table class="top">
           <caption>{{ i18n.t('device.top5') }}</caption>
+          <thead>
+            <tr><th scope="col">{{ i18n.t('device.top.process') }}</th><th scope="col" class="num">PID</th><th scope="col" class="num" colspan="2">{{ i18n.t('device.top.' + card.key) }}</th></tr>
+          </thead>
           <tbody>
             @for (p of card.top.slice(0, 5); track p.pid) {
-              <tr><td>{{ p.name }}</td><td class="num">{{ p.pid }}</td><td class="num">{{ p.value }}</td></tr>
+              <tr>
+                <td>{{ p.name }}</td>
+                <td class="num">{{ p.pid }}</td>
+                <td class="num value">{{ topValue(card.key, p.value) }}</td>
+                <td class="bar"><span [class]="'fill ' + card.key" [style.inline-size.%]="topShare(card.top, p.value)"></span></td>
+              </tr>
             }
           </tbody>
         </table>
@@ -48,17 +57,20 @@
 <section class="row two">
   <mc-card [title]="i18n.t('device.diskStatus')" [flush]="true" data-testid="disk-status">
     <mc-data-table [columns]="diskColumns()" [rows]="context.disks()" [trackBy]="diskKey" [emptyText]="i18n.t('device.noDisks')">
+      <ng-template mcCell="totalGb" let-row>{{ disk(row).totalGb }} GB</ng-template>
+      <ng-template mcCell="usedGb" let-row>{{ disk(row).usedGb }} GB</ng-template>
+      <ng-template mcCell="freeGb" let-row>{{ disk(row).freeGb }} GB</ng-template>
       <ng-template mcCell="usagePercent" let-row><mc-progress-bar [value]="disk(row).usagePercent" [tone]="disk(row).status === 'Critical' ? 'danger' : disk(row).status === 'Warning' ? 'warning' : 'success'" /></ng-template>
       <ng-template mcCell="status" let-row><mc-status-pill [status]="disk(row).status" [label]="i18n.t('status.' + disk(row).status.toLowerCase()) + ' ' + disk(row).usagePercent + '%'" /></ng-template>
     </mc-data-table>
   </mc-card>
   <mc-card [title]="i18n.t('device.hardwareOs')" data-testid="hardware-os">
     @for (kind of ['hardware', 'os', 'network']; track kind; let first = $first) {
-      <mc-accordion-item [title]="i18n.t('device.inventory.' + kind)" [open]="first">
+      <mc-accordion-item [title]="i18n.t('device.inventory.' + kind)" [summary]="summary(kind)" [open]="first">
         @if (entries(inventory()[kind]).length) {
           <dl class="kv">
             @for (e of entries(inventory()[kind]); track e.key) {
-              <div><dt>{{ e.key }}</dt><dd>{{ e.value }}</dd></div>
+              <div><dt>{{ label(e.key) }}</dt><dd>{{ e.value }}</dd></div>
             }
           </dl>
         } @else {

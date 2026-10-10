@@ -47,7 +47,7 @@ const PAGE_SIZE = 20;
           <ng-template mcCell="createdAt" let-row>
             <span class="time" [class.unread]="!n(row).read">
               @if (!n(row).read) {
-                <span class="dot" [attr.aria-label]="i18n.t('notifications.unread')"></span>
+                <span class="dot" role="img" [attr.aria-label]="i18n.t('notifications.unread')"></span>
               }
               {{ n(row).createdAt | date: 'short' : undefined : locale() }}
             </span>

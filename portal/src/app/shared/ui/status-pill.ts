@@ -15,7 +15,9 @@ const TONES: Record<string, string> = {
   template: `<span class="dot" aria-hidden="true"></span>{{ text() }}`,
   host: { '[attr.data-tone]': 'tone()', role: 'status' },
   styles: `
-    :host { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: var(--mc-radius-pill); font-size: var(--mc-fs-xs); font-weight: var(--mc-fw-medium); white-space: nowrap; background: var(--mc-neutral-soft); color: var(--mc-neutral); }
+    :host { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: var(--mc-radius-pill); font-size: var(--mc-fs-xs); font-weight: var(--mc-fw-medium); white-space: nowrap; background: var(--mc-neutral-soft); color: var(--mc-text-secondary); }
+    /* Neutral text uses the secondary text colour for 4.5:1 contrast (ADR 0010); the dot keeps the neutral colour. */
+    :host(:not([data-tone])) .dot, :host([data-tone='neutral']) .dot { background: var(--mc-neutral); }
     .dot { inline-size: 6px; block-size: 6px; border-radius: 50%; background: currentColor; }
     :host([data-tone='success']) { background: var(--mc-success-soft); color: var(--mc-success); }
     :host([data-tone='warning']) { background: var(--mc-warning-soft); color: var(--mc-warning); }

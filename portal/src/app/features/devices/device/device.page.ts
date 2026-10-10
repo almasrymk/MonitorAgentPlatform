@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, effect, inject, input, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { DevicesApi } from '../../../core/api/api.services';
@@ -21,12 +21,12 @@ import { DeviceContext } from './device-context';
 export const LIVE_RENEW_MS = 30_000;
 
 /**
- * Device details (07 section 5.7): header and tabs. While the screen is visible and the device online it keeps live
+ * Device details (07 section 5.7): header; the tabs of 07 section 5.7 are the device menu of the sidebar. While the screen is visible and the device online it keeps live
  * mode on (`POST live-sessions` now and every 30 s) and shows `liveSample`s; `snapshotUpdated` refetches the overview.
  */
 @Component({
   selector: 'mc-device-page',
-  imports: [DatePipe, RouterOutlet, RouterLink, RouterLinkActive, OsIcon, StatusPill, CopyButton, Skeleton, ErrorState],
+  imports: [DatePipe, RouterOutlet, RouterLink, OsIcon, StatusPill, CopyButton, Skeleton, ErrorState],
   providers: [DeviceContext],
   templateUrl: './device.page.html',
   styleUrl: './device.page.scss',
@@ -47,14 +47,6 @@ export class DevicePage {
   });
   protected readonly lastSeen = computed(() => relativeTime(this.i18n, this.context.device()?.lastSeenAt));
   protected readonly up = computed(() => uptime(this.i18n, this.context.device()?.uptimeSeconds));
-  protected readonly tabs = [
-    { path: 'overview', key: 'device.tab.overview' },
-    { path: 'monitor-points', key: 'device.tab.monitorPoints' },
-    { path: 'applications', key: 'device.tab.applications' },
-    { path: 'reports', key: 'device.tab.reports' },
-    { path: 'settings', key: 'device.tab.settings' },
-    { path: 'about', key: 'device.tab.about' },
-  ];
 
   constructor() {
     const live = inject(LiveService);

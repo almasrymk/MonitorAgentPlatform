@@ -19,6 +19,7 @@ public static class ApiServiceCollectionExtensions
 {
     public const string CorsPolicy = "portal";
     public const string AuthRateLimit = "auth";
+    public const string RefreshRateLimit = "auth-refresh";
     public const string EnrollRateLimit = "agent-enroll";
     public const string AgentTokenRateLimit = "agent-token";
     public const string LiveHubPath = "/hubs/live";
@@ -57,8 +58,11 @@ public static class ApiServiceCollectionExtensions
         services.AddOpenApi("v1");
         services.AddResponseCompression(o => o.EnableForHttps = true);
 
-        // Per-IP limit on auth/* (01 section 7); tuned in M10.
+        // Per IP and minute (01 section 7). Sign-in and invitations: 20, against password spraying (accounts lock after 5
+        // failures anyway). Refresh and logout: 300, because every open portal refreshes every 15 minutes and a whole
+        // office often shares one address.
         var permitLimit = configuration.GetValue("RateLimiting:Auth:PermitLimit", 20);
+        var refreshLimit = configuration.GetValue("RateLimiting:Refresh:PermitLimit", 300);
         // 05 section 1.1: 10 enrollments per minute per IP (5 per hour per fingerprint is checked by the handler).
         var enrollLimit = configuration.GetValue("RateLimiting:Enroll:PermitLimit", 10);
         // Token exchange: per IP here; 5 failures per device id block that id (DeviceCredential).
@@ -69,6 +73,9 @@ public static class ApiServiceCollectionExtensions
             o.AddPolicy(AuthRateLimit, context => RateLimitPartition.GetFixedWindowLimiter(
                 context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                 _ => new FixedWindowRateLimiterOptions { PermitLimit = permitLimit, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+            o.AddPolicy(RefreshRateLimit, context => RateLimitPartition.GetFixedWindowLimiter(
+                context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = refreshLimit, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
             o.AddPolicy(EnrollRateLimit, context => RateLimitPartition.GetFixedWindowLimiter(
                 context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                 _ => new FixedWindowRateLimiterOptions { PermitLimit = enrollLimit, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));

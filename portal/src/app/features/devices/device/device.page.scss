@@ -75,25 +75,3 @@
   color: var(--mc-warning);
 }
 
-.tabs {
-  display: flex;
-  gap: var(--mc-space-5);
-  border-block-end: 1px solid var(--mc-border);
-  margin-block-end: var(--mc-space-4);
-  overflow-x: auto;
-
-  a {
-    padding: var(--mc-space-2) 0;
-    color: var(--mc-text-muted);
-    text-decoration: none;
-    border-block-end: 2px solid transparent;
-    margin-block-end: -1px;
-    white-space: nowrap;
-  }
-
-  a.active {
-    color: var(--mc-text);
-    border-block-end-color: var(--mc-brand);
-    font-weight: var(--mc-fw-medium);
-  }
-}

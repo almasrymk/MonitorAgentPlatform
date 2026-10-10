@@ -12,7 +12,7 @@ const TYPE_ICONS: Record<string, string> = {
   Website: 'globe', Database: 'archive', Ping: 'reports', Application: 'devices', Service: 'settings', Disk: 'archive', Network: 'globe', Custom: 'dashboard',
 };
 
-/** Monitor Points (07 section 5.7): a carousel of round icons with name and status dot; selecting one shows its detail. Read-only in M6. */
+/** Monitor Points (07 section 5.7): a carousel of round icons with name and status dot; selecting one shows its detail. Points are edited on the Monitor Points tab. */
 @Component({
   selector: 'mc-monitor-points',
   imports: [Icon, StatusPill, EmptyState],

@@ -41,7 +41,7 @@ https address; `Storage:Root` is empty; `AllowedHosts` is `*`; or the log level 
 | `Telemetry:RetentionMinuteDays` / `RetentionHourDays` / `RetentionDiskDays` | 30 / 400 / 400 | Used until Platform Settings are saved; then those values apply. |
 | `Storage:Root` | `{content root}/App_Data` | Persistent folder: `media/` (report and archive files), `keys/` (Data Protection keys), `pdf/` (temporary). |
 | `Storage:ChromiumPath` | auto | Browser for PDF reports; empty = Edge/Chrome/Chromium in the usual places. Without one, PDF is reported as unavailable. |
-| `RateLimiting:Auth:PermitLimit` / `Enroll` / `AgentToken` | 20 / 10 / 120 per minute and IP | 429 `RATE_LIMITED` with `Retry-After`. |
+| `RateLimiting:Auth:PermitLimit` / `Refresh` / `Enroll` / `AgentToken` | 20 / 300 / 10 / 120 per minute and IP | Auth = sign-in and invitations; Refresh = token refresh and sign-out (an office behind one address refreshes often). 429 `RATE_LIMITED` with `Retry-After`. |
 | `ReverseProxy:KnownProxies` / `ReverseProxy:KnownNetworks` | `[]` | Addresses (e.g. `10.0.0.5`) or networks (e.g. `10.0.0.0/8`) of the reverse proxy. `X-Forwarded-For` / `X-Forwarded-Proto` are trusted only from them. **Set this behind a proxy**, or every client shares the proxy's rate limit and HTTPS is not detected. |
 | `Outbox:PollInterval` / `BatchSize` / `Enabled` | `00:00:02` / 50 / `true` | |
 | `Serilog:*` | console, Information | Structured logs; secrets are never logged (tested). |

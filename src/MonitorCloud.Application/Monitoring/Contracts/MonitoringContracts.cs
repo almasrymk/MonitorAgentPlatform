@@ -25,6 +25,9 @@ public interface IAlertDashboardReader
 
     /// <summary>The newest open alerts.</summary>
     Task<IReadOnlyList<RecentAlert>> RecentAsync(Guid? locationId, int take, CancellationToken ct);
+
+    /// <summary>For each device, the title of its most severe (then newest) open alert: the "Issue" of Top Problematic Devices.</summary>
+    Task<IReadOnlyDictionary<Guid, string>> WorstOpenTitlesAsync(IReadOnlyCollection<Guid> deviceIds, CancellationToken ct);
 }
 
 public sealed record OfflineAlertSettings(string Severity, int DelayMinutes);

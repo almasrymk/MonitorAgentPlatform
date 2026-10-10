@@ -191,9 +191,13 @@ public sealed class SecretsInLogsTests(SqlServerFixture sql) : IAsyncLifetime
             TestWorld.Password, "Wrong-" + TestWorld.Password, session.AccessToken, session.RefreshToken, refreshed.RefreshToken, key, enrolled.DeviceSecret,
             deviceToken.AccessToken, "TEST-ONLY-wrong-secret",
         };
+        // Request logging writes after the response is sent: wait for the entry of the last request.
+        for (var i = 0; i < 50 && !_sink.Lines.Any(l => l.Contains("/api/agent/v1/token", StringComparison.Ordinal) && l.Contains("401", StringComparison.Ordinal)); i++)
+            await Task.Delay(100);
         var lines = _sink.Lines.ToList();
-        lines.Count.ShouldBeGreaterThan(20, "the sink receives the application and request logs");
-        lines.ShouldContain(l => l.Contains("/api/agent/v1/enroll", StringComparison.Ordinal), "request logging is captured");
+        // The sink sees the request log of every call inspected here.
+        foreach (var path in new[] { "/api/v1/auth/login", "/api/v1/auth/refresh", "/api/agent/v1/enroll", "/api/agent/v1/token" })
+            lines.ShouldContain(l => l.Contains(path, StringComparison.Ordinal), $"the request log of {path} is captured");
         foreach (var secret in secrets)
             lines.Where(l => l.Contains(secret, StringComparison.Ordinal)).ShouldBeEmpty($"a secret ({secret[..Math.Min(6, secret.Length)]}...) was logged");
     }
@@ -209,6 +213,7 @@ public sealed class RateLimitTests(SqlServerFixture sql) : IAsyncLifetime
         {
             base.ConfigureWebHost(builder);
             builder.UseSetting("RateLimiting:Auth:PermitLimit", "3");
+            builder.UseSetting("RateLimiting:Refresh:PermitLimit", "4");
             builder.UseSetting("RateLimiting:Enroll:PermitLimit", "2");
             builder.UseSetting("RateLimiting:AgentToken:PermitLimit", "2");
         }
@@ -227,6 +232,7 @@ public sealed class RateLimitTests(SqlServerFixture sql) : IAsyncLifetime
 
     [Theory]
     [InlineData("/api/v1/auth/login", 3)]
+    [InlineData("/api/v1/auth/refresh", 4)]
     [InlineData("/api/agent/v1/enroll", 2)]
     [InlineData("/api/agent/v1/token", 2)]
     public async Task The_request_after_the_limit_gets_429_with_Retry_After(string url, int limit)

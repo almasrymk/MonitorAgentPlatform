@@ -21,7 +21,7 @@
   --mc-text: #FFFFFF;
   --mc-text-secondary: #B6C0CC;
   --mc-text-muted: #7C8A9F;
-  --mc-text-faint: #475263;
+  --mc-text-faint: #7385A0;
   --mc-link: #1BB8FF;
 
   // ---- brand and semantic ----
@@ -36,6 +36,8 @@
   --mc-warning-soft: rgba(253, 185, 38, 0.14);
   --mc-danger: #FD3F48;
   --mc-danger-soft: rgba(253, 63, 72, 0.14);
+  --mc-danger-solid: #D92D36;     // solid fills with white text (badges): 4.8:1
+  --mc-on-solid: #FFFFFF;         // text on solid semantic fills
   --mc-neutral: #7C8A9F;          // offline, other, resolved
   --mc-neutral-soft: rgba(124, 138, 159, 0.16);
 
@@ -107,14 +109,16 @@
   --mc-border-strong: #CBD3DC;
   --mc-text: #10151C;
   --mc-text-secondary: #3A4654;
-  --mc-text-muted: #66758A;
-  --mc-text-faint: #9AA6B5;
+  --mc-text-muted: #627084;
+  --mc-text-faint: #69717B;
   --mc-link: #0B6FCC;
-  --mc-brand: #17A34A;
-  --mc-success: #17A34A;
+  --mc-brand: #127F3A;
+  --mc-success: #127F3A;
   --mc-info: #0B6FCC;
-  --mc-warning: #B87900;
-  --mc-danger: #D92D36;
+  --mc-warning: #976300;
+  --mc-danger: #D52C35;
+  --mc-danger-solid: #C42830;
+  --mc-on-solid: #FFFFFF;
 }
 
 // Severity and state helpers used by pills, dots and badges.

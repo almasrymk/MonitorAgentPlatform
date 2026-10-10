@@ -1,10 +1,13 @@
 import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 
 import { ProblemDevice } from '../../core/api/models';
 import { I18nService } from '../../core/i18n/i18n.service';
 import { relativeTime } from '../../shared/format';
+import { Button } from '../../shared/ui/button';
 import { Card } from '../../shared/ui/card';
+import { Icon } from '../../shared/ui/icon';
 import { CellDef, Column, DataTable } from '../../shared/ui/data-table';
 import { DonutChart, DonutSegment } from '../../shared/ui/donut-chart';
 import { KpiTile } from '../../shared/ui/kpi-tile';
@@ -20,7 +23,7 @@ const OS_COLORS: Record<string, string> = { Windows: 'mc-series-windows', Linux:
 /** Location Overview (07 section 5.5). */
 @Component({
   selector: 'mc-location-overview-page',
-  imports: [DatePipe, KpiTile, Card, DonutChart, RingGauge, DataTable, CellDef, StatusPill, Skeleton, IncidentTrend, RecentAlerts],
+  imports: [DatePipe, RouterLink, Button, Icon, KpiTile, Card, DonutChart, RingGauge, DataTable, CellDef, StatusPill, Skeleton, IncidentTrend, RecentAlerts],
   template: `
     @if (context.dashboard(); as d) {
       <section class="tiles tiles-6" data-testid="location-tiles">
@@ -53,9 +56,9 @@ const OS_COLORS: Record<string, string> = { Windows: 'mc-series-windows', Linux:
           <p class="muted">{{ i18n.t('dashboard.acrossOnline', { n: d.resources.onlineDevices }) }}</p>
         </mc-card>
         <mc-card [title]="i18n.t('dashboard.topProblematic')" [flush]="true" class="span-2">
-          <mc-data-table [columns]="problemColumns()" [rows]="d.topProblematicDevices" [emptyText]="i18n.t('dashboard.noProblems')">
+          <mc-data-table [compact]="true" [columns]="problemColumns()" [rows]="d.topProblematicDevices" [emptyText]="i18n.t('dashboard.noProblems')">
             <ng-template mcCell="name" let-row><strong>{{ problem(row).name }}</strong></ng-template>
-            <ng-template mcCell="issue" let-row>{{ i18n.t('dashboard.issues.' + problem(row).issue) }}</ng-template>
+            <ng-template mcCell="issue" let-row>{{ problem(row).issueTitle || i18n.t('dashboard.issues.' + problem(row).issue) }}</ng-template>
             <ng-template mcCell="locationName" let-row>{{ problem(row).locationName ?? '—' }}</ng-template>
             <ng-template mcCell="health" let-row><mc-status-pill [status]="problem(row).connection === 'Offline' ? 'offline' : problem(row).health" /></ng-template>
             <ng-template mcCell="lastSeenAt" let-row>{{ seen(problem(row).lastSeenAt) }}</ng-template>
@@ -68,6 +71,7 @@ const OS_COLORS: Record<string, string> = { Windows: 'mc-series-windows', Linux:
           <mc-recent-alerts [alerts]="d.recentAlerts" mode="location" />
         </mc-card>
         <mc-card [title]="i18n.t('dashboard.locationSummary')" data-testid="location-summary">
+        <a cardActions mcButton="ghost" size="sm" routerLink="../settings" data-testid="edit-location"><mc-icon name="edit" [size]="14" /> {{ i18n.t('common.edit') }}</a>
           <dl class="summary">
             <dt>{{ i18n.t('locations.address') }}</dt><dd>{{ address() }}</dd>
             <dt>{{ i18n.t('dashboard.contact') }}</dt><dd>{{ d.location.contactName ?? '—' }}@if (d.location.contactPhone) { · {{ d.location.contactPhone }} }</dd>

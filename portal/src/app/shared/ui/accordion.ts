@@ -9,8 +9,11 @@ import { Icon } from './icon';
   template: `
     <h3>
       <button type="button" [attr.aria-expanded]="open()" data-testid="accordion-toggle" (click)="open.set(!open())">
-        <span>{{ title() }}</span>
-        <mc-icon [name]="open() ? 'chevronDown' : 'chevronRight'" [size]="16" />
+        <span class="title">{{ title() }}</span>
+        @if (summary()) {
+          <span class="summary">{{ summary() }}</span>
+        }
+        <mc-icon [name]="open() ? 'chevronDown' : 'chevronRight'" [class.closed]="!open()" [size]="16" />
       </button>
     </h3>
     @if (open()) {
@@ -21,12 +24,18 @@ import { Icon } from './icon';
     :host { display: block; border-block-end: 1px solid var(--mc-border); }
     h3 { margin: 0; }
     button { inline-size: 100%; display: flex; justify-content: space-between; align-items: center; background: none; border: 0; color: var(--mc-text); font: inherit; font-weight: var(--mc-fw-medium); padding: var(--mc-space-3) 0; cursor: pointer; text-align: start; }
+    .title { flex: none; }
+    .summary { flex: 1; min-inline-size: 0; margin-inline: var(--mc-space-4); color: var(--mc-text-secondary); font-weight: var(--mc-fw-regular, 400); font-size: var(--mc-fs-sm); text-align: end; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .content { padding-block-end: var(--mc-space-3); }
+    /* A closed section points to the reading direction. */
+    :host-context([dir='rtl']) mc-icon.closed { transform: scaleX(-1); }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AccordionItem {
   readonly title = input.required<string>();
+  /** One line shown next to the title (Hardware & OS: "Intel Xeon | 16 cores | 64 GB RAM"). */
+  readonly summary = input<string>('');
   readonly open = model(false);
 }
 
